@@ -315,7 +315,7 @@ function renderMiniCal(){
     else cls += ' mc-full';
     if(iso === selectedDate) cls += ' mc-selected';
     if(avail){
-      html += '<div class="'+cls+'" onclick="selectDate(''+iso+'')">'+day+'</div>';
+      html += '<div class="'+cls+'" data-iso="'+iso+'" onclick="selectDate(this.getAttribute(\'data-iso\'))">'+day+'</div>';
     } else {
       html += '<div class="'+cls+'">'+day+'</div>';
     }
@@ -332,7 +332,7 @@ function selectDate(iso){
   label.textContent = fmtDateLong(iso);
   var cont = document.getElementById('slotsContainer');
   cont.innerHTML = slots.map(function(s){
-    return '<div class="slot-chip" onclick="selectSlot(''+s.time+'',this)">'+s.label+'</div>';
+    return '<div class="slot-chip" data-time="'+s.time+'" onclick="selectSlot(this.getAttribute(\'data-time\'),this)">'+s.label+'</div>';
   }).join('');
   document.getElementById('step3Card').style.display = 'block';
   document.getElementById('step4Card').style.display = 'none';
@@ -360,19 +360,7 @@ function submitRequest(){
     alert('Please fill in all required fields and choose a date and time.');return;
   }
   var diaryLink = DIARY_URL+'?prefill=1&name='+encodeURIComponent(name)+'&phone='+encodeURIComponent(phone)+'&dog='+encodeURIComponent(dog)+'&breed='+encodeURIComponent(breed)+'&service='+encodeURIComponent(selectedService)+'&notes='+encodeURIComponent(notes)+'&date='+selectedDate+'&time='+encodeURIComponent(selectedTime);
-  var msg = 'NEW BOOKING REQUEST
-
-Name: '+name+'
-WhatsApp: '+phone+'
-Dog: '+dog+(breed?' ('+breed+')':'')+'
-Service: '+selectedService+'
-Dogs: '+selectedDogCount+'
-Date: '+fmtDateLong(selectedDate)+'
-Time: '+fmtTime12(selectedTime)+'
-'+(notes?'Notes: '+notes+'
-':'')+'
-Tap to add to diary:
-'+diaryLink;
+  var msg = 'NEW BOOKING REQUEST\n\nName: '+name+'\nWhatsApp: '+phone+'\nDog: '+dog+(breed?' ('+breed+')':'')+'\nService: '+selectedService+'\nDogs: '+selectedDogCount+'\nDate: '+fmtDateLong(selectedDate)+'\nTime: '+fmtTime12(selectedTime)+'\n'+(notes?'Notes: '+notes+'\n':'')+'\nTap to add to diary:\n'+diaryLink;
   var c = phone.replace(/\s+/g,'').replace(/^\+/,'');
   if(c.charAt(0)==='0') c='44'+c.slice(1);
   document.getElementById('bookingStep').style.display = 'none';
