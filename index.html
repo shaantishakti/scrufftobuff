@@ -801,7 +801,8 @@ function checkReminders(){
   banner.classList.add('show');
   document.getElementById('reminderList').innerHTML=due.map(function(b){
     return '<div class="banner-chip"><strong>'+b.name+'</strong> \u2014 '+(b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'')+' \u2014 '+fmtTime(b.time)
-      +'<button class="btn-wa-sm" onclick="sendReminderMsg(\''+b.id+'\')">Send Reminder</button></div>';
+      +'<button class="btn-wa-sm" onclick="sendReminderMsg(\''+ b.id +'\')">Reminder</button>'
+      +'<button class="btn-wa-sm" style="background:#f59e0b;margin-left:4px;" onclick="sendReminderPayMsgId(\''+b.id+'\')">Reminder + Pay</button></div>';
   }).join('');
 }
 
@@ -1212,6 +1213,12 @@ function sendReminderMsg(id){
 function sendPaymentChase(){
   var b=getCurrent();if(!b||!b.phone)return;
   openWA(b.phone,'Hi '+titleCase(b.name)+',\n\nJust going through payments, and can\'t seem to see one from you, please could you check from your end?\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
+}
+function sendReminderPayMsgId(id){
+  var b=id?bookings.find(function(x){return x.id===id;}):getCurrent();
+  if(!b||!b.phone)return;
+  var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
+  openWA(b.phone,'Just a friendly reminder that '+dogNames+' has a grooming appointment with '+BIZ+' in 4 days! Please let me know ASAP if you need to make any changes, to avoid any cancellation fees.\n\nIf you would like to pay in advance, you are welcome to do so here:\n'+SUMUP+'\n\nDID YOU KNOW you can book your fluffy friend\'s next appointment right now \uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html');
 }
 function sendReminderPayMsg(){
   var b=getCurrent();if(!b||!b.phone)return;
