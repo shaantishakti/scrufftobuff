@@ -1178,12 +1178,12 @@ function renderWaButtons(){
   var daysAway=appt?Math.round((appt-today)/864e5):999;
   var isNew=document.getElementById('ct-new').checked;
   var cont=document.getElementById('waButtons');
-  var remBtn=daysAway>=7?'<button class="btn-wa amber" onclick="sendReminderMsg(null)"><span><span class="wa-title">Send 4-Day Reminder</span><span class="wa-sub">Friendly reminder ahead of appointment</span></span></button>':'';
+  var remBtn=daysAway>=7?'<button class="btn-wa amber" onclick="sendReminderMsg(null)"><span><span class="wa-title">Send 4-Day Reminder</span><span class="wa-sub">Friendly reminder ahead of appointment</span></span></button>':'';  var remPayBtn=daysAway>=7?'<button class="btn-wa amber" onclick="sendReminderPayMsg()"><span><span class="wa-title">Send Reminder + Payment Link</span><span class="wa-sub">Reminder with option to prepay via SumUp</span></span></button>':'';
   var payBtn='<button class="btn-wa purple" onclick="openPay()"><span><span class="wa-title">Send Payment Request</span><span class="wa-sub">After the groom - enter final price and send</span></span></button>';
   var isPaid=document.getElementById('p-paid').checked;
   var chaseBtn=!isPaid?'<button class="btn-wa red" onclick="sendPaymentChase()"><span><span class="wa-title">Send Payment Reminder</span><span class="wa-sub">Politely chase outstanding payment</span></span></button>':'';
-  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+remBtn+payBtn+chaseBtn;}
-  else{cont.innerHTML='<button class="btn-wa" onclick="sendConfirmMsg(null)"><span><span class="wa-title">Send Confirmation</span><span class="wa-sub">Booking confirmed with appointment details</span></span></button>'+remBtn+payBtn+chaseBtn;}
+  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn;}
+  else{cont.innerHTML='<button class="btn-wa" onclick="sendConfirmMsg(null)"><span><span class="wa-title">Send Confirmation</span><span class="wa-sub">Booking confirmed with appointment details</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn;}
 }
 function getCurrent(){return editId?bookings.find(function(b){return b.id===editId;}):null;}
 
@@ -1212,6 +1212,11 @@ function sendReminderMsg(id){
 function sendPaymentChase(){
   var b=getCurrent();if(!b||!b.phone)return;
   openWA(b.phone,'Hi '+titleCase(b.name)+',\n\nJust going through payments, and can\'t seem to see one from you, please could you check from your end?\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
+}
+function sendReminderPayMsg(){
+  var b=getCurrent();if(!b||!b.phone)return;
+  var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
+  openWA(b.phone,'Just a friendly reminder that '+dogNames+' has a grooming appointment with '+BIZ+' in 4 days! Please let me know ASAP if you need to make any changes, to avoid any cancellation fees.\n\nIf you would like to pay in advance, you are welcome to do so here:\n'+SUMUP+'\n\nDID YOU KNOW you can book your fluffy friend\'s next appointment right now \uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html');
 }
 function openPay(){document.getElementById('f-price-pay').value='';document.getElementById('payOverlay').classList.add('open');}
 function sendPayment(){
