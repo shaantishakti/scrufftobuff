@@ -94,6 +94,7 @@ body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--blue);
         <option>De-shed Treatment</option><option>Anal Glands</option>
         <option>Hand Stripping</option><option>Emmi-Pet Teeth Consultation</option>
         <option>Emmi-Pet Teeth Cleaning</option><option>Emmi-Pet Teeth Maintenance</option>
+        <option>Teeth Descaling - £30</option>
         <option>Other</option>
       </select>
     </div>
@@ -147,6 +148,9 @@ body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--blue);
 </div>
 <script>
 const BIZ_WA = '447767749349';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwG00lLXzSbhkxVaigOD0arI9A9rns4f-i7GoUeKBXzUcRuxoYbXg7FP3cxhrIfVrB3/exec';
+let sheetBookings = [];
+let sheetLoaded = false;
 const DIARY_URL = 'https://shaantishakti.github.io/scrufftobuff/';
 
 const HOURS = {
@@ -179,6 +183,22 @@ function timeToMins(ts){var p=ts.split(':');return parseInt(p[0])*60+parseInt(p[
 function minsToTime(m){return(Math.floor(m/60)<10?'0':'')+Math.floor(m/60)+':'+(m%60<10?'0':'')+m%60;}
 function addMins(ts,mins){var p=ts.split(':');var t=parseInt(p[0])*60+parseInt(p[1])+mins;return minsToTime(t);}
 
+function loadSheetBookings(callback){
+  fetch(SHEET_URL)
+    .then(function(r){return r.json();})
+    .then(function(data){
+      sheetBookings = data.map(function(r){
+        return {date:r.date, time:r.time, finishTime:r.finishTime, duration:parseInt(r.duration)||90, id:r.id};
+      });
+      sheetLoaded = true;
+      if(callback) callback();
+    })
+    .catch(function(){
+      sheetLoaded = true;
+      if(callback) callback();
+    });
+}
+
 function selectDogCount(n, el){
   selectedDogCount = n;
   document.querySelectorAll('#dogCountSlots .slot-chip').forEach(function(c){c.classList.remove('selected');});
@@ -201,8 +221,12 @@ function onServiceSelected(){
   document.getElementById('step2Card').style.display = 'block';
   document.getElementById('step3Card').style.display = 'none';
   document.getElementById('step4Card').style.display = 'none';
+  // Render calendar immediately with local data, then refresh if sheet loads
   renderMiniCal();
   document.getElementById('step2Card').scrollIntoView({behavior:'smooth'});
+  loadSheetBookings(function(){
+    renderMiniCal();
+  });
 }
 
 function getAvailableSlots(dateStr){
@@ -216,8 +240,7 @@ function getAvailableSlots(dateStr){
   var blocked = blocks.filter(function(b){return b.date===dateStr;});
   for(var i=0;i<blocked.length;i++){if(blocked[i].fullDay)return[];}
   
-  var bookings = JSON.parse(localStorage.getItem('stbBookings')||'[]');
-  var dayBookings = bookings.filter(function(b){return b.date===dateStr;});
+  var dayBookings = sheetBookings.filter(function(b){return b.date===dateStr;});
   
   var openMins = timeToMins(hrs.open);
   var closeMins = timeToMins(hrs.close);
@@ -307,8 +330,7 @@ function renderMiniCal(){
     var isOpen = HOURS[dow] !== null && dow !== 0;
     var blocks = JSON.parse(localStorage.getItem('stbBlocks')||'[]');
     var isBlocked = blocks.some(function(b){return b.date===iso&&b.fullDay;});
-    var slots = (!isPast && isOpen && !isBlocked) ? getAvailableSlots(iso) : [];
-    var avail = slots.length > 0;
+    var avail = !isPast && isOpen && !isBlocked;
     var cls = 'mc-day';
     if(isPast || !isOpen || isBlocked) cls += ' mc-unavail';
     else if(avail) cls += ' mc-avail';
@@ -327,16 +349,23 @@ function selectDate(iso){
   if(!selectedService){alert('Please select a service first.');return;}
   selectedDate = iso;
   renderMiniCal();
-  var slots = getAvailableSlots(iso);
-  var label = document.getElementById('slotDateLabel');
-  label.textContent = fmtDateLong(iso);
-  var cont = document.getElementById('slotsContainer');
-  cont.innerHTML = slots.map(function(s){
-    return '<div class="slot-chip" data-time="'+s.time+'" onclick="selectSlot(this.getAttribute(\'data-time\'),this)">'+s.label+'</div>';
-  }).join('');
+  document.getElementById('slotsContainer').innerHTML = '<div style="padding:10px;color:#4a7aaa;">Loading available times...</div>';
   document.getElementById('step3Card').style.display = 'block';
-  document.getElementById('step4Card').style.display = 'none';
   document.getElementById('step3Card').scrollIntoView({behavior:'smooth'});
+  loadSheetBookings(function(){
+    var slots = getAvailableSlots(iso);
+    var label = document.getElementById('slotDateLabel');
+    label.textContent = fmtDateLong(iso);
+    var cont = document.getElementById('slotsContainer');
+    if(slots.length===0){
+      cont.innerHTML='<div style="padding:10px;color:#e05252;">No available slots on this day. Please try another date.</div>';
+    } else {
+      cont.innerHTML = slots.map(function(s){
+        return '<div class="slot-chip" data-time="'+s.time+'" onclick="selectSlot(this.getAttribute(\'data-time\'),this)">'+s.label+'</div>';
+      }).join('');
+    }
+    document.getElementById('step4Card').style.display = 'none';
+  });
 }
 
 function selectSlot(time, el){
