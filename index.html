@@ -62,8 +62,11 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 .time-lbl{background:var(--tan-light);text-align:right;padding:2px 6px 0;font-size:0.67rem;color:#4a7aaa;}
 .day-col{position:relative;border-left:1px solid var(--tan-light);}
 .hour-line{position:absolute;left:0;right:0;border-top:1px solid #c2d9f0;pointer-events:none;}
-.bk{position:absolute;left:2px;right:2px;border-radius:6px;padding:3px 6px;font-size:0.72rem;cursor:pointer;line-height:1.4;overflow:hidden;}
+.bk{position:absolute;left:2px;right:2px;border-radius:6px;padding:3px 6px;font-size:0.72rem;cursor:grab;line-height:1.4;overflow:hidden;}
 .bk:hover{box-shadow:0 2px 7px rgba(0,0,0,0.13);}
+.bk.dragging{opacity:0.4;cursor:grabbing;}
+.day-col.drag-over{background:rgba(59,130,246,0.08);}
+.drag-ghost{position:fixed;pointer-events:none;z-index:9999;opacity:0.85;border-radius:6px;padding:3px 6px;font-size:0.72rem;font-weight:600;background:#3b82f6;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.22);white-space:nowrap;}
 .bk.unpaid{background:var(--unpaid-bg);border-left:3px solid var(--unpaid);color:#7a1a1a;}
 .bk.paid{background:var(--paid-bg);border-left:3px solid var(--paid);color:#1a4f37;}
 .bk.blocked-slot{background:var(--blocked-bg);border-left:3px solid var(--blocked);color:#475569;}
@@ -835,6 +838,8 @@ function renderCal(){
     var rh=Math.floor(mins/60),rm=mins%60;
     if(rm===0){
       body+='<div class="time-lbl" style="grid-row:'+row+'/span 6;border-top:'+(row===1?'none':'1px solid var(--tan-light)')+'">'+fmtTime((rh<10?'0':'')+rh+':00')+'</div>';
+    } else if(rm===30){
+      body+='<div class="time-lbl" style="grid-row:'+row+'/span 6;font-size:0.58rem;opacity:0.65;padding-top:1px;">:30</div>';
     }
   }
   days.forEach(function(day,ci){
@@ -842,6 +847,7 @@ function renderCal(){
     var col=ci+2;
     body+='<div class="day-col" style="grid-column:'+col+';grid-row:1/span 60;" onclick="openAddAt(\''+ds+'\',getClickTime(event,this))">';
     for(var r=0;r<60;r+=6){body+='<div class="hour-line" style="top:'+(r*ROW_H)+'px"></div>';}
+    for(var r=3;r<60;r+=6){body+='<div class="hour-line" style="top:'+(r*ROW_H)+'px;border-top:1px dashed #d8eaf8;opacity:0.7;"></div>';}
     // Blocks
     blocks.filter(function(b){return b.date===ds;}).forEach(function(bl){
       var sr=1,sp=60;
@@ -885,7 +891,7 @@ function renderCal(){
         else if(svc==='Anal Glands')svcCls='svc-anal-glands';
         else if(svc==='De-shed Treatment')svcCls='svc-deshed';
         else svcCls=bk.paid?'paid':'unpaid';
-        body+='<div class="bk '+svcCls+'" style="top:'+tp+'px;height:'+hp+'px;" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">' 
+        body+='<div class="bk '+svcCls+'" style="top:'+tp+'px;height:'+hp+'px;" data-bkid="'+bk.id+'" onmousedown="startDrag(event,\''+bk.id+'\')" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">' 
           +'<div class="bn">'+bk.name+(totalBlocks>1?' — '+bl.dogName:'')+'</div>'
           +'<div class="bd">'+bl.dogName+(bl.breed?' ('+bl.breed+')':'')+'</div>'
           +'<div class="bs">'+svc+'</div>'
@@ -1125,9 +1131,15 @@ function saveBooking(){
 
 function deleteBooking(){
   if(!editId||!confirm('Delete this booking?'))return;
+  var bk=bookings.find(function(b){return b.id===editId;});
   bookings=bookings.filter(function(b){return b.id!==editId;});
   saveAll();
   closeMain();renderCal();
+  if(bk&&bk.phone){
+    setTimeout(function(){
+      openWA(bk.phone,'Hi '+titleCase(bk.name)+'! We\'re sorry to inform you that your appointment with Scruff to Buff Dogs on '+fmtDD(bk.date)+' at '+fmtTime(bk.time)+' has been cancelled. If you haven\'t already, then please get in touch to rebook. Many thanks,\n\nBecky - Scruff to Buff Dogs');
+    },300);
+  }
 }
 
 // ── BLOCK ──────────────────────────────────────────────────────────────────
@@ -1364,6 +1376,89 @@ document.getElementById('p-unpaid').addEventListener('change',function(){showPay
 renderCal();
 setTimeout(checkPrefill,300);
 window.addEventListener('resize',function(){mobileOffset=0;renderCal();});
+
+// ── Drag & Drop to reschedule ──────────────────────────────────────────────
+var _drag={active:false,bkId:null,clone:null,origEls:[],startX:0,startY:0,moved:false,offsetY:0};
+function startDrag(e,id){
+  if(e.button!==0)return;
+  var bk=bookings.find(function(x){return x.id===id;});
+  if(!bk)return;
+  _drag.bkId=id;_drag.startX=e.clientX;_drag.startY=e.clientY;_drag.moved=false;_drag.active=false;
+  // offset within the clicked block so it doesn't jump
+  var srcEl=e.currentTarget||e.target.closest('.bk');
+  _drag.offsetY=srcEl?e.clientY-srcEl.getBoundingClientRect().top:0;
+
+  function onMove(ev){
+    var dx=ev.clientX-_drag.startX,dy=ev.clientY-_drag.startY;
+    if(!_drag.active&&Math.sqrt(dx*dx+dy*dy)<6)return;
+    if(!_drag.active){
+      _drag.active=true;
+      // collect all blocks for this booking and dim them
+      _drag.origEls=Array.from(document.querySelectorAll('[data-bkid="'+id+'"]'));
+      _drag.origEls.forEach(function(el){el.style.opacity='0.25';});
+      // build a single floating clone representing the whole booking
+      var totalDur=bk.dogs&&bk.dogs.length
+        ?bk.dogs.reduce(function(s,d){var svcs=d.services&&d.services.length?d.services:[{duration:d.duration||60}];return s+svcs.reduce(function(a,sv){return a+(sv.duration||60);},0);},0)
+        :bk.duration||60;
+      var cloneH=Math.max(28,durationToRows(totalDur)*ROW_H-2);
+      var cloneW=_drag.origEls.length?_drag.origEls[0].offsetWidth:120;
+      var dogs=bk.dogs&&bk.dogs.length?bk.dogs.map(function(d){return d.name;}).join(' & '):bk.dog||'';
+      var c=document.createElement('div');
+      c.style.cssText='position:fixed;z-index:9999;width:'+cloneW+'px;height:'+cloneH+'px;border-radius:6px;padding:3px 6px;font-size:0.72rem;font-weight:600;background:#3b82f6;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,0.28);pointer-events:none;overflow:hidden;line-height:1.4;';
+      c.innerHTML='<div style="font-weight:700">'+bk.name+'</div><div style="font-size:0.67rem;opacity:0.9">'+dogs+'</div><div id="drag-time-label" style="font-size:0.67rem;margin-top:2px;opacity:0.9"></div>';
+      document.body.appendChild(c);_drag.clone=c;
+    }
+    _drag.moved=true;
+    // position clone under cursor
+    var cloneH=parseInt(_drag.clone.style.height);
+    _drag.clone.style.left=(ev.clientX+8)+'px';
+    _drag.clone.style.top=(ev.clientY-_drag.offsetY)+'px';
+    // highlight day col + show snapped time
+    document.querySelectorAll('.day-col').forEach(function(col){col.classList.remove('drag-over');});
+    var el=document.elementFromPoint(ev.clientX,ev.clientY);
+    var col=el&&el.closest?el.closest('.day-col'):null;
+    if(col){
+      col.classList.add('drag-over');
+      var rect=col.getBoundingClientRect();
+      var relY=ev.clientY-rect.top-_drag.offsetY;
+      var snapped=Math.round(relY/(ROW_H*1.5))*(15)+GRID_START; // snap to 15 min
+      snapped=Math.max(GRID_START,Math.min(snapped,18*60));
+      var lbl=document.getElementById('drag-time-label');
+      if(lbl)lbl.textContent=fmtTime((Math.floor(snapped/60)<10?'0':'')+Math.floor(snapped/60)+':'+(snapped%60<10?'0':'')+snapped%60);
+    }
+  }
+  function onUp(ev){
+    document.removeEventListener('mousemove',onMove);
+    document.removeEventListener('mouseup',onUp);
+    document.querySelectorAll('.day-col').forEach(function(col){col.classList.remove('drag-over');});
+    _drag.origEls.forEach(function(el){el.style.opacity='';});
+    if(_drag.clone){_drag.clone.remove();_drag.clone=null;}
+    if(!_drag.moved||!_drag.active){_drag.active=false;return;}
+    _drag.active=false;
+    var el=document.elementFromPoint(ev.clientX,ev.clientY);
+    var col=el&&el.closest?el.closest('.day-col'):null;
+    if(!col){renderCal();return;}
+    var m=col.getAttribute('onclick')||'';
+    var dateMatch=m.match(/openAddAt\('(\d{4}-\d{2}-\d{2})'/);
+    if(!dateMatch){renderCal();return;}
+    var newDate=dateMatch[1];
+    var rect=col.getBoundingClientRect();
+    var relY=ev.clientY-rect.top-_drag.offsetY;
+    var snapped=Math.round(relY/(ROW_H*1.5))*15+GRID_START;
+    snapped=Math.max(GRID_START,Math.min(snapped,18*60));
+    var hh=Math.floor(snapped/60),mm=snapped%60;
+    var newTime=(hh<10?'0':'')+hh+':'+(mm<10?'0':'')+mm;
+    if(newDate===bk.date&&newTime===bk.time){renderCal();return;}
+    bk.date=newDate;bk.time=newTime;
+    saveAll();renderCal();
+    var dogs=bk.dogs&&bk.dogs.length?bk.dogs.map(function(d){return d.name;}).join(' & '):bk.dog||'';
+    setTimeout(function(){
+      openWA(bk.phone,'Hi '+titleCase(bk.name)+'! Just to let you know that '+dogs+'\'s appointment has been moved to '+fmtDD(newDate)+' at '+fmtTime(newTime)+'. Please let me know if you have any questions!\n\nSee you then!\nBecky - Scruff to Buff Dogs');
+    },200);
+  }
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
+}
 
 </script>
 </body>
