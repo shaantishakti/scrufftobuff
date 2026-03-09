@@ -65,9 +65,10 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 .bk{position:absolute;left:2px;right:2px;border-radius:6px;padding:3px 6px;font-size:0.72rem;cursor:grab;line-height:1.4;overflow:hidden;}
 .bk:hover{box-shadow:0 2px 7px rgba(0,0,0,0.13);}
 .bk.dragging{opacity:0.4;cursor:grabbing;}
-.bk .pay-bar{position:absolute;top:0;left:0;right:0;height:4px;border-radius:6px 6px 0 0;}
-.bk .pay-bar.paid{background:#3a9e6e;}
-.bk .pay-bar.unpaid{background:#e05252;}
+.bk .pay-bar{display:none;}
+.bk .pay-dot{position:absolute;top:4px;right:4px;width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.7);}
+.bk .pay-dot.paid{background:#3a9e6e;}
+.bk .pay-dot.unpaid{background:#e05252;}
 .day-col.drag-over{background:rgba(59,130,246,0.08);}
 .drag-ghost{position:fixed;pointer-events:none;z-index:9999;opacity:0.85;border-radius:6px;padding:3px 6px;font-size:0.72rem;font-weight:600;background:#3b82f6;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.22);white-space:nowrap;}
 .bk.unpaid{background:var(--unpaid-bg);border-left:3px solid var(--unpaid);color:#7a1a1a;}
@@ -895,7 +896,7 @@ function renderCal(){
         else if(svc==='De-shed Treatment')svcCls='svc-deshed';
         else svcCls=bk.paid?'paid':'unpaid';
         body+='<div class="bk '+svcCls+'" style="top:'+tp+'px;height:'+hp+'px;padding-top:7px;" data-bkid="'+bk.id+'" onmousedown="startDrag(event,\''+bk.id+'\')" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">'
-          +'<div class="pay-bar '+(bk.paid?'paid':'unpaid')+'"></div>'
+          +'<div class="pay-dot '+(bk.paid?'paid':'unpaid')+'"></div>'
           +'<div class="bn">'+bk.name+(totalBlocks>1?' — '+bl.dogName:'')+'</div>'
           +'<div class="bd">'+bl.dogName+(bl.breed?' ('+bl.breed+')':'')+'</div>'
           +'<div class="bs">'+svc+'</div>'
@@ -977,23 +978,19 @@ function openEdit(id){
 
   // Fill dogs - support both old single-dog and new multi-dog format
   if(b.dogs&&b.dogs.length){
+    // Pre-populate dogServices so renderDogRows uses the saved data
+    b.dogs.forEach(function(d,i){
+      var idx=i+1;
+      dogServices[idx]=d.services&&d.services.length?d.services.map(function(sv){return {service:sv.service||'',duration:sv.duration||60,price:sv.price||''};}):[{service:d.service||'',duration:d.duration||60,price:d.price||''}];
+    });
     setDogCount(b.dogs.length);
     b.dogs.forEach(function(d,i){
       var idx=i+1;
       setTimeout(function(){
         var nameEl=document.getElementById('f-dog-'+idx);
         var breedEl=document.getElementById('f-breed-'+idx);
-        var svcEl=document.getElementById('f-service-'+idx);
-        var priceEl=document.getElementById('f-price-'+idx);
-        var durEl=document.getElementById('f-duration-'+idx);
         if(nameEl)nameEl.value=d.name||'';
         if(breedEl)breedEl.value=d.breed||'';
-        if(svcEl&&d.service){
-          if(SVC_OPTIONS.indexOf(d.service)>=0)svcEl.value=d.service;
-          else{svcEl.value='Other';var oth=document.getElementById('f-svc-other-'+idx);if(oth)oth.value=d.service;document.getElementById('f-other-group-'+idx).style.display='block';}
-        }
-        if(priceEl&&d.price)priceEl.value=parseFloat(d.price).toFixed(2);
-        if(durEl&&d.duration)durEl.value=d.duration;
         calcFinish();
       },50);
     });
