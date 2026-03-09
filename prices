@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pricing — Scruff to Buff Dogs</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1e3a5f;
+  --blue:#3b6ea5;
+  --blue-light:#c2d9f0;
+  --cream:#f0f6ff;
+  --white:#ffffff;
+  --text:#1e3a5f;
+  --muted:#5b80aa;
+  --green:#3a9e6e;
+  --green-bg:#e6f7ef;
+  --accent:#e8a020;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;}
+
+/* HEADER */
+header{background:var(--navy);color:var(--cream);padding:28px 28px 0;text-align:center;}
+header h1{font-family:'Playfair Display',serif;font-size:2rem;letter-spacing:0.01em;}
+header p{font-size:0.88rem;opacity:0.75;margin-top:4px;padding-bottom:18px;}
+.header-tabs{display:flex;justify-content:center;gap:0;margin-top:18px;}
+.header-tab{padding:9px 22px;font-size:0.84rem;font-family:'DM Sans',sans-serif;color:rgba(255,255,255,0.65);border-bottom:3px solid transparent;cursor:pointer;transition:all 0.2s;}
+.header-tab.active{color:#fff;border-bottom-color:#5b9bd5;}
+
+/* SEARCH */
+.search-bar{max-width:520px;margin:28px auto 0;padding:0 16px;}
+.search-bar input{width:100%;padding:11px 16px 11px 42px;border:1.5px solid var(--blue-light);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.92rem;background:white;color:var(--navy);outline:none;transition:border-color 0.2s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%235b80aa' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:14px center;}
+.search-bar input:focus{border-color:var(--blue);}
+
+/* DISCLAIMER */
+.disclaimer{max-width:860px;margin:18px auto 0;padding:0 16px;}
+.disclaimer-box{background:linear-gradient(135deg,#fff9ec,#fff3d6);border:1.5px solid #f0c84a;border-radius:10px;padding:12px 16px;font-size:0.82rem;color:#7a5500;display:flex;gap:10px;align-items:flex-start;}
+.disclaimer-box span{font-size:1.1rem;flex-shrink:0;}
+
+/* MAIN LAYOUT */
+main{max-width:860px;margin:0 auto;padding:0 16px 60px;}
+
+/* SECTION */
+.section{margin-top:28px;}
+.section-title{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--navy);border-bottom:2px solid var(--blue-light);padding-bottom:8px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.section-title .pill{font-family:'DM Sans',sans-serif;font-size:0.7rem;font-weight:600;background:var(--blue-light);color:var(--blue);padding:2px 9px;border-radius:20px;letter-spacing:0.03em;}
+
+/* TABLE */
+.price-table{width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(30,58,95,0.08);}
+.price-table thead tr{background:var(--navy);color:var(--cream);}
+.price-table thead th{padding:10px 14px;text-align:left;font-size:0.78rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;}
+.price-table thead th:not(:first-child){text-align:center;}
+.price-table tbody tr{border-bottom:1px solid var(--blue-light);transition:background 0.12s;}
+.price-table tbody tr:last-child{border-bottom:none;}
+.price-table tbody tr:hover{background:#f4f9ff;}
+.price-table tbody tr.hidden-row{display:none;}
+.price-table td{padding:9px 14px;font-size:0.85rem;}
+.price-table td:not(:first-child){text-align:center;font-weight:500;}
+.price-table td.breed-name{font-weight:500;color:var(--navy);}
+.price-val{color:var(--green);font-weight:600;}
+.price-na{color:#b0bec5;font-size:0.75rem;}
+.strip-badge{display:inline-block;font-size:0.7rem;background:#fff3e0;color:#c07a00;border:1px solid #f0c040;border-radius:4px;padding:1px 6px;font-weight:600;}
+
+/* EXTRAS GRID */
+.extras-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
+.extra-card{background:white;border-radius:10px;padding:14px 16px;box-shadow:0 2px 10px rgba(30,58,95,0.07);border:1.5px solid var(--blue-light);display:flex;justify-content:space-between;align-items:center;transition:box-shadow 0.15s;}
+.extra-card:hover{box-shadow:0 4px 16px rgba(30,58,95,0.13);}
+.extra-name{font-size:0.84rem;font-weight:500;color:var(--navy);}
+.extra-price{font-size:0.9rem;font-weight:700;color:var(--green);}
+
+/* PUPPY / SPECIAL */
+.special-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+.special-card{background:white;border-radius:12px;padding:18px;box-shadow:0 2px 12px rgba(30,58,95,0.08);border-top:4px solid var(--blue);}
+.special-card h3{font-family:'Playfair Display',serif;font-size:1rem;margin-bottom:6px;}
+.special-card p{font-size:0.82rem;color:var(--muted);line-height:1.5;}
+.special-card .price{font-size:1.1rem;font-weight:700;color:var(--green);margin-top:10px;}
+
+/* BOOK CTA */
+.book-cta{background:var(--navy);color:var(--cream);text-align:center;padding:36px 24px;border-radius:14px;margin-top:36px;}
+.book-cta h2{font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:8px;}
+.book-cta p{font-size:0.88rem;opacity:0.75;margin-bottom:18px;}
+.book-btn{display:inline-block;background:#5b9bd5;color:white;padding:12px 32px;border-radius:9px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:0.95rem;text-decoration:none;transition:background 0.2s;}
+.book-btn:hover{background:#4a8ac4;}
+
+/* TABS */
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+@media(max-width:600px){
+  header h1{font-size:1.5rem;}
+  .price-table thead th:nth-child(3),.price-table td:nth-child(3){display:none;}
+  .extras-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🐾 Scruff to Buff Dogs</h1>
+  <p>Professional Dog Grooming — East Sussex</p>
+  <div class="header-tabs">
+    <div class="header-tab active" onclick="showTab('breeds')">Breed Prices</div>
+    <div class="header-tab" onclick="showTab('extras')">Extras & Add-ons</div>
+    <div class="header-tab" onclick="showTab('special')">Puppy & Special</div>
+  </div>
+</header>
+
+<div class="search-bar">
+  <input type="text" id="breedSearch" placeholder="Search for your breed..." oninput="filterBreeds(this.value)">
+</div>
+
+<div class="disclaimer">
+  <div class="disclaimer-box">
+    <span>⚠️</span>
+    <div>All prices are <strong>estimates</strong> and may vary based on coat condition, matting, behaviour and size. Final price confirmed at appointment.</div>
+  </div>
+</div>
+
+<main>
+
+<!-- BREEDS TAB -->
+<div class="tab-content active" id="tab-breeds">
+  <div class="section">
+    <div class="section-title">Breed Price Guide <span class="pill">2026</span></div>
+    <table class="price-table" id="breedTable">
+      <thead>
+        <tr>
+          <th>Breed</th>
+          <th>Full Groom / Clip</th>
+          <th>Hand Strip</th>
+          <th>Bath &amp; Dry</th>
+        </tr>
+      </thead>
+      <tbody id="breedBody">
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- EXTRAS TAB -->
+<div class="tab-content" id="tab-extras">
+  <div class="section">
+    <div class="section-title">Add-on Services</div>
+    <div class="extras-grid" id="extrasGrid"></div>
+  </div>
+</div>
+
+<!-- SPECIAL TAB -->
+<div class="tab-content" id="tab-special">
+  <div class="section">
+    <div class="section-title">Puppy &amp; Special Services</div>
+    <div class="special-cards" id="specialCards"></div>
+  </div>
+</div>
+
+<div class="book-cta">
+  <h2>Ready to book?</h2>
+  <p>Use our online booking form to request an appointment — we'll confirm your slot shortly.</p>
+  <a href="https://shaantishakti.github.io/scrufftobuff/book.html" class="book-btn">Book Online →</a>
+</div>
+
+</main>
+
+<script>
+const breeds = [
+  {name:"Airedale",clip:"£70–75",strip:"£100+",bath:"£50–55"},
+  {name:"American Cocker",clip:"£60–65",strip:null,bath:"£40–45"},
+  {name:"Australian Doodle",clip:"£60–65",strip:null,bath:"£40–45"},
+  {name:"Akita",clip:"£65–75",strip:null,bath:"£45–55"},
+  {name:"Beagle",clip:"£48",strip:null,bath:"£38"},
+  {name:"Basset Hound",clip:"£50",strip:null,bath:"£40"},
+  {name:"Bearded Collie",clip:"£70",strip:null,bath:"£50"},
+  {name:"Bernese Mountain Dog",clip:"£90",strip:null,bath:"£70"},
+  {name:"Bernadoodle",clip:"£65–80",strip:null,bath:"£50"},
+  {name:"Border Collie — Long Coat",clip:"£65–70",strip:null,bath:"£40–50"},
+  {name:"Border Collie — Short Coat",clip:"£62–65",strip:null,bath:"£40–45"},
+  {name:"Bichon Frise",clip:"£55–60",strip:null,bath:"from £35"},
+  {name:"Bichon Bolognese",clip:"£55–60",strip:null,bath:"£35–40"},
+  {name:"Brussels Griffon",clip:"£50",strip:"£65/hr",bath:"£35"},
+  {name:"Border Terrier",clip:"£50",strip:"£65/hr",bath:"£35"},
+  {name:"Boxer",clip:"£45–50",strip:null,bath:"£40–45"},
+  {name:"Cavalier King Charles Spaniel (Lg)",clip:"£60",strip:null,bath:"£35"},
+  {name:"Cavachon / Cavapoo / Maltipoo",clip:"£55",strip:null,bath:"£35"},
+  {name:"Cockapoo — Small (≤10kg)",clip:"£55",strip:null,bath:"£40"},
+  {name:"Cockapoo — Medium (11–25kg)",clip:"£60",strip:null,bath:"£45"},
+  {name:"Cockapoo — Large (>25kg)",clip:"£65",strip:null,bath:"£50"},
+  {name:"Cocker Spaniel — Small",clip:"£55",strip:null,bath:"£35"},
+  {name:"Cocker Spaniel — Large",clip:"£60",strip:null,bath:"£40"},
+  {name:"Chihuahua — Long",clip:"£48",strip:null,bath:"£30"},
+  {name:"Chihuahua — Short",clip:"£30",strip:null,bath:"£30"},
+  {name:"Chinese Powderpuff",clip:"£55",strip:null,bath:"£35"},
+  {name:"Chug (Chi x Pug)",clip:"£50",strip:null,bath:"£35"},
+  {name:"Chow Chow",clip:"£80",strip:null,bath:"£60"},
+  {name:"Dachshund Mini — Long",clip:"£55",strip:null,bath:"£35"},
+  {name:"Dachshund Mini — Short",clip:"£50",strip:null,bath:"£35"},
+  {name:"Dachshund Standard — Wire",clip:"£55",strip:"£65/hr",bath:"£38"},
+  {name:"Dachshund Standard — Long",clip:"£55",strip:null,bath:"£38"},
+  {name:"Doberman",clip:"£50",strip:null,bath:"£45"},
+  {name:"English Setter",clip:"£60",strip:null,bath:"£40"},
+  {name:"Flatcoat",clip:"£60",strip:null,bath:"£40"},
+  {name:"Fox Terrier",clip:"£55",strip:"£70–75",bath:"£38"},
+  {name:"French Bulldog",clip:"£35–40",strip:null,bath:"£35–40"},
+  {name:"German Shepherd — Short",clip:"£70",strip:null,bath:"£50–55"},
+  {name:"German Shepherd — Long",clip:"£75–80",strip:null,bath:"£55–60"},
+  {name:"Golden Retriever",clip:"£65",strip:null,bath:"£45"},
+  {name:"Goldendoodle",clip:"£70",strip:null,bath:"£50"},
+  {name:"Greyhound",clip:null,strip:null,bath:"£40"},
+  {name:"Havanese",clip:"£50–55",strip:null,bath:"£35"},
+  {name:"Husky",clip:"£70–75",strip:null,bath:"£50–55"},
+  {name:"Irish Setter",clip:"£60–65",strip:null,bath:"£40–45"},
+  {name:"Jack Russell",clip:"£48",strip:"£65/hr",bath:"£32"},
+  {name:"Jug (J.R. x Pug)",clip:"£42",strip:null,bath:"£35"},
+  {name:"Jackapoo",clip:"£50–55",strip:null,bath:"£38"},
+  {name:"King Charles Spaniel (Sml)",clip:"£55",strip:null,bath:"£35"},
+  {name:"Labradoodle — Mini Wire",clip:"£50–55",strip:"£65/hr",bath:"£35"},
+  {name:"Labradoodle — Mini Curly",clip:"£55",strip:null,bath:"£35"},
+  {name:"Labradoodle — Standard Wire",clip:"£55–60",strip:"£65/hr",bath:"£35"},
+  {name:"Labradoodle — Standard Curly",clip:"£60",strip:null,bath:"£40"},
+  {name:"Labradoodle — Large Wire",clip:"£60–70",strip:"£65/hr",bath:"£40"},
+  {name:"Labradoodle — Large Curly",clip:"£70",strip:null,bath:"£50"},
+  {name:"Labrador",clip:"£50–55",strip:null,bath:"£45"},
+  {name:"Lhasa Apso",clip:"£55",strip:null,bath:"£35"},
+  {name:"Lurcher",clip:"£45–48",strip:null,bath:"£40"},
+  {name:"Maltese / Maltepoo",clip:"£52–55",strip:null,bath:"£32"},
+  {name:"Norfolk / Norwich Terrier",clip:"£50",strip:null,bath:"£32"},
+  {name:"Old English Sheepdog",clip:"£75",strip:null,bath:"£55"},
+  {name:"Patterdale",clip:"£50",strip:null,bath:"£35"},
+  {name:"Pointer",clip:null,strip:null,bath:"£45"},
+  {name:"Pomeranian",clip:"£52",strip:null,bath:"£38"},
+  {name:"Poodle — Toy / Mini",clip:"£55–60",strip:null,bath:"£30"},
+  {name:"Poodle — Standard",clip:"£75",strip:null,bath:"£45–50"},
+  {name:"Portuguese Water Dog",clip:"£70",strip:null,bath:"£50"},
+  {name:"Pug",clip:null,strip:null,bath:"£35"},
+  {name:"Rottweiler",clip:"£55",strip:null,bath:"£55"},
+  {name:"Rough Collie",clip:"£70",strip:null,bath:"£50"},
+  {name:"Saluki",clip:"£50–55",strip:null,bath:"£35"},
+  {name:"Schnauzer — Mini",clip:"£55",strip:null,bath:"£35"},
+  {name:"Schnauzer — Standard",clip:"£65",strip:null,bath:"£42"},
+  {name:"Schnauzer — Giant",clip:"£70",strip:null,bath:"£48"},
+  {name:"Schnoodle",clip:"£55",strip:null,bath:"£35"},
+  {name:"Sealyham",clip:"£55–60",strip:"£65/hr",bath:"£35–40"},
+  {name:"Setter — Medium",clip:"£55–60",strip:null,bath:"£40"},
+  {name:"Setter — Large",clip:"£60–65",strip:null,bath:"£45"},
+  {name:"Shar Pei",clip:"£70",strip:null,bath:"£45"},
+  {name:"Shih Tzu / Shihpoo / Shorkie",clip:"£52–55",strip:null,bath:"£35"},
+  {name:"Spinone Italiano",clip:"£70",strip:"£100+",bath:"£50"},
+  {name:"Springer Spaniel",clip:"£55–65",strip:null,bath:"£35–40"},
+  {name:"Sproodle",clip:"£55–60",strip:null,bath:"£35–40"},
+  {name:"Staffordshire Bull Terrier",clip:"£45",strip:null,bath:null},
+  {name:"Tibetan Terrier",clip:"£55–65",strip:null,bath:"£35–40"},
+  {name:"Wheaten",clip:"£65",strip:null,bath:"£45"},
+  {name:"Whippet",clip:"£40",strip:null,bath:"£40"},
+  {name:"West Highland Terrier",clip:"£55",strip:"£65/hr",bath:"£40"},
+  {name:"Yorkie",clip:"£48–50",strip:null,bath:"£35"},
+  {name:"Yorkiepoo",clip:"£55",strip:null,bath:"£38"},
+];
+
+const extras = [
+  {name:"Foot / Pad Trim",price:"£10"},
+  {name:"Eye Trim",price:"£10"},
+  {name:"Face Trim",price:"£15"},
+  {name:"Hygiene Trim",price:"£10"},
+  {name:"Tick Removal",price:"£8"},
+  {name:"Eye Clean",price:"£6"},
+  {name:"Ear Clean",price:"£8"},
+  {name:"Ear Pluck",price:"£15"},
+  {name:"Nail Clip",price:"from £13"},
+  {name:"Anal Glands",price:"£25"},
+  {name:"Flea Containment Fee",price:"£15"},
+  {name:"Ultrasonic Teeth (Emmi-Pet)",price:"See teeth list"},
+];
+
+const specials = [
+  {title:"Puppy Introduction — No Bath",price:"£15",desc:"A gentle first visit to get your pup comfortable with the grooming experience. No full groom included."},
+  {title:"Puppy Introduction — Inc. Bath & Nails",price:"£28",desc:"Introduction session including a bath and nail clip — perfect for getting puppies used to the full process."},
+  {title:"XXL Breeds",price:"POA",desc:"Extra large breeds are priced on request. Please get in touch before booking."},
+];
+
+function renderBreeds(list){
+  const tbody=document.getElementById('breedBody');
+  tbody.innerHTML=list.map(function(b){
+    var clipCell=b.clip?'<span class="price-val">'+b.clip+'</span>':'<span class="price-na">—</span>';
+    var stripCell=b.strip?'<span class="strip-badge">'+b.strip+'</span>':'<span class="price-na">—</span>';
+    var bathCell=b.bath?'<span class="price-val">'+b.bath+'</span>':'<span class="price-na">—</span>';
+    return '<tr><td class="breed-name">'+b.name+'</td><td>'+clipCell+'</td><td>'+stripCell+'</td><td>'+bathCell+'</td></tr>';
+  }).join('');
+}
+
+function renderExtras(){
+  document.getElementById('extrasGrid').innerHTML=extras.map(function(e){
+    return '<div class="extra-card"><span class="extra-name">'+e.name+'</span><span class="extra-price">'+e.price+'</span></div>';
+  }).join('');
+}
+
+function renderSpecials(){
+  document.getElementById('specialCards').innerHTML=specials.map(function(s){
+    return '<div class="special-card"><h3>'+s.title+'</h3><p>'+s.desc+'</p><div class="price">'+s.price+'</div></div>';
+  }).join('');
+}
+
+function filterBreeds(q){
+  var filtered=q.trim()===''?breeds:breeds.filter(function(b){return b.name.toLowerCase().indexOf(q.toLowerCase())>-1;});
+  renderBreeds(filtered);
+  // switch to breeds tab if not already
+  showTab('breeds');
+}
+
+function showTab(id){
+  document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active');});
+  document.querySelectorAll('.header-tab').forEach(function(el){el.classList.remove('active');});
+  document.getElementById('tab-'+id).classList.add('active');
+  var tabs=['breeds','extras','special'];
+  document.querySelectorAll('.header-tab')[tabs.indexOf(id)].classList.add('active');
+}
+
+renderBreeds(breeds);
+renderExtras();
+renderSpecials();
+</script>
+</body>
+</html>
