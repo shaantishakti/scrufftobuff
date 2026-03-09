@@ -65,6 +65,9 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 .bk{position:absolute;left:2px;right:2px;border-radius:6px;padding:3px 6px;font-size:0.72rem;cursor:grab;line-height:1.4;overflow:hidden;}
 .bk:hover{box-shadow:0 2px 7px rgba(0,0,0,0.13);}
 .bk.dragging{opacity:0.4;cursor:grabbing;}
+.bk .pay-bar{position:absolute;top:0;left:0;right:0;height:4px;border-radius:6px 6px 0 0;}
+.bk .pay-bar.paid{background:#3a9e6e;}
+.bk .pay-bar.unpaid{background:#e05252;}
 .day-col.drag-over{background:rgba(59,130,246,0.08);}
 .drag-ghost{position:fixed;pointer-events:none;z-index:9999;opacity:0.85;border-radius:6px;padding:3px 6px;font-size:0.72rem;font-weight:600;background:#3b82f6;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.22);white-space:nowrap;}
 .bk.unpaid{background:var(--unpaid-bg);border-left:3px solid var(--unpaid);color:#7a1a1a;}
@@ -891,7 +894,8 @@ function renderCal(){
         else if(svc==='Anal Glands')svcCls='svc-anal-glands';
         else if(svc==='De-shed Treatment')svcCls='svc-deshed';
         else svcCls=bk.paid?'paid':'unpaid';
-        body+='<div class="bk '+svcCls+'" style="top:'+tp+'px;height:'+hp+'px;" data-bkid="'+bk.id+'" onmousedown="startDrag(event,\''+bk.id+'\')" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">' 
+        body+='<div class="bk '+svcCls+'" style="top:'+tp+'px;height:'+hp+'px;padding-top:7px;" data-bkid="'+bk.id+'" onmousedown="startDrag(event,\''+bk.id+'\')" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">'
+          +'<div class="pay-bar '+(bk.paid?'paid':'unpaid')+'"></div>'
           +'<div class="bn">'+bk.name+(totalBlocks>1?' — '+bl.dogName:'')+'</div>'
           +'<div class="bd">'+bl.dogName+(bl.breed?' ('+bl.breed+')':'')+'</div>'
           +'<div class="bs">'+svc+'</div>'
@@ -1195,10 +1199,20 @@ function renderWaButtons(){
   var payBtn='<button class="btn-wa purple" onclick="openPay()"><span><span class="wa-title">Send Payment Request</span><span class="wa-sub">After the groom - enter final price and send</span></span></button>';
   var isPaid=document.getElementById('p-paid').checked;
   var chaseBtn=!isPaid?'<button class="btn-wa red" onclick="sendPaymentChase()"><span><span class="wa-title">Send Payment Reminder</span><span class="wa-sub">Politely chase outstanding payment</span></span></button>':'';
-  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn;}
-  else{cont.innerHTML='<button class="btn-wa" onclick="sendConfirmMsg(null)"><span><span class="wa-title">Send Confirmation</span><span class="wa-sub">Booking confirmed with appointment details</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn;}
+  // Hand stripping price notice button
+  var isStrip=false;
+  if(b&&b.dogs){b.dogs.forEach(function(d){var svcs=d.services&&d.services.length?d.services:[{service:d.service}];svcs.forEach(function(sv){if((sv.service||'').indexOf('Hand Strip')>-1)isStrip=true;});});}
+  var stripBtn=isStrip?'<button class="btn-wa" style="background:#6b4226;" onclick="sendHandStripPriceMsg()"><span><span class="wa-title">Send Hand Stripping Price Notice</span><span class="wa-sub">Let client know current rate is £65/hr</span></span></button>':'';
+  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn;}
+  else{cont.innerHTML='<button class="btn-wa" onclick="sendConfirmMsg(null)"><span><span class="wa-title">Send Confirmation</span><span class="wa-sub">Booking confirmed with appointment details</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn;}
 }
 function getCurrent(){return editId?bookings.find(function(b){return b.id===editId;}):null;}
+
+function sendHandStripPriceMsg(){
+  var b=getCurrent();if(!b||!b.phone)return;
+  var dog=b.dogs&&b.dogs.length?b.dogs[0].name:b.dog||'your dog';
+  openWA(b.phone,'Hi '+titleCase(b.name)+'! I just wanted to give you a heads up that my hand stripping price has recently updated to £65 per hour. The total cost will depend on '+dog+'\'s coat condition and how long it takes on the day. I hope that\'s okay — please do let me know if you have any questions!\n\nLooking forward to seeing '+dog+' again!\nBecky - Scruff to Buff Dogs');
+}
 
 function buildDogSummary(b){
   if(b.dogs&&b.dogs.length){
