@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="STB Diary">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root{--cream:#f0f6ff;--brown:#1e3a5f;--tan:#5b9bd5;--tan-light:#c2d9f0;--unpaid:#e05252;--unpaid-bg:#fdeaea;--paid:#3a9e6e;--paid-bg:#e6f7ef;--blocked:#94a3b8;--blocked-bg:#f1f5f9;--wa:#25D366;--wa-dark:#128C7E;--cash:#f59e0b;--card:#6366f1;--monzo:#ef4444;}
+:root{--cream:#f0f6ff;--brown:#1e3a5f;--tan:#5b9bd5;--tan-light:#c2d9f0;--unpaid:#e05252;--unpaid-bg:#fdeaea;--paid:#3a9e6e;--paid-bg:#e6f7ef;--blocked:#64748b;--blocked-bg:#cbd5e1;--wa:#25D366;--wa-dark:#128C7E;--cash:#f59e0b;--card:#6366f1;--monzo:#ef4444;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--brown);min-height:100vh;}
 header{background:var(--brown);color:var(--cream);padding:14px 28px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
@@ -59,6 +59,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 .day-hdr{background:var(--brown);color:var(--cream);text-align:center;padding:9px 4px;font-size:0.79rem;border-left:1px solid rgba(255,255,255,0.1);}
 .day-hdr .dn{font-family:'Playfair Display',serif;font-size:0.93rem;display:block;}
 .day-hdr.today{background:#2a6db5;color:#fff;}
+.day-hdr.closed-day{background:#4a5568;opacity:0.7;}
 .time-lbl{background:var(--tan-light);text-align:right;padding:2px 6px 0;font-size:0.67rem;color:#4a7aaa;}
 .day-col{position:relative;border-left:1px solid var(--tan-light);}
 .hour-line{position:absolute;left:0;right:0;border-top:1px solid #c2d9f0;pointer-events:none;}
@@ -343,6 +344,12 @@ const SVC_DURATIONS={'Nail Clip - £13':10,'Nail Clip Fussy - £16':10,'Nail Cli
 const BREED_TIMES={'labrador':{min:60,max:70},'cockapoo':{min:70,max:90},'spaniel':{min:60,max:90},'spinone':{min:100,max:150},'golden retriever':{min:90,max:100},'jack russell':{min:45,max:60},'border terrier':{min:60,max:90},'airedale':{min:90,max:150}};
 const AUTO_SVCS=['Full Groom','Hand Stripping'];
 const GRID_START=480;
+function isLastSatOfMonth(dateStr){
+  var d=new Date(dateStr+'T12:00:00');
+  if(d.getDay()!==6)return false;
+  var next=new Date(d);next.setDate(d.getDate()+7);
+  return next.getMonth()!==d.getMonth();
+}
 const ROW_H=14;
 const MAX_DOGS=4;
 const BREEDS=["Affenpinscher", "Afghan Hound", "Airedale Terrier", "Akita", "Alaskan Malamute", "American Bulldog", "American Cocker Spaniel", "American Eskimo Dog", "American Foxhound", "American Staffordshire Terrier", "Australian Cattle Dog", "Australian Shepherd", "Australian Terrier", "Basenji", "Basset Hound", "Beagle", "Bearded Collie", "Bedlington Terrier", "Belgian Malinois", "Belgian Shepherd", "Bernese Mountain Dog", "Bichon Frise", "Bloodhound", "Border Collie", "Border Terrier", "Boston Terrier", "Boxer", "Bracco Italiano", "Briard", "Brittany Spaniel", "Brussels Griffon", "Bull Terrier", "Bulldog", "Bullmastiff", "Cairn Terrier", "Cavalier King Charles Spaniel", "Chesapeake Bay Retriever", "Chihuahua", "Chinese Crested", "Chow Chow", "Clumber Spaniel", "Cockapoo", "Cocker Spaniel", "Collie", "Dachshund", "Dalmatian", "Dandie Dinmont Terrier", "Doberman", "Dogue de Bordeaux", "English Setter", "English Springer Spaniel", "English Toy Terrier", "Flat Coated Retriever", "Fox Terrier", "French Bulldog", "German Shepherd", "German Shorthaired Pointer", "Giant Schnauzer", "Golden Retriever", "Goldendoodle", "Gordon Setter", "Great Dane", "Greyhound", "Havanese", "Hungarian Vizsla", "Ibizan Hound", "Irish Red and White Setter", "Irish Setter", "Irish Terrier", "Irish Water Spaniel", "Irish Wolfhound", "Italian Greyhound", "Jack Russell Terrier", "Japanese Spitz", "Keeshond", "Kerry Blue Terrier", "King Charles Spaniel", "Labradoodle", "Labrador", "Lagotto Romagnolo", "Leonberger", "Lhasa Apso", "Lowchen", "Lurcher", "Maltese", "Maltipoo", "Manchester Terrier", "Mastiff", "Miniature Dachshund", "Miniature Pinscher", "Miniature Schnauzer", "Mongrel", "Newfoundland", "Norfolk Terrier", "Norwegian Elkhound", "Norwich Terrier", "Nova Scotia Duck Tolling Retriever", "Old English Sheepdog", "Papillon", "Patterdale Terrier", "Pekingese", "Pembroke Welsh Corgi", "Petit Basset Griffon Vendeen", "Pharaoh Hound", "Pointer", "Poochon", "Poodle", "Portuguese Water Dog", "Pug", "Puggle", "Rhodesian Ridgeback", "Rottweiler", "Rough Collie", "Saint Bernard", "Saluki", "Samoyed", "Schnauzer", "Scottish Deerhound", "Scottish Terrier", "Shetland Sheepdog", "Shih Tzu", "Siberian Husky", "Skye Terrier", "Sloughi", "Smooth Collie", "Smooth Fox Terrier", "Soft Coated Wheaten Terrier", "Spaniel", "Spinone Italiano", "Springer Spaniel", "Staffordshire Bull Terrier", "Standard Poodle", "Standard Schnauzer", "Sussex Spaniel", "Tibetan Mastiff", "Tibetan Spaniel", "Tibetan Terrier", "Toy Poodle", "Vizsla", "Weimaraner", "Welsh Corgi", "Welsh Springer Spaniel", "Welsh Terrier", "West Highland White Terrier", "Whippet", "Wire Fox Terrier", "Wirehaired Pointing Griffon", "Xoloitzcuintli", "Yorkshire Terrier"];
@@ -834,7 +841,8 @@ function renderCal(){
     var gi=0;
     for(var k=0;k<allDays.length;k++){if(fmtISO(allDays[k])===fmtISO(d)){gi=k;break;}}
     var tod=fmtISO(d)===today;
-    hdr+='<div class="day-hdr'+(tod?' today':'')+'"><span class="dn">'+DAYS[gi]+'</span><span>'+d.getDate()+' '+MONS[d.getMonth()]+'</span></div>';
+    var lastSat=isLastSatOfMonth(fmtISO(d));
+    hdr+='<div class="day-hdr'+(tod?' today':'')+(lastSat?' closed-day':'')+'">'+(lastSat?'<span style="font-size:0.6rem;opacity:0.7;">Closed</span>':'')+' <span class="dn">'+DAYS[gi]+'</span><span>'+d.getDate()+' '+MONS[d.getMonth()]+'</span></div>';
   });
   var body='';
   for(var row=1;row<=60;row++){
@@ -849,7 +857,8 @@ function renderCal(){
   days.forEach(function(day,ci){
     var ds=fmtISO(day);
     var col=ci+2;
-    body+='<div class="day-col" style="grid-column:'+col+';grid-row:1/span 60;" onclick="openAddAt(\''+ds+'\',getClickTime(event,this))">';
+    var lastSat=isLastSatOfMonth(ds);
+    body+='<div class="day-col" style="grid-column:'+col+';grid-row:1/span 60;'+(lastSat?'background:repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(200,200,200,0.15) 6px,rgba(200,200,200,0.15) 12px);pointer-events:none;opacity:0.6;':'')+'" '+(lastSat?'':'onclick="openAddAt(\''+ds+'\',getClickTime(event,this))"')+'>'; 
     for(var r=0;r<60;r+=6){body+='<div class="hour-line" style="top:'+(r*ROW_H)+'px"></div>';}
     for(var r=3;r<60;r+=6){body+='<div class="hour-line" style="top:'+(r*ROW_H)+'px;border-top:1px dashed #d8eaf8;opacity:0.7;"></div>';}
     // Blocks
