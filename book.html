@@ -329,9 +329,10 @@ function renderMiniCal(){
   for(var i=0;i<firstDay;i++) html += '<div></div>';
   for(var day=1;day<=daysInMonth;day++){
     var d = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-    d.setHours(0,0,0,0);
+    d.setHours(12,0,0,0);
     var dow = d.getDay();
-    var iso = d.toISOString().split('T')[0];
+    var y=d.getFullYear(),mo=d.getMonth()+1,da=d.getDate();
+    var iso=y+'-'+(mo<10?'0':'')+mo+'-'+(da<10?'0':'')+da;
     var isPast = d < today;
     var isOpen = HOURS[dow] !== null && dow !== 0;
     var blocks = JSON.parse(localStorage.getItem('stbBlocks')||'[]');
