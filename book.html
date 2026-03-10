@@ -386,6 +386,75 @@ function selectSlot(time, el){
 function prevMonth(){currentMonth.setMonth(currentMonth.getMonth()-1);renderMiniCal();}
 function nextMonth(){currentMonth.setMonth(currentMonth.getMonth()+1);renderMiniCal();}
 
+// ── Rebook logic ──────────────────────────────────────────────────────────
+function initRebook(){
+  var params=new URLSearchParams(window.location.search);
+  if(!params.get('rebook'))return;
+  var name=params.get('name')||'';
+  var phone=params.get('phone')||'';
+  var dog=params.get('dog')||'';
+  var breed=params.get('breed')||'';
+  var lastDate=params.get('lastdate')||'';
+  var lastDow=lastDate?new Date(lastDate+'T12:00:00').getDay():-1;
+  var dowName=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  // Show rebook banner
+  var banner=document.createElement('div');
+  banner.style.cssText='background:#e6f7ef;border:1.5px solid #3a9e6e;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:0.88rem;color:#1a4f37;';
+  banner.innerHTML='<strong>👋 Welcome back, '+name+'!</strong> Choose how far ahead you\'d like to rebook'+(lastDow>0?' (we\'ll find the next available <strong>'+dowName[lastDow]+'</strong>)':'')+'.<br><br>'
+    +'<label style="font-weight:600;display:block;margin-bottom:6px;">Weeks ahead</label>'
+    +'<select id="rebookWeeks" onchange="applyRebook()" style="width:100%;padding:8px 10px;border:1.5px solid #3a9e6e;border-radius:7px;font-family:\'DM Sans\',sans-serif;font-size:0.88rem;background:white;color:#1e3a5f;outline:none;">'
+    +'<option value="">-- Choose --</option>'
+    +'<option value="6">6 weeks</option>'
+    +'<option value="7">7 weeks</option>'
+    +'<option value="8">8 weeks</option>'
+    +'<option value="9">9 weeks</option>'
+    +'<option value="10">10 weeks</option>'
+    +'<option value="custom">Custom</option>'
+    +'</select>'
+    +'<div id="rebookCustomWrap" style="display:none;margin-top:8px;"><label style="font-size:0.82rem;">Enter number of weeks:</label><input type="number" id="rebookCustomVal" min="1" max="52" style="width:100%;padding:8px 10px;border:1.5px solid #3a9e6e;border-radius:7px;font-family:\'DM Sans\',sans-serif;margin-top:4px;" oninput="applyRebook()"></div>';
+  document.querySelector('.page-wrap').insertBefore(banner, document.getElementById('bookingStep'));
+
+  // Pre-fill name/phone/dog/breed
+  setTimeout(function(){
+    if(name)document.getElementById('req-name').value=name;
+    if(phone)document.getElementById('req-phone').value=phone;
+    if(dog)document.getElementById('req-dog').value=dog;
+    if(breed)document.getElementById('req-breed').value=breed;
+  },200);
+
+  window._rebookDow=lastDow;
+  window._rebookLastDate=lastDate;
+
+  function applyRebook(){
+    var sel=document.getElementById('rebookWeeks').value;
+    document.getElementById('rebookCustomWrap').style.display=sel==='custom'?'block':'none';
+    var weeks=sel==='custom'?parseInt(document.getElementById('rebookCustomVal').value||'0'):parseInt(sel||'0');
+    if(!weeks||weeks<1)return;
+    // Find target date: weeks ahead, on same day of week
+    var base=lastDate?new Date(lastDate+'T12:00:00'):new Date();
+    var target=new Date(base);
+    target.setDate(base.getDate()+weeks*7);
+    // Find nearest matching dow on or after target
+    if(lastDow>0){
+      var diff=(lastDow-target.getDay()+7)%7;
+      target.setDate(target.getDate()+diff);
+    }
+    var y=target.getFullYear(),mo=target.getMonth()+1,da=target.getDate();
+    var iso=y+'-'+(mo<10?'0':'')+mo+'-'+(da<10?'0':'')+da;
+    // Check if last sat — if so go to next week same day
+    if(isLastSatOfMonth(iso)){target.setDate(target.getDate()+7);y=target.getFullYear();mo=target.getMonth()+1;da=target.getDate();iso=y+'-'+(mo<10?'0':'')+mo+'-'+(da<10?'0':'')+da;}
+    // Navigate calendar to correct month and auto-select
+    currentMonth=new Date(target.getFullYear(),target.getMonth(),1);
+    renderMiniCal();
+    // Trigger selectDate
+    setTimeout(function(){selectDate(iso);},100);
+  }
+  window.applyRebook=applyRebook;
+}
+
+setTimeout(initRebook, 300);
+
 function submitRequest(){
   var name = document.getElementById('req-name').value.trim();
   var phone = document.getElementById('req-phone').value.trim();
