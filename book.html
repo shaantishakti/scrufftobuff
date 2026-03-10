@@ -159,8 +159,14 @@ const HOURS = {
   3:{open:'08:30',close:'17:00'},
   4:{open:'08:30',close:'17:00'},
   5:{open:'08:30',close:'17:00'},
-  6:{open:'09:30',close:'13:30'}
+  6:{open:'09:30',close:'14:00'}
 };
+function isLastSatOfMonth(dateStr){
+  var d=new Date(dateStr+'T12:00:00');
+  if(d.getDay()!==6)return false;
+  var next=new Date(d);next.setDate(d.getDate()+7);
+  return next.getMonth()!==d.getMonth();
+}
 
 const SVC_DURATIONS = {
   'Nail Clip - £13':10,'Nail Clip Fussy - £16':10,'Nail Clip Problematic - £20':10,
@@ -286,7 +292,7 @@ function getAvailableSlots(dateStr){
     // Round up to next 10 min
     lastEnd = Math.ceil(lastEnd/10)*10;
     if(lastEnd + dur <= closeMins){
-      slots.push({time: minsToTime(lastEnd), label: 'Follow on - '+fmtTime12(minsToTime(lastEnd))});
+      slots.push({time: minsToTime(lastEnd), label: fmtTime12(minsToTime(lastEnd))});
     }
   } else if(allAfternoon){
     // Fill backwards from first afternoon booking
@@ -303,7 +309,7 @@ function getAvailableSlots(dateStr){
     var lastMorningEnd = morningBookings[morningBookings.length-1].end;
     lastMorningEnd = Math.ceil(lastMorningEnd/10)*10;
     if(lastMorningEnd + dur <= closeMins){
-      slots.push({time: minsToTime(lastMorningEnd), label: 'Follow on - '+fmtTime12(minsToTime(lastMorningEnd))});
+      slots.push({time: minsToTime(lastMorningEnd), label: fmtTime12(minsToTime(lastMorningEnd))});
     }
   }
   
@@ -329,7 +335,7 @@ function renderMiniCal(){
     var isPast = d < today;
     var isOpen = HOURS[dow] !== null && dow !== 0;
     var blocks = JSON.parse(localStorage.getItem('stbBlocks')||'[]');
-    var isBlocked = blocks.some(function(b){return b.date===iso&&b.fullDay;});
+    var isBlocked = blocks.some(function(b){return b.date===iso&&b.fullDay;}) || isLastSatOfMonth(iso);
     var avail = !isPast && isOpen && !isBlocked;
     var cls = 'mc-day';
     if(isPast || !isOpen || isBlocked) cls += ' mc-unavail';
