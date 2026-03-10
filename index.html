@@ -1209,8 +1209,9 @@ function renderWaButtons(){
   var isStrip=false;
   if(b&&b.dogs){b.dogs.forEach(function(d){var svcs=d.services&&d.services.length?d.services:[{service:d.service}];svcs.forEach(function(sv){if((sv.service||'').indexOf('Hand Strip')>-1)isStrip=true;});});}
   var stripBtn=isStrip?'<button class="btn-wa" style="background:#6b4226;" onclick="sendHandStripPriceMsg()"><span><span class="wa-title">Send Hand Stripping Price Notice</span><span class="wa-sub">Let client know current rate is £65/hr</span></span></button>':'';
-  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn;}
-  else{cont.innerHTML='<button class="btn-wa" onclick="sendConfirmMsg(null)"><span><span class="wa-title">Send Confirmation</span><span class="wa-sub">Booking confirmed with appointment details</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn;}
+  var rebookBtn='<button class="btn-wa" style="background:#0ea5e9;" onclick="sendRebookMsg()"><span><span class="wa-title">Send Rebook Link</span><span class="wa-sub">Let client choose 6–10 weeks ahead on same day</span></span></button>';
+  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookBtn;}
+  else{cont.innerHTML='<button class="btn-wa" onclick="sendConfirmMsg(null)"><span><span class="wa-title">Send Confirmation</span><span class="wa-sub">Booking confirmed with appointment details</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookBtn;}
 }
 function getCurrent(){return editId?bookings.find(function(b){return b.id===editId;}):null;}
 
@@ -1218,6 +1219,19 @@ function sendHandStripPriceMsg(){
   var b=getCurrent();if(!b||!b.phone)return;
   var dog=b.dogs&&b.dogs.length?b.dogs[0].name:b.dog||'your dog';
   openWA(b.phone,'Hi '+titleCase(b.name)+'! I just wanted to give you a heads up that my hand stripping price has recently updated to £65 per hour. The total cost will depend on '+dog+'\'s coat condition and how long it takes on the day. I hope that\'s okay — please do let me know if you have any questions!\n\nLooking forward to seeing '+dog+' again!\nBecky - Scruff to Buff Dogs');
+}
+
+function sendRebookMsg(){
+  var b=getCurrent();if(!b||!b.phone)return;
+  var dog=b.dogs&&b.dogs.length?b.dogs[0].name:b.dog||'';
+  var rebookUrl='https://shaantishakti.github.io/scrufftobuff/book.html'
+    +'?rebook=1'
+    +'&name='+encodeURIComponent(b.name)
+    +'&phone='+encodeURIComponent(b.phone||'')
+    +'&dog='+encodeURIComponent(dog)
+    +'&breed='+encodeURIComponent((b.dogs&&b.dogs.length?b.dogs[0].breed:b.breed)||'')
+    +'&lastdate='+encodeURIComponent(b.date);
+  openWA(b.phone,'Hi '+titleCase(b.name)+'! It was great seeing '+dog+' today 🐾\n\nWhenever you\'re ready to rebook, you can choose your next appointment using the link below — just pick how many weeks ahead suits you and it\'ll find the right day for you!\n\n👇 '+rebookUrl+'\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
 }
 
 function buildDogSummary(b){
