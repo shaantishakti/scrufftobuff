@@ -366,7 +366,7 @@ let dogCount=1;
 
 function getMonday(d){d=new Date(d);var day=d.getDay();d.setDate(d.getDate()-day+(day===0?-6:1));d.setHours(0,0,0,0);return d;}
 function addDays(d,n){var r=new Date(d);r.setDate(r.getDate()+n);return r;}
-function fmtISO(d){return d.toISOString().split('T')[0];}
+function fmtISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function titleCase(s){if(!s)return'';return s.toLowerCase().split(' ').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');}
 function fmtDD(ds){var d=new Date(ds+'T12:00:00');return d.getDate()+' '+FMONS[d.getMonth()]+' '+d.getFullYear();}
 function fmtTime(ts){if(!ts)return'';var parts=ts.split(':');var h=parseInt(parts[0]),m=parseInt(parts[1]);return(h%12||12)+':'+(m<10?'0'+m:''+m)+(h>=12?'pm':'am');}
@@ -1370,6 +1370,7 @@ function checkPrefill(){
     +'<button class="btn-wa-sm" style="background:#0ea5e9;padding:5px 10px;" onclick="waReplyPrefill()">WhatsApp</button>'
     +'</div></div>';
   window._prefill={name:name,phone:phone,dog:dog,breed:breed,service:service,notes:notes,date:date,time:time};
+  localStorage.setItem('pendingRequest', JSON.stringify(window._prefill));
   window.history.replaceState({},'',window.location.pathname);
 }
 function addFromPrefill(){
@@ -1380,8 +1381,13 @@ function addFromPrefill(){
     document.getElementById('f-phone').value=p.phone;
     var dogEl=document.getElementById('f-dog-1');if(dogEl)dogEl.value=p.dog;
     var breedEl=document.getElementById('f-breed-1');if(breedEl)breedEl.value=p.breed;
-    var svcEl=document.getElementById('f-service-1');
-    if(svcEl&&SVC_OPTIONS.indexOf(p.service)>=0)svcEl.value=p.service;
+    // Service may be a single value or comma-separated list from multi-select booking page
+    var services = p.service ? p.service.split(',').map(function(s){return s.trim();}) : [];
+    if(services.length>0){
+      // Set first service in slot 0-0
+      dogServices[0] = services.map(function(svc,i){return {service:svc,duration:60,price:''};});
+      renderDogRows();
+    }
     document.getElementById('ct-new').checked=true;
     dismissPrefill();
   },200);
@@ -1398,7 +1404,34 @@ function dismissPrefill(){
   banner.style.background='';
   banner.style.borderBottomColor='';
   window._prefill=null;
+  localStorage.removeItem('pendingRequest');
 }
+
+// ── RESTORE PENDING REQUEST ────────────────────────────────────────────────
+(function restorePendingRequest(){
+  var stored = localStorage.getItem('pendingRequest');
+  if(!stored) return;
+  try {
+    var p = JSON.parse(stored);
+    if(!p || !p.name || !p.date) return;
+    var banner = document.getElementById('reminderBanner');
+    banner.style.background='#fff8e0';
+    banner.style.borderBottomColor='#f59e0b';
+    banner.classList.add('show');
+    document.getElementById('reminderList').innerHTML=
+      '<div class="banner-chip" style="border-color:#f59e0b;flex-direction:column;align-items:flex-start;gap:4px;min-width:240px;">'
+      +'<div style="font-weight:600;color:#92400e;">&#128276; Pending Booking Request</div>'
+      +'<div><strong>'+p.name+'</strong> &mdash; '+p.dog+(p.breed?' ('+p.breed+')':'')+'</div>'
+      +'<div style="font-size:0.75rem;color:#92400e;">'+p.service+' &bull; '+fmtDD(p.date)+' at '+fmtTime(p.time)+'</div>'
+      +(p.notes?'<div style="font-size:0.72rem;font-style:italic;color:#7a5c00;">'+p.notes+'</div>':'')
+      +'<div style="display:flex;gap:6px;margin-top:4px;">'
+      +'<button class="btn-wa-sm" style="background:#3a9e6e;padding:5px 10px;" onclick="addFromPrefill()">&#10003; Add to Diary</button>'
+      +'<button class="btn-wa-sm" style="background:#e05252;padding:5px 10px;" onclick="dismissPrefill()">&#10007; Dismiss</button>'
+      +'<button class="btn-wa-sm" style="background:#0ea5e9;padding:5px 10px;" onclick="waReplyPrefill()">WhatsApp</button>'
+      +'</div></div>';
+    window._prefill = p;
+  } catch(e) {}
+})();
 
 // ── INIT ───────────────────────────────────────────────────────────────────
 document.getElementById('mainOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('mainOverlay'))closeMain();});
