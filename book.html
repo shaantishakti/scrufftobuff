@@ -140,6 +140,18 @@ body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--blue);
   <!-- STEP 2: Date -->
   <div class="card" id="step2Card" style="display:none">
     <h2>2. Choose a Date</h2>
+    <div class="fg" style="margin-bottom:12px;">
+      <label style="font-size:0.82rem;font-weight:600;color:#2a5080;">Jump ahead by weeks</label>
+      <div class="slots-row" style="flex-wrap:wrap;gap:8px;margin-top:6px;" id="weeksAheadRow">
+        <div class="slot-chip" onclick="jumpWeeksAhead(4,this)">4 wks</div>
+        <div class="slot-chip" onclick="jumpWeeksAhead(6,this)">6 wks</div>
+        <div class="slot-chip" onclick="jumpWeeksAhead(7,this)">7 wks</div>
+        <div class="slot-chip" onclick="jumpWeeksAhead(8,this)">8 wks</div>
+        <div class="slot-chip" onclick="jumpWeeksAhead(9,this)">9 wks</div>
+        <div class="slot-chip" onclick="jumpWeeksAhead(10,this)">10 wks</div>
+        <div class="slot-chip" onclick="jumpWeeksAhead(12,this)">12 wks</div>
+      </div>
+    </div>
     <div class="cal-nav">
       <button onclick="prevMonth()">&#8249;</button>
       <span id="calMonthLabel"></span>
@@ -253,6 +265,20 @@ function selectDogCount(n, el){
   document.getElementById('step2Card').style.display = 'none';
   document.getElementById('step3Card').style.display = 'none';
   document.getElementById('step4Card').style.display = 'none';
+}
+
+function jumpWeeksAhead(weeks, btn){
+  document.querySelectorAll('#weeksAheadRow .slot-chip').forEach(function(c){c.classList.remove('selected');});
+  btn.classList.add('selected');
+  // Use selected date as base if one is picked, otherwise use today
+  var base = selectedDate ? new Date(selectedDate + 'T12:00:00') : new Date();
+  base.setHours(12,0,0,0);
+  base.setDate(base.getDate() + weeks * 7);
+  var iso = base.getFullYear()+'-'+String(base.getMonth()+1).padStart(2,'0')+'-'+String(base.getDate()).padStart(2,'0');
+  currentMonth = new Date(base.getFullYear(), base.getMonth(), 1);
+  renderMiniCal();
+  // Auto-select the target date
+  setTimeout(function(){ selectDate(iso); }, 50);
 }
 
 function switchSvcTab(tab, btn){
