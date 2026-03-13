@@ -220,7 +220,7 @@ function isLastSatOfMonth(dateStr){
 const SVC_DURATIONS = {
   'Nail Clip - £13':10,'Nail Clip Fussy - £16':10,'Nail Clip Problematic - £20':10,
   'Anal Glands':10,'Puppy Intro (Inc. Bath) - £28':40,'Puppy Intro (Exc. Bath) - £15':20,
-  'Emmi-Pet Teeth Consultation':30,'Emmi-Pet Teeth Cleaning':20,'Emmi-Pet Teeth Maintenance':15
+  'Emmi-Pet Teeth Consultation':30,'Emmi-Pet Teeth Cleaning':30,'Emmi-Pet Teeth Maintenance':20
 };
 const DEFAULT_SLOT = 90;
 
@@ -346,9 +346,16 @@ function getAvailableSlots(dateStr){
   
   // Get all booked time ranges sorted
   var bookedRanges = dayBookings.map(function(b){
-    var dogs = b.dogs && b.dogs.length ? b.dogs : [{duration: b.duration||DEFAULT_SLOT}];
-    var totalDur = dogs.reduce(function(s,d){return s+(d.duration||DEFAULT_SLOT);},0);
-    return {start: timeToMins(b.time), end: timeToMins(b.time)+totalDur};
+    var startMins = timeToMins(b.time);
+    var endMins;
+    if(b.finishTime && b.finishTime.indexOf(':')>-1){
+      // Use finishTime directly - most reliable
+      endMins = timeToMins(b.finishTime);
+    } else {
+      var dur = parseInt(b.duration)||DEFAULT_SLOT;
+      endMins = startMins + dur;
+    }
+    return {start: startMins, end: endMins};
   }).sort(function(a,b){return a.start-b.start;});
   
   if(bookedRanges.length === 0){
