@@ -246,6 +246,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
       <button class="export-btn" onclick="exportData()">&#8595; Export</button>
       <label class="export-btn import-lbl">&#8593; Import<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)"></label>
       <button class="add-btn" onclick="syncFromCloud()" id="syncBtn">&#9729; Sync</button>
+      <button class="add-btn" onclick="pushAllToSheet()" id="pushAllBtn" style="background:#3a9e6e;">⬆ Push All</button>
     </div>
   </div>
   <div class="cal-wrap"><div class="cal-outer" id="calOuter"></div></div>
@@ -336,6 +337,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 </div>
 <script>
 const SUMUP='https://pay.sumup.com/b2c/Q88WCHEE';
+const SHEET_URL='https://script.google.com/macros/s/AKfycbwG00lLXzSbhkxVaigOD0arI9A9rns4f-i7GoUeKBXzUcRuxoYbXg7FP3cxhrIfVrB3/exec';
 const BIZ='Scruff to Buff Dogs';
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const MONS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -477,7 +479,10 @@ function fillCustomer(name){
       }
       if(priceEl&&d.lastPrice)priceEl.value=d.lastPrice.toFixed(2);
       if(durEl&&d.lastDuration){
-        durEl.value=d.lastDuration;
+        // Only use lastDuration if the current service doesn't have a known fixed duration
+        var _svcEl=document.getElementById('f-service-'+idx+'-0');
+        var _svc=_svcEl?_svcEl.value:'';
+        if(!SVC_DURATIONS[_svc]){durEl.value=d.lastDuration;calcFinish();}
         var dh=document.getElementById('durationHint-'+idx);
         if(dh){
           var dm=d.lastDuration;
@@ -1136,6 +1141,7 @@ function saveBooking(){
   }
   upsertCustomer(booking);
   saveAll();
+  syncToSheet(booking, editId ? 'update' : 'add');
   closeMain();renderCal();
 }
 
@@ -1144,12 +1150,34 @@ function deleteBooking(){
   var bk=bookings.find(function(b){return b.id===editId;});
   bookings=bookings.filter(function(b){return b.id!==editId;});
   saveAll();
+  if(bk) syncToSheet(bk, 'delete');
   closeMain();renderCal();
   if(bk&&bk.phone){
     setTimeout(function(){
       openWA(bk.phone,'Hi '+titleCase(bk.name)+'! We\'re sorry to inform you that your appointment with Scruff to Buff Dogs on '+fmtDD(bk.date)+' at '+fmtTime(bk.time)+' has been cancelled. If you haven\'t already, then please get in touch to rebook. Many thanks,\n\nBecky - Scruff to Buff Dogs');
     },300);
   }
+}
+
+function pushAllToSheet(){
+  var btn=document.getElementById('pushAllBtn');
+  btn.textContent='⏳ Pushing...';
+  btn.disabled=true;
+  var all=bookings.filter(function(b){return b.date&&b.time;});
+  if(!all.length){alert('No bookings to push.');btn.textContent='⬆ Push All to Sheet';btn.disabled=false;return;}
+  var done=0;var errors=0;
+  all.forEach(function(bk){
+    try{
+      var dogs=bk.dogs&&bk.dogs.length?bk.dogs:[{duration:bk.duration||60}];
+      var totalDur=dogs.reduce(function(s,d){return s+(d.duration||60);},0);
+      var finTime=bk.finishTime||addMins(bk.time,totalDur);
+      fetch(SHEET_URL,{
+        method:'POST',
+        body:JSON.stringify({action:'add',id:bk.id,date:bk.date,time:bk.time,finishTime:finTime,duration:totalDur,name:bk.name||''})
+      }).then(function(){done++;if(done+errors===all.length){btn.textContent='⬆ Push All to Sheet';btn.disabled=false;alert('Done! '+done+' booking(s) pushed to Sheet.');}})
+        .catch(function(){errors++;if(done+errors===all.length){btn.textContent='⬆ Push All to Sheet';btn.disabled=false;alert('Done with '+errors+' error(s). '+done+' pushed successfully.');}});
+    }catch(e){errors++;}
+  });
 }
 
 // ── BLOCK ──────────────────────────────────────────────────────────────────
@@ -1385,8 +1413,13 @@ function addFromPrefill(){
     var services = p.service ? p.service.split(',').map(function(s){return s.trim();}) : [];
     if(services.length>0){
       // Set first service in slot 0-0
-      dogServices[0] = services.map(function(svc,i){return {service:svc,duration:60,price:''};});
+      dogServices[0] = services.map(function(svc,i){
+        var dur = SVC_DURATIONS[svc] || 60;
+        return {service:svc, duration:dur, price:''};
+      });
       renderDogRows();
+      // trigger calcFinish after rows render
+      setTimeout(function(){ calcFinish(); }, 100);
     }
     document.getElementById('ct-new').checked=true;
     dismissPrefill();
