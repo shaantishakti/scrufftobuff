@@ -247,6 +247,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
       <label class="export-btn import-lbl">&#8593; Import<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)"></label>
       <button class="add-btn" onclick="syncFromCloud()" id="syncBtn">&#9729; Sync</button>
       <button class="add-btn" onclick="pushAllToSheet()" id="pushAllBtn" style="background:#3a9e6e;">⬆ Push All</button>
+      <button class="add-btn" onclick="clearAndPushAll()" id="clearPushBtn" style="background:#e05252;">🔄 Clear & Push All</button>
     </div>
   </div>
   <div class="cal-wrap"><div class="cal-outer" id="calOuter"></div></div>
@@ -1177,6 +1178,39 @@ function pushAllToSheet(){
       }).then(function(){done++;if(done+errors===all.length){btn.textContent='⬆ Push All to Sheet';btn.disabled=false;alert('Done! '+done+' booking(s) pushed to Sheet.');}})
         .catch(function(){errors++;if(done+errors===all.length){btn.textContent='⬆ Push All to Sheet';btn.disabled=false;alert('Done with '+errors+' error(s). '+done+' pushed successfully.');}});
     }catch(e){errors++;}
+  });
+}
+
+function clearAndPushAll(){
+  if(!confirm('This will clear the Google Sheet and resend all diary bookings. Continue?'))return;
+  var btn=document.getElementById('clearPushBtn');
+  btn.textContent='⏳ Working...';
+  btn.disabled=true;
+  // First clear the sheet
+  fetch(SHEET_URL,{
+    method:'POST',
+    body:JSON.stringify({action:'clearAll'})
+  }).then(function(){
+    // Now push all bookings fresh
+    var all=bookings.filter(function(b){return b.date&&b.time;});
+    if(!all.length){alert('No bookings to push.');btn.textContent='🔄 Clear & Push All';btn.disabled=false;return;}
+    var done=0;var errors=0;
+    all.forEach(function(bk){
+      try{
+        var dogs=bk.dogs&&bk.dogs.length?bk.dogs:[{duration:bk.duration||60}];
+        var totalDur=dogs.reduce(function(s,d){return s+(d.duration||60);},0);
+        var finTime=bk.finishTime||addMins(bk.time,totalDur);
+        fetch(SHEET_URL,{
+          method:'POST',
+          body:JSON.stringify({action:'add',id:bk.id,date:bk.date,time:bk.time,finishTime:finTime,duration:totalDur,name:bk.name||''})
+        }).then(function(){done++;if(done+errors===all.length){btn.textContent='🔄 Clear & Push All';btn.disabled=false;alert('Done! Sheet cleared and '+done+' booking(s) pushed fresh.');}})
+          .catch(function(){errors++;if(done+errors===all.length){btn.textContent='🔄 Clear & Push All';btn.disabled=false;alert('Done with '+errors+' error(s).');}});
+      }catch(e){errors++;}
+    });
+  }).catch(function(){
+    alert('Failed to clear sheet. Check internet connection.');
+    btn.textContent='🔄 Clear & Push All';
+    btn.disabled=false;
   });
 }
 
