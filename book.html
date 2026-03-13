@@ -235,14 +235,38 @@ currentMonth.setDate(1);
 
 function fmtTime12(ts){if(!ts)return'';var p=ts.split(':');var h=parseInt(p[0]),m=parseInt(p[1]);return(h%12||12)+':'+(m<10?'0'+m:''+m)+(h>=12?'pm':'am');}
 function fmtDateLong(ds){var d=new Date(ds+'T12:00:00');var ms=['January','February','March','April','May','June','July','August','September','October','November','December'];return d.getDate()+' '+ms[d.getMonth()]+' '+d.getFullYear();}
+function parseSheetTime(ts){
+  // Convert any time format to HH:MM string
+  if(!ts && ts !== 0) return '';
+  ts = String(ts).trim();
+  // ISO date string e.g. 1899-12-30T09:00:00.000Z
+  if(ts.indexOf('T') > -1){
+    var t = ts.split('T')[1].split(':');
+    return (t[0].length<2?'0':'')+t[0]+':'+t[1];
+  }
+  // Already HH:MM
+  if(ts.indexOf(':') > -1){
+    var p = ts.split(':');
+    return (p[0].length<2?'0':'')+p[0]+':'+(p[1].length<2?'0':'')+p[1];
+  }
+  // Decimal < 1 = fraction of day
+  if(!isNaN(ts) && parseFloat(ts) < 1){
+    var m = Math.round(parseFloat(ts)*1440);
+    return (Math.floor(m/60)<10?'0':'')+Math.floor(m/60)+':'+(m%60<10?'0':'')+m%60;
+  }
+  // Plain number e.g. 9 = 09:00
+  if(!isNaN(ts)){
+    var h = Math.floor(parseFloat(ts));
+    var m = Math.round((parseFloat(ts)-h)*60);
+    return (h<10?'0':'')+h+':'+(m<10?'0':'')+m;
+  }
+  return ts;
+}
 function timeToMins(ts){
   if(!ts) return 0;
-  ts = String(ts).trim();
-  // Handle HH:MM:SS or HH:MM
+  ts = parseSheetTime(ts);
   var p = ts.split(':');
   if(p.length >= 2) return parseInt(p[0])*60+parseInt(p[1]);
-  // Handle decimal hours from Google Sheets (e.g. 0.375 = 9:00am)
-  if(!isNaN(ts)) return Math.round(parseFloat(ts)*1440);
   return 0;
 }
 function minsToTime(m){return(Math.floor(m/60)<10?'0':'')+Math.floor(m/60)+':'+(m%60<10?'0':'')+m%60;}
@@ -253,7 +277,7 @@ function loadSheetBookings(callback){
     .then(function(r){return r.json();})
     .then(function(data){
       sheetBookings = data.map(function(r){
-        return {date:r.date, time:r.time, finishTime:r.finishTime, duration:parseInt(r.duration)||90, id:r.id};
+        return {date:r.date, time:parseSheetTime(r.time), finishTime:parseSheetTime(r.finishTime), duration:parseInt(r.duration)||90, id:r.id};
       });
       // Debug: show 18th March data visibly on page
       var march18 = sheetBookings.filter(function(b){return b.date==='2026-03-18';});
