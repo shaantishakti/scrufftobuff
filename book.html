@@ -234,7 +234,16 @@ currentMonth.setDate(1);
 
 function fmtTime12(ts){if(!ts)return'';var p=ts.split(':');var h=parseInt(p[0]),m=parseInt(p[1]);return(h%12||12)+':'+(m<10?'0'+m:''+m)+(h>=12?'pm':'am');}
 function fmtDateLong(ds){var d=new Date(ds+'T12:00:00');var ms=['January','February','March','April','May','June','July','August','September','October','November','December'];return d.getDate()+' '+ms[d.getMonth()]+' '+d.getFullYear();}
-function timeToMins(ts){var p=ts.split(':');return parseInt(p[0])*60+parseInt(p[1]);}
+function timeToMins(ts){
+  if(!ts) return 0;
+  ts = String(ts).trim();
+  // Handle HH:MM:SS or HH:MM
+  var p = ts.split(':');
+  if(p.length >= 2) return parseInt(p[0])*60+parseInt(p[1]);
+  // Handle decimal hours from Google Sheets (e.g. 0.375 = 9:00am)
+  if(!isNaN(ts)) return Math.round(parseFloat(ts)*1440);
+  return 0;
+}
 function minsToTime(m){return(Math.floor(m/60)<10?'0':'')+Math.floor(m/60)+':'+(m%60<10?'0':'')+m%60;}
 function addMins(ts,mins){var p=ts.split(':');var t=parseInt(p[0])*60+parseInt(p[1])+mins;return minsToTime(t);}
 
@@ -245,6 +254,9 @@ function loadSheetBookings(callback){
       sheetBookings = data.map(function(r){
         return {date:r.date, time:r.time, finishTime:r.finishTime, duration:parseInt(r.duration)||90, id:r.id};
       });
+      // Debug: log 18th March bookings
+      var march18 = sheetBookings.filter(function(b){return b.date==='2026-03-18';});
+      console.log('Sheet bookings for 18 Mar:', JSON.stringify(march18));
       sheetLoaded = true;
       if(callback) callback();
     })
@@ -348,15 +360,18 @@ function getAvailableSlots(dateStr){
   var bookedRanges = dayBookings.map(function(b){
     var startMins = timeToMins(b.time);
     var endMins;
-    if(b.finishTime && b.finishTime.indexOf(':')>-1){
-      // Use finishTime directly - most reliable
+    // Try finishTime first
+    if(b.finishTime && String(b.finishTime).trim() !== ''){
       endMins = timeToMins(b.finishTime);
-    } else {
+    }
+    // Fall back to duration if finishTime missing or same as start
+    if(!endMins || endMins <= startMins){
       var dur = parseInt(b.duration)||DEFAULT_SLOT;
       endMins = startMins + dur;
     }
     return {start: startMins, end: endMins};
   }).sort(function(a,b){return a.start-b.start;});
+  console.log('Booked ranges for '+dateStr+':', JSON.stringify(bookedRanges));
   
   if(bookedRanges.length === 0){
     // No bookings yet - offer morning and afternoon starts
