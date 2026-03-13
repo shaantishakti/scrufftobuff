@@ -1194,19 +1194,26 @@ function clearAndPushAll(){
     // Now push all bookings fresh
     var all=bookings.filter(function(b){return b.date&&b.time;});
     if(!all.length){alert('No bookings to push.');btn.textContent='🔄 Clear & Push All';btn.disabled=false;return;}
-    var done=0;var errors=0;
-    all.forEach(function(bk){
-      try{
-        var dogs=bk.dogs&&bk.dogs.length?bk.dogs:[{duration:bk.duration||60}];
-        var totalDur=dogs.reduce(function(s,d){return s+(d.duration||60);},0);
-        var finTime=bk.finishTime||addMins(bk.time,totalDur);
-        fetch(SHEET_URL,{
-          method:'POST',
-          body:JSON.stringify({action:'add',id:bk.id,date:bk.date,time:bk.time,finishTime:finTime,duration:totalDur,name:bk.name||''})
-        }).then(function(){done++;if(done+errors===all.length){btn.textContent='🔄 Clear & Push All';btn.disabled=false;alert('Done! Sheet cleared and '+done+' booking(s) pushed fresh.');}})
-          .catch(function(){errors++;if(done+errors===all.length){btn.textContent='🔄 Clear & Push All';btn.disabled=false;alert('Done with '+errors+' error(s).');}});
-      }catch(e){errors++;}
-    });
+    // Send one at a time to avoid overwhelming Apps Script
+    function pushNext(i){
+      if(i>=all.length){
+        btn.textContent='🔄 Clear & Push All';
+        btn.disabled=false;
+        alert('Done! '+all.length+' booking(s) pushed fresh.');
+        return;
+      }
+      btn.textContent='⏳ Pushing '+( i+1)+'/'+all.length+'...';
+      var bk=all[i];
+      var dogs=bk.dogs&&bk.dogs.length?bk.dogs:[{duration:bk.duration||60}];
+      var totalDur=dogs.reduce(function(s,d){return s+(d.duration||60);},0);
+      var finTime=bk.finishTime||addMins(bk.time,totalDur);
+      fetch(SHEET_URL,{
+        method:'POST',
+        body:JSON.stringify({action:'add',id:bk.id,date:bk.date,time:bk.time,finishTime:finTime,duration:totalDur,name:bk.name||''})
+      }).then(function(){setTimeout(function(){pushNext(i+1);},300);})
+        .catch(function(){setTimeout(function(){pushNext(i+1);},300);});
+    }
+    pushNext(0);
   }).catch(function(){
     alert('Failed to clear sheet. Check internet connection.');
     btn.textContent='🔄 Clear & Push All';
@@ -1591,7 +1598,8 @@ function startDrag(e,id){
     },200);
   }
   document.addEventListener('mousemove',onMove);
-  document.addEventListener('mouseup',onUp);}
+  document.addEventListener('mouseup',onUp);
+}
 
 </script>
 </body>
