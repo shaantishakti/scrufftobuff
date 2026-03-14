@@ -279,10 +279,8 @@ function loadSheetBookings(callback){
       sheetBookings = data.map(function(r){
         return {date:r.date, time:parseSheetTime(r.time), finishTime:parseSheetTime(r.finishTime), duration:parseInt(r.duration)||90, id:r.id};
       });
-      // Debug: show 18th March data visibly on page
-      var march18 = sheetBookings.filter(function(b){return b.date==='2026-03-18';});
       var dbg = document.getElementById('sheetDebug');
-      if(dbg) dbg.innerHTML = '<strong>Sheet data for 18 Mar:</strong><br>' + (march18.length ? march18.map(function(b){return 'time:'+b.time+' finish:'+b.finishTime+' dur:'+b.duration;}).join('<br>') : 'NONE FOUND');
+      if(dbg) dbg.innerHTML = '<strong>All Sheet bookings ('+sheetBookings.length+' total):</strong><br>' + sheetBookings.map(function(b){return b.date+' '+b.time+'-'+b.finishTime+' ('+b.duration+'min)';}).join('<br>');
       sheetLoaded = true;
       if(callback) callback();
     })
