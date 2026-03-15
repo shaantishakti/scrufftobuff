@@ -421,14 +421,18 @@ function selectSessionPlan(n){
   onServiceSelected();
 
   if(n===4||n===9){
-    document.getElementById('step2Card').style.display='none';
-    document.getElementById('step3Card').style.display='none';
-    document.getElementById('emmiDatesCard').style.display='block';
-    document.getElementById('emmiDatesTitle').textContent='2. Choose Your '+n+' Session Dates & Times';
-    // Reset payment checkbox and hide booking section
-    document.getElementById('emmiPaymentConfirm').checked=false;
-    document.getElementById('emmiBookingSection').style.display='none';
-    document.getElementById('emmiDatesCard').scrollIntoView({behavior:'smooth'});
+    // Use timeout to override onServiceSelected showing step2Card
+    setTimeout(function(){
+      document.getElementById('step2Card').style.display='none';
+      document.getElementById('step3Card').style.display='none';
+      document.getElementById('step4Card').style.display='none';
+      document.getElementById('emmiDatesCard').style.display='block';
+      document.getElementById('emmiDatesTitle').textContent='2. Choose Your '+n+' Session Dates & Times';
+      var payCheck = document.getElementById('emmiPaymentConfirm');
+      if(payCheck) payCheck.checked=false;
+      document.getElementById('emmiBookingSection').style.display='none';
+        document.getElementById('emmiDatesCard').scrollIntoView({behavior:'smooth'});
+    }, 50);
   } else {
     document.getElementById('emmiDatesCard').style.display='none';
     document.getElementById('step2Card').style.display='block';
@@ -555,18 +559,16 @@ function emmiPickDate(iso){
   var timeSlots = document.getElementById('emmiTimeSlots');
   timeLabel.textContent = 'Choose a time for '+fmtDateLong(iso)+':';
   timeWrap.style.display='block';
-  // Load available slots
-  loadSheetBookings(function(){
-    var slots = getAvailableSlots(iso);
-    if(slots.length===0){
-      timeSlots.innerHTML='<div style="font-size:0.82rem;color:#e05252;">No slots available on this day — please pick another date.</div>';
-    } else {
-      timeSlots.innerHTML = slots.map(function(s){
-        return '<div class="slot-chip" data-time="'+s.time+'" data-iso="'+iso+'" onclick="emmiPickTime(this.dataset.iso,this.dataset.time,this)">'+s.label+'</div>';
-      }).join('');
-    }
-    timeWrap.scrollIntoView({behavior:'smooth'});
-  });
+  // Use already-loaded sheet data (don't reload - would wipe manually added sessions)
+  var slots = getAvailableSlots(iso);
+  if(slots.length===0){
+    timeSlots.innerHTML='<div style="font-size:0.82rem;color:#e05252;">No slots available on this day — please pick another date.</div>';
+  } else {
+    timeSlots.innerHTML = slots.map(function(s){
+      return '<div class="slot-chip" data-time="'+s.time+'" data-iso="'+iso+'" onclick="emmiPickTime(this.dataset.iso,this.dataset.time,this)">'+s.label+'</div>';
+    }).join('');
+  }
+  timeWrap.scrollIntoView({behavior:'smooth'});
 }
 
 function emmiPickTime(iso, time, el){
