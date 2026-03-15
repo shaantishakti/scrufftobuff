@@ -119,7 +119,9 @@ body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--blue);
         <div class="svc-tab-panel" id="svc-tab-teeth">
           <div class="slot-chip svc-chip" onclick="toggleService(this,'Teeth Descaling - £30')">Teeth Descaling — £30</div>
           <div class="slot-chip svc-chip" onclick="toggleService(this,'Emmi-Pet Teeth Consultation')">Emmi-Pet Consultation</div>
-          <div class="slot-chip svc-chip" onclick="toggleService(this,'Emmi-Pet Teeth Cleaning')">Emmi-Pet Cleaning</div>
+          <div class="slot-chip svc-chip" onclick="toggleService(this,'Emmi-Pet Teeth Cleaning PAYG')">Emmi-Pet Cleaning PAYG</div>
+          <div class="slot-chip svc-chip" onclick="toggleService(this,'Emmi-Pet Teeth Cleaning x4')">Emmi-Pet Cleaning x4</div>
+          <div class="slot-chip svc-chip" onclick="toggleService(this,'Emmi-Pet Teeth Cleaning x9')">Emmi-Pet Cleaning x9</div>
           <div class="slot-chip svc-chip" onclick="toggleService(this,'Emmi-Pet Teeth Maintenance')">Emmi-Pet Maintenance</div>
         </div>
         <div class="svc-tab-panel" id="svc-tab-puppy">
@@ -162,6 +164,20 @@ body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--blue);
   </div>
 
   <!-- STEP 3: Time -->
+  <!-- EMMI-PET MULTI DATE CARD -->
+  <div class="card" id="emmiDatesCard" style="display:none">
+    <h2 id="emmiDatesTitle">3. Choose Your Session Dates</h2>
+    <p style="font-size:0.82rem;color:#4a7aaa;margin-bottom:12px;">Pick your dates one by one — the calendar will highlight each one as you go. You can pick them in any order.</p>
+    <div id="emmiDatesList" style="margin-bottom:14px;"></div>
+    <div class="cal-nav">
+      <button onclick="prevMonth()">&#8249;</button>
+      <span id="emmiCalMonthLabel"></span>
+      <button onclick="nextMonth()">&#8250;</button>
+    </div>
+    <div class="mc-grid" id="emmiMiniCal"></div>
+    <button class="submit-btn" id="emmiDoneBtn" onclick="emmiDatesDone()" style="display:none;margin-top:12px;">Continue →</button>
+  </div>
+
   <div class="card" id="step3Card" style="display:none">
     <h2>3. Choose a Time</h2>
     <div class="slot-label" id="slotDateLabel"></div>
@@ -204,11 +220,11 @@ let sheetLoaded = false;
 const DIARY_URL = 'https://shaantishakti.github.io/scrufftobuff/';
 
 const HOURS = {
-  1:{open:'08:30',close:'17:00'},
-  2:{open:'08:30',close:'17:00'},
-  3:{open:'08:30',close:'17:00'},
-  4:{open:'08:30',close:'17:00'},
-  5:{open:'08:30',close:'17:00'},
+  1:{open:'08:30',close:'17:30'},
+  2:{open:'08:30',close:'17:30'},
+  3:{open:'08:30',close:'17:30'},
+  4:{open:'08:30',close:'17:30'},
+  5:{open:'08:30',close:'17:30'},
   6:{open:'09:30',close:'14:00'}
 };
 function isLastSatOfMonth(dateStr){
@@ -221,7 +237,7 @@ function isLastSatOfMonth(dateStr){
 const SVC_DURATIONS = {
   'Nail Clip - £13':10,'Nail Clip Fussy - £16':10,'Nail Clip Problematic - £20':10,
   'Anal Glands':10,'Puppy Intro (Inc. Bath) - £28':40,'Puppy Intro (Exc. Bath) - £15':20,
-  'Emmi-Pet Teeth Consultation':30,'Emmi-Pet Teeth Cleaning':30,'Emmi-Pet Teeth Maintenance':20
+  'Emmi-Pet Teeth Consultation':30,'Emmi-Pet Teeth Cleaning':30,'Emmi-Pet Teeth Cleaning PAYG':30,'Emmi-Pet Teeth Cleaning x4':30,'Emmi-Pet Teeth Cleaning x9':30,'Emmi-Pet Teeth Maintenance':20
 };
 const DEFAULT_SLOT = 90;
 
@@ -324,21 +340,163 @@ function switchSvcTab(tab, btn){
   btn.classList.add('active');
 }
 
-function toggleService(el, svc){
-  el.classList.toggle('selected');
-  onServiceSelected();
-  // update summary
-  var sel = [];
-  document.querySelectorAll('.svc-chip.selected').forEach(function(c){
-    sel.push(c.textContent.trim());
+// Emmi-Pet multi-date state
+var emmiSessionPlan = null; // 'payg', 4, or 9
+var emmiSelectedDates = []; // array of ISO date strings
+
+// ── EMMI-PET SESSION VARIABLES ────────────────────────────────────────────
+var emmiPlan = null; // 'payg', 4, or 9
+var emmiSelectedDates = []; // array of ISO date strings
+
+function selectSessionPlan(n){
+  emmiPlan = n;
+  // Deselect all cleaning chips
+  document.querySelectorAll('.svc-chip').forEach(function(c){
+    var oc = c.getAttribute('onclick')||'';
+    if(oc.indexOf('Emmi-Pet Teeth Cleaning')>-1) c.classList.remove('selected');
   });
-  var summary = document.getElementById('svcSummary');
-  if(sel.length){
-    summary.style.display='block';
-    summary.innerHTML = '✅ Selected: <strong>' + sel.join(', ') + '</strong>';
+  // Select correct chip
+  var key = n==='payg' ? 'Emmi-Pet Teeth Cleaning PAYG' : 'Emmi-Pet Teeth Cleaning x'+n;
+  document.querySelectorAll('.svc-chip').forEach(function(c){
+    if((c.getAttribute('onclick')||'').indexOf(key)>-1) c.classList.add('selected');
+  });
+  onServiceSelected();
+  // Update summary with plan buttons highlighted
+  var sel=[];
+  document.querySelectorAll('.svc-chip.selected').forEach(function(c){sel.push(c.textContent.trim());});
+  var summary=document.getElementById('svcSummary');
+  var emmiBadge = buildEmmiBadge(n);
+  summary.style.display='block';
+  summary.innerHTML='✅ Selected: <strong>'+sel.join(', ')+'</strong>'+emmiBadge;
+
+  // If x4 or x9, show the multi-date picker instead of normal date step
+  if(n===4||n===9){
+    emmiSelectedDates=[];
+    document.getElementById('step2Card').style.display='none';
+    document.getElementById('emmiDatesCard').style.display='block';
+    document.getElementById('emmiDatesTitle').textContent='2. Choose Your '+(n==='payg'?'Date':n+' Session Dates');
+    renderEmmiDatesList();
+    renderEmmiCal();
+    document.getElementById('emmiDatesCard').scrollIntoView({behavior:'smooth'});
   } else {
-    summary.style.display='none';
+    // PAYG - normal single date flow
+    document.getElementById('emmiDatesCard').style.display='none';
+    document.getElementById('step2Card').style.display='block';
+    document.getElementById('step2Card').scrollIntoView({behavior:'smooth'});
   }
+}
+
+function buildEmmiBadge(n){
+  return '<div style="margin-top:8px;padding:8px;background:#fff8e0;border:1.5px solid #f59e0b;border-radius:7px;font-size:0.8rem;color:#92400e;">'
+    +'⚠️ <strong>Please note:</strong> Emmi-Pet Cleaning sessions require a consultation first. '
+    +'If you haven't had an Emmi-Pet Consultation with Scruff to Buff Dogs yet, please select that instead.'
+    +'<br><br><strong>Choose your plan:</strong><br>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">'
+    +'<div class="slot-chip'+(n==='payg'?' selected':'')+'" onclick="selectSessionPlan('payg')" style="font-size:0.82rem;">PAYG (single)</div>'
+    +'<div class="slot-chip'+(n===4?' selected':'')+'" onclick="selectSessionPlan(4)" style="font-size:0.82rem;">x4 sessions (min)</div>'
+    +'<div class="slot-chip'+(n===9?' selected':'')+'" onclick="selectSessionPlan(9)" style="font-size:0.82rem;">x9 sessions</div>'
+    +'</div></div>';
+}
+
+function renderEmmiDatesList(){
+  var plan = emmiPlan;
+  var needed = plan===9?9:4;
+  var list = document.getElementById('emmiDatesList');
+  var html = '<div style="font-size:0.82rem;color:#4a7aaa;margin-bottom:8px;">Select <strong>'+needed+'</strong> dates'+(plan===9?' (you can add up to 9)':'')+' — <strong>'+emmiSelectedDates.length+'/'+needed+'</strong> chosen so far:</div>';
+  if(emmiSelectedDates.length===0){
+    html += '<div style="font-size:0.8rem;color:#94a3b8;font-style:italic;">No dates selected yet — tap dates on the calendar below</div>';
+  } else {
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+    emmiSelectedDates.forEach(function(d,i){
+      var num = i+1;
+      var circle = num<=20?['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'][num-1]:num;
+      html += '<div style="background:#1e3a5f;color:white;border-radius:20px;padding:5px 12px;font-size:0.8rem;display:flex;align-items:center;gap:6px;">'
+        +circle+' '+fmtDateLong(d)
+        +'<span onclick="removeEmmiDate(''+d+'')" style="cursor:pointer;opacity:0.7;font-size:0.9rem;">✕</span>'
+        +'</div>';
+    });
+    html += '</div>';
+  }
+  list.innerHTML = html;
+  // Show continue button only when minimum reached
+  var doneBtn = document.getElementById('emmiDoneBtn');
+  doneBtn.style.display = emmiSelectedDates.length>=needed ? 'block' : 'none';
+  if(emmiSelectedDates.length>=needed){
+    doneBtn.textContent = 'Continue with '+emmiSelectedDates.length+' sessions →';
+  }
+}
+
+function removeEmmiDate(iso){
+  emmiSelectedDates = emmiSelectedDates.filter(function(d){return d!==iso;});
+  renderEmmiDatesList();
+  renderEmmiCal();
+}
+
+function renderEmmiCal(){
+  var grid = document.getElementById('emmiMiniCal');
+  var label = document.getElementById('emmiCalMonthLabel');
+  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  label.textContent = months[currentMonth.getMonth()]+' '+currentMonth.getFullYear();
+  var today=new Date();today.setHours(0,0,0,0);
+  var firstDay=new Date(currentMonth.getFullYear(),currentMonth.getMonth(),1).getDay();
+  var daysInMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1,0).getDate();
+  var html='';
+  ['M','T','W','T','F','S','S'].forEach(function(d){html+='<div class="mc-day-hdr">'+d+'</div>';});
+  var startCol=firstDay===0?6:firstDay-1;
+  for(var i=0;i<startCol;i++) html+='<div class="mc-day"></div>';
+  for(var day=1;day<=daysInMonth;day++){
+    var d=new Date(currentMonth.getFullYear(),currentMonth.getMonth(),day);
+    d.setHours(12,0,0,0);
+    var y=d.getFullYear(),mo=d.getMonth()+1,da=d.getDate();
+    var iso=y+'-'+(mo<10?'0':'')+mo+'-'+(da<10?'0':'')+da;
+    var dow=d.getDay();
+    var isPast=d<today;
+    var isBlocked=isLastSatOfMonth(iso)||dow===0||dow===4;
+    var isSelected=emmiSelectedDates.indexOf(iso)>-1;
+    var sessionNum=emmiSelectedDates.indexOf(iso)+1;
+    var circles=['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
+    var cls='mc-day';
+    if(isSelected) cls+=' mc-selected';
+    else if(isPast||isBlocked) cls+=' mc-disabled';
+    else cls+=' mc-available';
+    var label2=isSelected?(circles[sessionNum-1]||sessionNum):day;
+    if(isPast||isBlocked) html+='<div class="'+cls+'">'+day+'</div>';
+    else html+='<div class="'+cls+'" onclick="toggleEmmiDate(''+iso+'')">'+label2+'</div>';
+  }
+  grid.innerHTML=html;
+}
+
+function toggleEmmiDate(iso){
+  var idx=emmiSelectedDates.indexOf(iso);
+  var plan=emmiPlan;
+  var max=plan===9?9:4;
+  if(idx>-1){
+    emmiSelectedDates.splice(idx,1);
+  } else {
+    if(emmiSelectedDates.length>=max){
+      alert('You've already selected '+max+' dates. Remove one first to change it.');
+      return;
+    }
+    emmiSelectedDates.push(iso);
+    emmiSelectedDates.sort();
+  }
+  renderEmmiDatesList();
+  renderEmmiCal();
+}
+
+function emmiDatesDone(){
+  var plan=emmiPlan;
+  var needed=plan===9?9:4;
+  if(emmiSelectedDates.length<needed){
+    alert('Please select at least '+needed+' dates.');return;
+  }
+  // Move to step 4 (details) directly - no time needed for sessions
+  document.getElementById('emmiDatesCard').style.display='none';
+  document.getElementById('step4Card').style.display='block';
+  document.getElementById('step4Card').scrollIntoView({behavior:'smooth'});
+  // Store session info
+  selectedDate=emmiSelectedDates[0];
+  selectedTime='09:00';
 }
 
 function onServiceSelected(){
@@ -363,6 +521,7 @@ function onServiceSelected(){
 function getAvailableSlots(dateStr){
   var d = new Date(dateStr+'T12:00:00');
   var dow = d.getDay();
+  if(dow === 4) return []; // Thursdays blocked for clients
   var hrs = HOURS[dow];
   if(!hrs) return [];
   
@@ -416,7 +575,7 @@ function getAvailableSlots(dateStr){
   
   // Simply find the end of the last booking and offer that as next slot
   var lastEnd = bookedRanges[bookedRanges.length-1].end;
-  lastEnd = Math.ceil(lastEnd/10)*10;
+  lastEnd = Math.ceil((lastEnd+1)/10)*10; // ensure slot is strictly after last booking ends
   
   var slots = [];
   if(lastEnd + dur <= closeMins){
@@ -451,7 +610,7 @@ function renderMiniCal(){
     var isPast = d < today;
     var isOpen = HOURS[dow] !== null && dow !== 0;
     var blocks = JSON.parse(localStorage.getItem('stbBlocks')||'[]');
-    var isBlocked = blocks.some(function(b){return b.date===iso&&b.fullDay;}) || isLastSatOfMonth(iso);
+    var isBlocked = blocks.some(function(b){return b.date===iso&&b.fullDay;}) || isLastSatOfMonth(iso) || dow===4;
     var avail = !isPast && isOpen && !isBlocked;
     var cls = 'mc-day';
     if(isPast || !isOpen || isBlocked) cls += ' mc-unavail';
@@ -580,7 +739,13 @@ function submitRequest(){
     alert('Please fill in all required fields and choose a date and time.');return;
   }
   var diaryLink = DIARY_URL+'?prefill=1&name='+encodeURIComponent(name)+'&phone='+encodeURIComponent(phone)+'&dog='+encodeURIComponent(dog)+'&breed='+encodeURIComponent(breed)+'&service='+encodeURIComponent(selectedService)+'&notes='+encodeURIComponent(notes)+'&date='+selectedDate+'&time='+encodeURIComponent(selectedTime);
-  var msg = 'NEW BOOKING REQUEST\n\nName: '+name+'\nWhatsApp: '+phone+'\nDog: '+dog+(breed?' ('+breed+')':'')+'\nService: '+selectedService+'\nDogs: '+selectedDogCount+'\nDate: '+fmtDateLong(selectedDate)+'\nTime: '+fmtTime12(selectedTime)+'\n'+(notes?'Notes: '+notes+'\n':'')+'\nTap to add to diary:\n'+diaryLink;
+  // Add Emmi-Pet session dates to notes if multi-session
+  var emmiNote = '';
+  if(emmiSelectedDates.length > 1){
+    var circles = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
+    emmiNote = '\nEmmi-Pet Session Dates:\n' + emmiSelectedDates.map(function(d,i){return circles[i]+' '+fmtDateLong(d);}).join('\n');
+  }
+  var msg = 'NEW BOOKING REQUEST\n\nName: '+name+'\nWhatsApp: '+phone+'\nDog: '+dog+(breed?' ('+breed+')':'')+'\nService: '+selectedService+'\nDogs: '+selectedDogCount+'\nDate: '+fmtDateLong(selectedDate)+'\nTime: '+fmtTime12(selectedTime)+'\n'+(notes?'Notes: '+notes+'\n':'')+emmiNote+'\nTap to add to diary:\n'+diaryLink;
   var c = phone.replace(/\s+/g,'').replace(/^\+/,'');
   if(c.charAt(0)==='0') c='44'+c.slice(1);
   document.getElementById('bookingStep').style.display = 'none';
