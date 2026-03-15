@@ -554,7 +554,9 @@ function getAvailableSlots(dateStr){
   // Debug
   var dbg = document.getElementById('sheetDebug');
   if(dbg) dbg.innerHTML += '<br><strong>'+dateStr+':</strong> '+dayBookings.length+' sheet bookings'
-    +(dayBookings.length > 0 ? ' — '+dayBookings.map(function(b){return b.time+'-'+b.finishTime;}).join(', ') : '');
+    +(dayBookings.length > 0 ? ' — '+dayBookings.map(function(b){return b.time+'-'+b.finishTime;}).join(', ') 
+    : ' <span style="color:red">NO MATCH</span> — first 3 sheet dates: '+sheetBookings.slice(0,3).map(function(b){return '"'+b.date+'"('+typeof b.date+')'}).join(', ')
+    +' — looking for: "'+dateStr+'"('+typeof dateStr+')');
 
   var slots = [];
 
@@ -744,8 +746,7 @@ function submitRequest(){
   if(!name||!phone||!dog||!selectedDate||!selectedTime||!selectedService){
     alert('Please fill in all required fields and choose a date and time.');return;
   }
-  var diaryLink = DIARY_URL+'?prefill=1&name='+encodeURIComponent(name)+'&phone='+encodeURIComponent(phone)+'&dog='+encodeURIComponent(dog)+'&breed='+encodeURIComponent(breed)+'&service='+encodeURIComponent(selectedService)+'&notes='+encodeURIComponent(notes)+'&date='+selectedDate+'&time='+encodeURIComponent(selectedTime);
-  // Add Emmi-Pet session dates to notes if multi-session
+  var diaryLink = DIARY_URL+'?prefill=1&name='+encodeURIComponent(name)+'&phone='+encodeURIComponent(phone)+'&dog='+encodeURIComponent(dog)+'&breed='+encodeURIComponent(breed)+'&service='+encodeURIComponent(selectedService)+'&notes='+encodeURIComponent(notes)+'&date='+selectedDate+'&time='+encodeURIComponent(selectedTime);  // Add Emmi-Pet session dates to notes if multi-session
   var emmiNote = '';
   if(emmiSelectedDates.length > 1){
     var circles = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
