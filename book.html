@@ -533,75 +533,68 @@ function onServiceSelected(){
 
 function getAvailableSlots(dateStr){
   var d = new Date(dateStr+'T12:00:00');
-  var dow = d.getDay();
-  if(dow === 4) return []; // Thursdays blocked for clients
-  var hrs = HOURS[dow];
-  if(!hrs) return [];
-  
-  // Check for full day blocks
-  var blocks = JSON.parse(localStorage.getItem('stbBlocks')||'[]');
-  var blocked = blocks.filter(function(b){return b.date===dateStr;});
-  for(var i=0;i<blocked.length;i++){if(blocked[i].fullDay)return[];}
-  
-  var dayBookings = sheetBookings.filter(function(b){return b.date===dateStr;});
-  
-  var openMins = timeToMins(hrs.open);
-  var closeMins = timeToMins(hrs.close);
+  var dow = d.getDay(); // 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
+
+  // Closed days
+  if(dow === 0 || dow === 4) return []; // Sunday or Thursday
+  if(isLastSatOfMonth(dateStr)) return [];
+
   var dur = selectedServiceDuration || DEFAULT_SLOT;
-  
-  // Afternoon options based on dog count
-  var afternoonStart = selectedDogCount >= 2 ? timeToMins('14:00') : timeToMins('15:30');
-  
-  // Get all booked time ranges sorted
-  var bookedRanges = dayBookings.map(function(b){
-    var startMins = timeToMins(b.time);
-    var endMins;
-    // Try finishTime first
-    if(b.finishTime && String(b.finishTime).trim() !== ''){
-      endMins = timeToMins(b.finishTime);
-    }
-    // Fall back to duration if finishTime missing or same as start
-    if(!endMins || endMins <= startMins){
-      var dur = parseInt(b.duration)||DEFAULT_SLOT;
-      endMins = startMins + dur;
-    }
-    return {start: startMins, end: endMins};
-  }).sort(function(a,b){return a.start-b.start;});
-  console.log('Booked ranges for '+dateStr+':', JSON.stringify(bookedRanges));
-  
-  if(bookedRanges.length === 0){
-    // No bookings yet - offer morning and afternoon starts
-    var slots = [];
-    // Morning options
-    if(dow !== 6){
-      if(openMins + dur <= closeMins) slots.push({time: minsToTime(openMins), label: fmtTime12(minsToTime(openMins))});
-      if(timeToMins('09:00') + dur <= closeMins) slots.push({time: '09:00', label: '9:00am'});
-    } else {
-      if(openMins + dur <= closeMins) slots.push({time: minsToTime(openMins), label: fmtTime12(minsToTime(openMins))});
-    }
-    // Afternoon option (only on weekdays)
-    if(dow !== 6 && afternoonStart + dur <= closeMins){
-      slots.push({time: minsToTime(afternoonStart), label: fmtTime12(minsToTime(afternoonStart))+' (afternoon)'});
-    }
-    return slots;
-  }
-  
-  // Simply find the end of the last booking and offer that as next slot
-  var lastEnd = bookedRanges[bookedRanges.length-1].end;
-  lastEnd = Math.ceil((lastEnd+1)/10)*10; // ensure slot is strictly after last booking ends
-  
+  var closeMins = dow === 6 ? timeToMins('14:00') : timeToMins('17:30');
+
+  // Fixed morning start times per day
+  var morningStart;
+  if(dow === 1) morningStart = timeToMins('09:00');       // Monday
+  else if(dow === 6) morningStart = timeToMins('09:30');  // Saturday
+  else morningStart = timeToMins('08:30');                // Tue/Wed/Fri
+
+  // Get bookings for this day from sheet
+  var dayBookings = sheetBookings.filter(function(b){ return b.date === dateStr; });
+
+  // Debug
+  var dbg = document.getElementById('sheetDebug');
+  if(dbg) dbg.innerHTML += '<br><strong>'+dateStr+':</strong> '+dayBookings.length+' sheet bookings'
+    +(dayBookings.length > 0 ? ' — '+dayBookings.map(function(b){return b.time+'-'+b.finishTime;}).join(', ') : '');
+
   var slots = [];
-  if(lastEnd + dur <= closeMins){
-    slots.push({time: minsToTime(lastEnd), label: fmtTime12(minsToTime(lastEnd))});
+
+  if(dayBookings.length === 0){
+    // No bookings — offer morning start
+    if(morningStart + dur <= closeMins){
+      slots.push({time: minsToTime(morningStart), label: fmtTime12(minsToTime(morningStart))});
+    }
+    // Offer 3:30pm on weekdays
+    if(dow !== 6){
+      var pm = timeToMins('15:30');
+      if(pm + dur <= closeMins){
+        slots.push({time: minsToTime(pm), label: fmtTime12(minsToTime(pm))+' (afternoon)'});
+      }
+    }
+  } else {
+    // Has bookings — find end of last booking
+    var bookedRanges = dayBookings.map(function(b){
+      var startMins = timeToMins(b.time);
+      var endMins;
+      if(b.finishTime && String(b.finishTime).trim() !== '' && timeToMins(b.finishTime) > startMins){
+        endMins = timeToMins(b.finishTime);
+      } else {
+        endMins = startMins + (parseInt(b.duration)||DEFAULT_SLOT);
+      }
+      return {start: startMins, end: endMins};
+    }).sort(function(a,b){return a.start-b.start;});
+
+    var lastEnd = bookedRanges[bookedRanges.length-1].end;
+    // Round up to next 10 min boundary strictly after last booking
+    lastEnd = Math.ceil((lastEnd + 1) / 10) * 10;
+
+    if(lastEnd + dur <= closeMins){
+      slots.push({time: minsToTime(lastEnd), label: fmtTime12(minsToTime(lastEnd))});
+    }
   }
-  
-  // Also offer afternoon start if last booking ends before afternoonStart
-  if(lastEnd <= afternoonStart && dow !== 6 && afternoonStart + dur <= closeMins){
-    slots.push({time: minsToTime(afternoonStart), label: fmtTime12(minsToTime(afternoonStart))+' (afternoon)'});
-  }
-  
+
   return slots;
 }
+
 
 function renderMiniCal(){
   var grid = document.getElementById('miniCal');
