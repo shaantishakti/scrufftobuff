@@ -367,7 +367,7 @@ let editId=null,editBlockId=null;
 let earnView='day',earnDate=new Date();
 let dogCount=1;
 
-function getMonday(d){d=new Date(d);var day=d.getDay();d.setDate(d.getDate()-day+(day===0?-6:1));d.setHours(0,0,0,0);return d;}
+function getMonday(d){d=new Date(d);var day=d.getDay();d.setDate(d.getDate()-day+(day===0?-6:1));d.setHours(12,0,0,0);return d;}
 function addDays(d,n){var r=new Date(d);r.setDate(r.getDate()+n);return r;}
 function fmtISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function titleCase(s){if(!s)return'';return s.toLowerCase().split(' ').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');}
