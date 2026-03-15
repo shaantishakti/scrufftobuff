@@ -405,39 +405,36 @@ function emmiPrevMonth(){emmiMonth.setMonth(emmiMonth.getMonth()-1);renderEmmiCa
 function emmiNextMonth(){emmiMonth.setMonth(emmiMonth.getMonth()+1);renderEmmiCal();}
 
 function selectSessionPlan(n){
-  alert('selectSessionPlan called with: '+n);
   emmiPlan = n;
   emmiSessions = [];
   emmiPickingDate = null;
-  // Deselect all cleaning chips
+
+  // Update chip selection
   document.querySelectorAll('.svc-chip').forEach(function(c){
     var oc = c.getAttribute('onclick')||'';
     if(oc.indexOf('Emmi-Pet Teeth Cleaning')>-1) c.classList.remove('selected');
   });
-  // Select correct chip
   var key = n==='payg' ? 'Emmi-Pet Teeth Cleaning PAYG' : 'Emmi-Pet Teeth Cleaning x'+n;
   document.querySelectorAll('.svc-chip').forEach(function(c){
     if((c.getAttribute('onclick')||'').indexOf(key)>-1) c.classList.add('selected');
   });
-  onServiceSelected();
 
   if(n===4||n===9){
-    // Use timeout to override onServiceSelected showing step2Card
-    setTimeout(function(){
-      document.getElementById('step2Card').style.display='none';
-      document.getElementById('step3Card').style.display='none';
-      document.getElementById('step4Card').style.display='none';
-      document.getElementById('emmiDatesCard').style.display='block';
-      document.getElementById('emmiDatesTitle').textContent='2. Choose Your '+n+' Session Dates & Times';
-      var payCheck = document.getElementById('emmiPaymentConfirm');
-      if(payCheck) payCheck.checked=false;
-      document.getElementById('emmiBookingSection').style.display='none';
-        document.getElementById('emmiDatesCard').scrollIntoView({behavior:'smooth'});
-    }, 50);
+    var card = document.getElementById('emmiDatesCard');
+    if(!card){alert('ERROR: emmiDatesCard not found!');return;}
+    document.getElementById('step2Card').style.display='none';
+    document.getElementById('step3Card').style.display='none';
+    document.getElementById('step4Card').style.display='none';
+    card.style.display='block';
+    document.getElementById('emmiDatesTitle').textContent='2. Choose Your '+n+' Session Dates & Times';
+    var payCheck = document.getElementById('emmiPaymentConfirm');
+    if(payCheck) payCheck.checked=false;
+    document.getElementById('emmiBookingSection').style.display='none';
+    card.scrollIntoView({behavior:'smooth'});
   } else {
+    // PAYG - normal single date flow
     document.getElementById('emmiDatesCard').style.display='none';
-    document.getElementById('step2Card').style.display='block';
-    document.getElementById('step2Card').scrollIntoView({behavior:'smooth'});
+    onServiceSelected();
   }
 }
 
