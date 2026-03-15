@@ -549,7 +549,7 @@ function getAvailableSlots(dateStr){
   else morningStart = timeToMins('08:30');                // Tue/Wed/Fri
 
   // Get bookings for this day from sheet
-  var dayBookings = sheetBookings.filter(function(b){ return b.date === dateStr; });
+  var dayBookings = sheetBookings.filter(function(b){ return String(b.date).trim() === String(dateStr).trim(); });
 
   // Debug
   var dbg = document.getElementById('sheetDebug');
@@ -616,7 +616,7 @@ function renderMiniCal(){
     var y=d.getFullYear(),mo=d.getMonth()+1,da=d.getDate();
     var iso=y+'-'+(mo<10?'0':'')+mo+'-'+(da<10?'0':'')+da;
     var isPast = d < today;
-    var isOpen = HOURS[dow] !== null && dow !== 0;
+    var isOpen = HOURS[dow] !== undefined && HOURS[dow] !== null && dow !== 0;
     var blocks = JSON.parse(localStorage.getItem('stbBlocks')||'[]');
     var isBlocked = blocks.some(function(b){return b.date===iso&&b.fullDay;}) || isLastSatOfMonth(iso) || dow===4;
     var avail = !isPast && isOpen && !isBlocked;
@@ -746,7 +746,8 @@ function submitRequest(){
   if(!name||!phone||!dog||!selectedDate||!selectedTime||!selectedService){
     alert('Please fill in all required fields and choose a date and time.');return;
   }
-  var diaryLink = DIARY_URL+'?prefill=1&name='+encodeURIComponent(name)+'&phone='+encodeURIComponent(phone)+'&dog='+encodeURIComponent(dog)+'&breed='+encodeURIComponent(breed)+'&service='+encodeURIComponent(selectedService)+'&notes='+encodeURIComponent(notes)+'&date='+selectedDate+'&time='+encodeURIComponent(selectedTime);  // Add Emmi-Pet session dates to notes if multi-session
+  var diaryLink = DIARY_URL+'?prefill=1&name='+encodeURIComponent(name)+'&phone='+encodeURIComponent(phone)+'&dog='+encodeURIComponent(dog)+'&breed='+encodeURIComponent(breed)+'&service='+encodeURIComponent(selectedService)+'&notes='+encodeURIComponent(notes)+'&date='+selectedDate+'&time='+encodeURIComponent(selectedTime);
+  // Add Emmi-Pet session dates to notes if multi-session
   var emmiNote = '';
   if(emmiSelectedDates.length > 1){
     var circles = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
