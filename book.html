@@ -405,6 +405,7 @@ function emmiPrevMonth(){emmiMonth.setMonth(emmiMonth.getMonth()-1);renderEmmiCa
 function emmiNextMonth(){emmiMonth.setMonth(emmiMonth.getMonth()+1);renderEmmiCal();}
 
 function selectSessionPlan(n){
+  alert('selectSessionPlan called with: '+n);
   emmiPlan = n;
   emmiSessions = [];
   emmiPickingDate = null;
