@@ -414,38 +414,18 @@ function getAvailableSlots(dateStr){
     return slots;
   }
   
-  // Check if all bookings are in the afternoon (start >= afternoonStart)
-  var allAfternoon = bookedRanges.every(function(r){return r.start >= afternoonStart;});
-  // Check if all bookings are in the morning
-  var allMorning = bookedRanges.every(function(r){return r.start < afternoonStart;});
+  // Simply find the end of the last booking and offer that as next slot
+  var lastEnd = bookedRanges[bookedRanges.length-1].end;
+  lastEnd = Math.ceil(lastEnd/10)*10;
   
   var slots = [];
+  if(lastEnd + dur <= closeMins){
+    slots.push({time: minsToTime(lastEnd), label: fmtTime12(minsToTime(lastEnd))});
+  }
   
-  if(allMorning){
-    // Fill forward from last booking end
-    var lastEnd = bookedRanges[bookedRanges.length-1].end;
-    // Round up to next 10 min
-    lastEnd = Math.ceil(lastEnd/10)*10;
-    if(lastEnd + dur <= closeMins){
-      slots.push({time: minsToTime(lastEnd), label: fmtTime12(minsToTime(lastEnd))});
-    }
-  } else if(allAfternoon){
-    // Fill backwards from first afternoon booking
-    var firstStart = bookedRanges[0].start;
-    var newEnd = firstStart;
-    var newStart = newEnd - dur;
-    newStart = Math.floor(newStart/10)*10;
-    if(newStart >= openMins){
-      slots.push({time: minsToTime(newStart), label: fmtTime12(minsToTime(newStart))});
-    }
-  } else {
-    // Mixed - fill forward from last morning booking
-    var morningBookings = bookedRanges.filter(function(r){return r.start < afternoonStart;});
-    var lastMorningEnd = morningBookings[morningBookings.length-1].end;
-    lastMorningEnd = Math.ceil(lastMorningEnd/10)*10;
-    if(lastMorningEnd + dur <= closeMins){
-      slots.push({time: minsToTime(lastMorningEnd), label: fmtTime12(minsToTime(lastMorningEnd))});
-    }
+  // Also offer afternoon start if last booking ends before afternoonStart
+  if(lastEnd <= afternoonStart && dow !== 6 && afternoonStart + dur <= closeMins){
+    slots.push({time: minsToTime(afternoonStart), label: fmtTime12(minsToTime(afternoonStart))+' (afternoon)'});
   }
   
   return slots;
