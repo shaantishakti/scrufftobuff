@@ -405,7 +405,7 @@ function buildEmmiBadge(n){
     +'If you have not had an Emmi-Pet Consultation with Scruff to Buff Dogs yet, please select that instead.'
     +'<br><br><strong>Choose your plan:</strong><br>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">'
-    +'<div class="slot-chip'+(n==='payg'?' selected':'')+'" onclick="selectSessionPlan('payg')" style="font-size:0.82rem;">PAYG (single)</div>'
+    +'<div class="slot-chip'+(n==="payg"?' selected':'')+'" onclick="selectSessionPlan(&apos;payg&apos;)" style="font-size:0.82rem;">PAYG (single)</div>'
     +'<div class="slot-chip'+(n===4?' selected':'')+'" onclick="selectSessionPlan(4)" style="font-size:0.82rem;">x4 sessions (min)</div>'
     +'<div class="slot-chip'+(n===9?' selected':'')+'" onclick="selectSessionPlan(9)" style="font-size:0.82rem;">x9 sessions</div>'
     +'</div></div>';
@@ -425,7 +425,7 @@ function renderEmmiDatesList(){
       var circle = num<=20?['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'][num-1]:num;
       html += '<div style="background:#1e3a5f;color:white;border-radius:20px;padding:5px 12px;font-size:0.8rem;display:flex;align-items:center;gap:6px;">'
         +circle+' '+fmtDateLong(d)
-        +'<span onclick="removeEmmiDate(''+d+'')" style="cursor:pointer;opacity:0.7;font-size:0.9rem;">✕</span>'
+        +'<span data-iso="'+d+'" class="emmi-remove" style="cursor:pointer;opacity:0.7;font-size:0.9rem;margin-left:4px;">&#10005;</span>'
         +'</div>';
     });
     html += '</div>';
@@ -474,7 +474,7 @@ function renderEmmiCal(){
     else cls+=' mc-available';
     var label2=isSelected?(circles[sessionNum-1]||sessionNum):day;
     if(isPast||isBlocked) html+='<div class="'+cls+'">'+day+'</div>';
-    else html+='<div class="'+cls+'" onclick="toggleEmmiDate(''+iso+'')">'+label2+'</div>';
+    else html+='<div class="'+cls+'" data-iso="'+iso+'" onclick="toggleEmmiDate(this.getAttribute(\'data-iso\'))">'+label2+'</div>';
   }
   grid.innerHTML=html;
 }
