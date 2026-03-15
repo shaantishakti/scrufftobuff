@@ -26,6 +26,7 @@ body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--blue);
 .mc-available{cursor:pointer;font-weight:500;}
 .mc-available:hover{background:var(--blue-light);}
 .mc-disabled{color:#c2d9f0;}
+.mc-unavail{color:#c2d9f0;cursor:not-allowed;}
 .mc-selected{background:var(--blue)!important;color:white!important;}
 .slot-section{display:none;}
 .slot-label{font-size:0.82rem;font-weight:600;color:#4a7aaa;margin-bottom:10px;}
@@ -170,9 +171,9 @@ body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--blue);
     <p style="font-size:0.82rem;color:#4a7aaa;margin-bottom:12px;">Pick your dates one by one — the calendar will highlight each one as you go. You can pick them in any order.</p>
     <div id="emmiDatesList" style="margin-bottom:14px;"></div>
     <div class="cal-nav">
-      <button onclick="prevMonth()">&#8249;</button>
+      <button onclick="emmiPrevMonth()">&#8249;</button>
       <span id="emmiCalMonthLabel"></span>
-      <button onclick="nextMonth()">&#8250;</button>
+      <button onclick="emmiNextMonth()">&#8250;</button>
     </div>
     <div class="mc-grid" id="emmiMiniCal"></div>
     <button class="submit-btn" id="emmiDoneBtn" onclick="emmiDatesDone()" style="display:none;margin-top:12px;">Continue →</button>
@@ -449,16 +450,16 @@ function renderEmmiCal(){
   var grid = document.getElementById('emmiMiniCal');
   var label = document.getElementById('emmiCalMonthLabel');
   var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  label.textContent = months[currentMonth.getMonth()]+' '+currentMonth.getFullYear();
+  label.textContent = months[emmiMonth.getMonth()]+' '+emmiMonth.getFullYear();
   var today=new Date();today.setHours(0,0,0,0);
-  var firstDay=new Date(currentMonth.getFullYear(),currentMonth.getMonth(),1).getDay();
-  var daysInMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1,0).getDate();
+  var firstDay=new Date(emmiMonth.getFullYear(),emmiMonth.getMonth(),1).getDay();
+  var daysInMonth=new Date(emmiMonth.getFullYear(),emmiMonth.getMonth()+1,0).getDate();
   var html='';
   ['M','T','W','T','F','S','S'].forEach(function(d){html+='<div class="mc-day-hdr">'+d+'</div>';});
   var startCol=firstDay===0?6:firstDay-1;
   for(var i=0;i<startCol;i++) html+='<div class="mc-day"></div>';
   for(var day=1;day<=daysInMonth;day++){
-    var d=new Date(currentMonth.getFullYear(),currentMonth.getMonth(),day);
+    var d=new Date(emmiMonth.getFullYear(),emmiMonth.getMonth(),day);
     d.setHours(12,0,0,0);
     var y=d.getFullYear(),mo=d.getMonth()+1,da=d.getDate();
     var iso=y+'-'+(mo<10?'0':'')+mo+'-'+(da<10?'0':'')+da;
@@ -549,7 +550,18 @@ function getAvailableSlots(dateStr){
   else morningStart = timeToMins('08:30');                // Tue/Wed/Fri
 
   // Get bookings for this day from sheet
-  var dayBookings = sheetBookings.filter(function(b){ return String(b.date).trim() === String(dateStr).trim(); });
+  var dayBookings = sheetBookings.filter(function(b){
+    // Normalise both dates to YYYY-MM-DD for comparison
+    var bDate = String(b.date).trim().replace(/[^0-9]/g,'-').replace(/--+/g,'-');
+    var sDate = String(dateStr).trim();
+    // Also try matching just year-month-day parts
+    var bParts = bDate.match(/(\d{4})-?(\d{2})-?(\d{2})/);
+    var sParts = sDate.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if(bParts && sParts){
+      return bParts[1]===sParts[1] && bParts[2]===sParts[2] && bParts[3]===sParts[3];
+    }
+    return bDate === sDate;
+  });
 
   // Debug
   var dbg = document.getElementById('sheetDebug');
@@ -588,6 +600,8 @@ function getAvailableSlots(dateStr){
     var lastEnd = bookedRanges[bookedRanges.length-1].end;
     // Round up to next 10 min boundary strictly after last booking
     lastEnd = Math.ceil((lastEnd + 1) / 10) * 10;
+
+    if(dbg) dbg.innerHTML += '<br>lastEnd='+minsToTime(lastEnd)+' dur='+dur+' close='+minsToTime(closeMins)+' fits='+(lastEnd+dur<=closeMins);
 
     if(lastEnd + dur <= closeMins){
       slots.push({time: minsToTime(lastEnd), label: fmtTime12(minsToTime(lastEnd))});
