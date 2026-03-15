@@ -605,12 +605,24 @@ function onServiceSelected(){
   selectedServiceDuration = selected.reduce(function(sum, svc){
     return sum + (SVC_DURATIONS[svc] || DEFAULT_SLOT);
   }, 0) * selectedDogCount;
-  document.getElementById('step2Card').style.display = 'block';
-  document.getElementById('step3Card').style.display = 'none';
-  document.getElementById('step4Card').style.display = 'none';
-  renderMiniCal();
-  document.getElementById('step2Card').scrollIntoView({behavior:'smooth'});
-  loadSheetBookings(function(){ renderMiniCal(); });
+  // Check if x4 or x9 emmi session selected
+  var hasX4 = selected.indexOf('Emmi-Pet Teeth Cleaning x4') > -1;
+  var hasX9 = selected.indexOf('Emmi-Pet Teeth Cleaning x9') > -1;
+
+  if(hasX4 || hasX9){
+    document.getElementById('step2Card').style.display = 'none';
+    document.getElementById('step3Card').style.display = 'none';
+    document.getElementById('step4Card').style.display = 'none';
+    selectSessionPlan(hasX9 ? 9 : 4);
+  } else {
+    document.getElementById('step2Card').style.display = 'block';
+    document.getElementById('step3Card').style.display = 'none';
+    document.getElementById('step4Card').style.display = 'none';
+    document.getElementById('emmiDatesCard').style.display = 'none';
+    renderMiniCal();
+    document.getElementById('step2Card').scrollIntoView({behavior:'smooth'});
+    loadSheetBookings(function(){ renderMiniCal(); });
+  }
 }
 
 function getAvailableSlots(dateStr){
