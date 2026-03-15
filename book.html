@@ -333,6 +333,23 @@ function jumpWeeksAhead(weeks, btn){
   setTimeout(function(){ selectDate(iso); }, 50);
 }
 
+function toggleService(el, svc){
+  el.classList.toggle('selected');
+  onServiceSelected();
+  // update summary
+  var sel = [];
+  document.querySelectorAll('.svc-chip.selected').forEach(function(c){
+    sel.push(c.textContent.trim());
+  });
+  var summary = document.getElementById('svcSummary');
+  if(sel.length){
+    summary.style.display='block';
+    summary.innerHTML = '✅ Selected: <strong>' + sel.join(', ') + '</strong>';
+  } else {
+    summary.style.display='none';
+  }
+}
+
 function switchSvcTab(tab, btn){
   document.querySelectorAll('.svc-tab-panel').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.svc-tab-btn').forEach(function(b){b.classList.remove('active');});
