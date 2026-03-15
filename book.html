@@ -409,9 +409,12 @@ function emmiCheckPayment(){
   var bookSec = document.getElementById('emmiBookingSection');
   bookSec.style.display = confirmed ? 'block' : 'none';
   if(confirmed){
-    renderEmmiSessions();
-    renderEmmiCal();
-    bookSec.scrollIntoView({behavior:'smooth'});
+    // Load sheet bookings first so availability is accurate
+    loadSheetBookings(function(){
+      renderEmmiSessions();
+      renderEmmiCal();
+      bookSec.scrollIntoView({behavior:'smooth'});
+    });
   }
 }
 
