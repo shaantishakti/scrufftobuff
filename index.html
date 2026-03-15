@@ -343,7 +343,7 @@ const BIZ='Scruff to Buff Dogs';
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const MONS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const FMONS=['January','February','March','April','May','June','July','August','September','October','November','December'];
-const SVC_DURATIONS={'Nail Clip - £13':10,'Nail Clip Fussy - £16':10,'Nail Clip Problematic - £20':10,'Anal Glands':10,'Puppy Intro (Inc. Bath) - £28':40,'Puppy Intro (Exc. Bath) - £15':20,'Emmi-Pet Teeth Consultation':30,'Emmi-Pet Teeth Cleaning':30,'Emmi-Pet Teeth Maintenance':20};
+const SVC_DURATIONS={'Nail Clip - £13':10,'Nail Clip Fussy - £16':10,'Nail Clip Problematic - £20':10,'Anal Glands':10,'Puppy Intro (Inc. Bath) - £28':40,'Puppy Intro (Exc. Bath) - £15':20,'Emmi-Pet Teeth Consultation':30,'Emmi-Pet Teeth Cleaning':30,'Emmi-Pet Teeth Cleaning PAYG':30,'Emmi-Pet Teeth Cleaning x4':30,'Emmi-Pet Teeth Cleaning x9':30,'Emmi-Pet Teeth Maintenance':20};
 const BREED_TIMES={'labrador':{min:60,max:70},'cockapoo':{min:70,max:90},'spaniel':{min:60,max:90},'spinone':{min:100,max:150},'golden retriever':{min:90,max:100},'jack russell':{min:45,max:60},'border terrier':{min:60,max:90},'airedale':{min:90,max:150}};
 const AUTO_SVCS=['Full Groom','Hand Stripping'];
 const GRID_START=480;
@@ -356,7 +356,7 @@ function isLastSatOfMonth(dateStr){
 const ROW_H=14;
 const MAX_DOGS=4;
 const BREEDS=["Affenpinscher", "Afghan Hound", "Airedale Terrier", "Akita", "Alaskan Malamute", "American Bulldog", "American Cocker Spaniel", "American Eskimo Dog", "American Foxhound", "American Staffordshire Terrier", "Australian Cattle Dog", "Australian Shepherd", "Australian Terrier", "Basenji", "Basset Hound", "Beagle", "Bearded Collie", "Bedlington Terrier", "Belgian Malinois", "Belgian Shepherd", "Bernese Mountain Dog", "Bichon Frise", "Bloodhound", "Border Collie", "Border Terrier", "Boston Terrier", "Boxer", "Bracco Italiano", "Briard", "Brittany Spaniel", "Brussels Griffon", "Bull Terrier", "Bulldog", "Bullmastiff", "Cairn Terrier", "Cavalier King Charles Spaniel", "Chesapeake Bay Retriever", "Chihuahua", "Chinese Crested", "Chow Chow", "Clumber Spaniel", "Cockapoo", "Cocker Spaniel", "Collie", "Dachshund", "Dalmatian", "Dandie Dinmont Terrier", "Doberman", "Dogue de Bordeaux", "English Setter", "English Springer Spaniel", "English Toy Terrier", "Flat Coated Retriever", "Fox Terrier", "French Bulldog", "German Shepherd", "German Shorthaired Pointer", "Giant Schnauzer", "Golden Retriever", "Goldendoodle", "Gordon Setter", "Great Dane", "Greyhound", "Havanese", "Hungarian Vizsla", "Ibizan Hound", "Irish Red and White Setter", "Irish Setter", "Irish Terrier", "Irish Water Spaniel", "Irish Wolfhound", "Italian Greyhound", "Jack Russell Terrier", "Japanese Spitz", "Keeshond", "Kerry Blue Terrier", "King Charles Spaniel", "Labradoodle", "Labrador", "Lagotto Romagnolo", "Leonberger", "Lhasa Apso", "Lowchen", "Lurcher", "Maltese", "Maltipoo", "Manchester Terrier", "Mastiff", "Miniature Dachshund", "Miniature Pinscher", "Miniature Schnauzer", "Mongrel", "Newfoundland", "Norfolk Terrier", "Norwegian Elkhound", "Norwich Terrier", "Nova Scotia Duck Tolling Retriever", "Old English Sheepdog", "Papillon", "Patterdale Terrier", "Pekingese", "Pembroke Welsh Corgi", "Petit Basset Griffon Vendeen", "Pharaoh Hound", "Pointer", "Poochon", "Poodle", "Portuguese Water Dog", "Pug", "Puggle", "Rhodesian Ridgeback", "Rottweiler", "Rough Collie", "Saint Bernard", "Saluki", "Samoyed", "Schnauzer", "Scottish Deerhound", "Scottish Terrier", "Shetland Sheepdog", "Shih Tzu", "Siberian Husky", "Skye Terrier", "Sloughi", "Smooth Collie", "Smooth Fox Terrier", "Soft Coated Wheaten Terrier", "Spaniel", "Spinone Italiano", "Springer Spaniel", "Staffordshire Bull Terrier", "Standard Poodle", "Standard Schnauzer", "Sussex Spaniel", "Tibetan Mastiff", "Tibetan Spaniel", "Tibetan Terrier", "Toy Poodle", "Vizsla", "Weimaraner", "Welsh Corgi", "Welsh Springer Spaniel", "Welsh Terrier", "West Highland White Terrier", "Whippet", "Wire Fox Terrier", "Wirehaired Pointing Griffon", "Xoloitzcuintli", "Yorkshire Terrier"];
-const SVC_OPTIONS=['Full Groom','Wash & Dry','Trim & Tidy','Puppy Intro (Inc. Bath) - £28','Puppy Intro (Exc. Bath) - £15','Puppy Groom','Nail Clip - £13','Nail Clip Fussy - £16','Nail Clip Problematic - £20','De-shed Treatment','Anal Glands','Hand Stripping','Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning','Emmi-Pet Teeth Maintenance','Teeth Descaling - £30','Other'];
+const SVC_OPTIONS=['Full Groom','Wash & Dry','Trim & Tidy','Puppy Intro (Inc. Bath) - £28','Puppy Intro (Exc. Bath) - £15','Puppy Groom','Nail Clip - £13','Nail Clip Fussy - £16','Nail Clip Problematic - £20','De-shed Treatment','Anal Glands','Hand Stripping','Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning','Emmi-Pet Teeth Cleaning PAYG','Emmi-Pet Teeth Cleaning x4','Emmi-Pet Teeth Cleaning x9','Emmi-Pet Teeth Maintenance','Teeth Descaling - £30','Other'];
 
 let bookings=JSON.parse(localStorage.getItem('stbBookings')||'[]');
 let customers=JSON.parse(localStorage.getItem('stbCustomers')||'[]');
@@ -848,7 +848,8 @@ function renderCal(){
     for(var k=0;k<allDays.length;k++){if(fmtISO(allDays[k])===fmtISO(d)){gi=k;break;}}
     var tod=fmtISO(d)===today;
     var lastSat=isLastSatOfMonth(fmtISO(d));
-    hdr+='<div class="day-hdr'+(tod?' today':'')+(lastSat?' closed-day':'')+'">'+(lastSat?'<span style="font-size:0.6rem;opacity:0.7;">Closed</span>':'')+' <span class="dn">'+DAYS[gi]+'</span><span>'+d.getDate()+' '+MONS[d.getMonth()]+'</span></div>';
+    var isThu=d.getDay()===4;
+    hdr+='<div class="day-hdr'+(tod?' today':'')+(lastSat||isThu?' closed-day':'')+'">'+(lastSat?'<span style="font-size:0.6rem;opacity:0.7;">Closed</span>':isThu?'<span style="font-size:0.6rem;opacity:0.7;">Client Closed</span>':'')+' <span class="dn">'+DAYS[gi]+'</span><span>'+d.getDate()+' '+MONS[d.getMonth()]+'</span></div>';
   });
   var body='';
   for(var row=1;row<=60;row++){
@@ -912,9 +913,23 @@ function renderCal(){
         else svcCls=bk.paid?'paid':'unpaid';
         body+='<div class="bk '+svcCls+'" style="top:'+tp+'px;height:'+hp+'px;padding-top:7px;" data-bkid="'+bk.id+'" onmousedown="startDrag(event,\''+bk.id+'\')" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">'
           +'<div class="pay-dot '+(bk.paid?'paid':'unpaid')+'"></div>'
-          +'<div class="bn">'+bk.name+(totalBlocks>1?' — '+bl.dogName:'')+'</div>'
-          +'<div class="bd">'+bl.dogName+(bl.breed?' ('+bl.breed+')':'')+'</div>'
-          +'<div class="bs">'+svc+'</div>'
+          +(function(){
+            var sessionBadge='';
+            if(svc&&svc.indexOf('Emmi-Pet Teeth Cleaning')>-1){
+              // Count how many Emmi-Pet Cleaning sessions this client has up to and including this date
+              var clientSessions=bookings.filter(function(b){
+                return b.name&&bk.name&&b.name.toLowerCase()===bk.name.toLowerCase()
+                  &&b.dogs&&b.dogs.some(function(d){return d.service&&d.service.indexOf('Emmi-Pet Teeth Cleaning')>-1;})
+                  &&b.date<=bk.date;
+              }).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
+              var sessionNum=clientSessions.findIndex(function(b){return b.id===bk.id;})+1;
+              var totalSessions=svc.indexOf('x9')>-1?9:svc.indexOf('x4')>-1?4:'';
+              var circles=['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
+              sessionBadge='<span style="font-size:1rem;margin-left:4px;">'+(circles[sessionNum-1]||sessionNum)+'</span>'+(totalSessions?' /'+totalSessions:'');
+            }
+            return '<div class="bn">'+bk.name+(totalBlocks>1?' — '+bl.dogName:'')+sessionBadge+'</div>';
+          })()
+          +'<div class="bd">'+bl.dogName+(bl.breed?' ('+bl.breed+')':'')+'</div>'          +'<div class="bs">'+svc+'</div>'
           +'<div class="bt">'+fmtTime(slotTime)+' - '+fmtTime(finTime)+'</div>'
           +(bi===totalBlocks-1?pm:'')
           +'</div>';
