@@ -193,6 +193,9 @@ body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--blue);
         <div style="font-size:0.82rem;font-weight:600;color:#1e3a5f;margin-bottom:8px;">Your sessions so far:</div>
         <div id="emmiSessionsItems"></div>
       </div>
+      <div style="background:#e8f0fb;border:1.5px solid var(--blue-light);border-radius:8px;padding:10px 12px;font-size:0.78rem;color:#1e3a5f;margin-bottom:12px;">
+        📅 <strong>Please note:</strong> For best results, sessions should be no more than <strong>2 weeks apart</strong>. Please keep this in mind when choosing your dates.
+      </div>
       <div id="emmiPickingLabel" style="font-size:0.82rem;font-weight:600;color:#4a7aaa;margin-bottom:10px;"></div>
       <!-- Date picker -->
       <div id="emmiDatePickWrap">
@@ -500,9 +503,6 @@ function renderEmmiCal(){
   ['M','T','W','T','F','S','S'].forEach(function(d){html+='<div class="mc-day-hdr">'+d+'</div>';});
   for(var i=0;i<startCol;i++) html+='<div class="mc-day"></div>';
 
-  // Last session date for 2-week window check
-  var lastSessionDate = emmiSessions.length > 0 ? new Date(emmiSessions[emmiSessions.length-1].date+'T12:00:00') : null;
-
   for(var day=1;day<=daysInMonth;day++){
     var d=new Date(emmiMonth.getFullYear(),emmiMonth.getMonth(),day);
     d.setHours(12,0,0,0);
@@ -512,12 +512,8 @@ function renderEmmiCal(){
     var isPast=d<today;
     var isDow=dow===0||dow===4;
     var isLastSat=isLastSatOfMonth(iso);
-    // Check 2-week window from last session
+    // No window restriction - client can pick any future available date
     var outOfWindow=false;
-    if(lastSessionDate && emmiSessions.length > 0){
-      var diffDays = Math.round((d - lastSessionDate) / 86400000);
-      if(diffDays < 1 || diffDays > 14) outOfWindow = true;
-    }
     var isAlreadyPicked = emmiSessions.some(function(s){return s.date===iso;});
     var isPickingThis = emmiPickingDate === iso;
     var isBlocked = isPast||isDow||isLastSat||outOfWindow||isAlreadyPicked||emmiSessions.length>=needed;
@@ -540,6 +536,17 @@ function renderEmmiCal(){
 
 function emmiPickDate(iso){
   if(emmiSessions.some(function(s){return s.date===iso;})) return;
+  // Warn if more than 2 weeks from last session
+  if(emmiSessions.length > 0){
+    var lastDate = new Date(emmiSessions[emmiSessions.length-1].date+'T12:00:00');
+    var thisDate = new Date(iso+'T12:00:00');
+    var diffDays = Math.round((thisDate - lastDate) / 86400000);
+    if(diffDays > 14){
+      if(!confirm('⚠️ This date is more than 2 weeks after your previous session. For best results, sessions should be no more than 2 weeks apart. Do you still want to pick this date?')){
+        return;
+      }
+    }
+  }
   emmiPickingDate = iso;
   renderEmmiCal();
   // Show time slots for this date
