@@ -1205,7 +1205,8 @@ function clearAndPushAll(){
   fetch(SHEET_URL,{
     method:'POST',
     body:JSON.stringify({action:'clearAll'})
-  }).then(function(){
+  }).then(function(r){return r.text();}).then(function(resp){
+    console.log('Clear response:',resp);
     // Now push all bookings fresh
     var all=bookings.filter(function(b){return b.date&&b.time;});
     if(!all.length){alert('No bookings to push.');btn.textContent='🔄 Clear & Push All';btn.disabled=false;return;}
