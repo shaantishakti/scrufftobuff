@@ -1690,6 +1690,26 @@ document.getElementById('p-unpaid').addEventListener('change',function(){showPay
 renderCal();
 setTimeout(checkPrefill,300);
 setTimeout(checkSheetRequests,1000); // Check for new booking requests from Sheet
+
+// ── SWIPE TO CHANGE WEEK ──────────────────────────────────────────────────
+(function(){
+  var el = document.getElementById('calOuter');
+  if(!el) return;
+  var startX = 0;
+  var startY = 0;
+  el.addEventListener('touchstart', function(e){
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, {passive:true});
+  el.addEventListener('touchend', function(e){
+    var dx = e.changedTouches[0].clientX - startX;
+    var dy = e.changedTouches[0].clientY - startY;
+    // Only trigger if horizontal swipe is dominant and long enough
+    if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5){
+      changeWeek(dx < 0 ? 1 : -1);
+    }
+  }, {passive:true});
+})();
 window.addEventListener('resize',function(){mobileOffset=0;renderCal();});
 
 // ── Drag & Drop to reschedule ──────────────────────────────────────────────
