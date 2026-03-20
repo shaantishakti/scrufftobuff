@@ -876,12 +876,34 @@ function submitRequest(){
   var msg = 'NEW BOOKING REQUEST\n\nName: '+name+'\nWhatsApp: '+phone+'\nDog: '+dog+(breed?' ('+breed+')':'')+'\nService: '+selectedService+'\nDogs: '+selectedDogCount+'\nDate: '+fmtDateLong(selectedDate)+'\nTime: '+fmtTime12(selectedTime)+'\n'+(notes?'Notes: '+notes+'\n':'')+emmiNote+'\nTap to add to diary:\n'+diaryLink;
   var c = phone.replace(/\s+/g,'').replace(/^\+/,'');
   if(c.charAt(0)==='0') c='44'+c.slice(1);
+  // Save request to Google Sheet requests tab
+  var requestData = {
+    action: 'addRequest',
+    id: 'req'+Date.now(),
+    name: name,
+    phone: phone,
+    dog: dog,
+    breed: breed,
+    service: selectedService,
+    date: selectedDate,
+    time: selectedTime,
+    notes: notes,
+    dogs: selectedDogCount,
+    emmiSessions: emmiSessions.length > 1 ? emmiSessions.map(function(s,i){return circles[i]+' '+fmtDateLong(s.date)+' at '+fmtTime12(s.time);}).join(', ') : ''
+  };
+  fetch(SHEET_URL, {method:'POST', body:JSON.stringify(requestData)}).catch(function(){});
+
   document.getElementById('bookingStep').style.display = 'none';
   document.getElementById('successStep').style.display = 'block';
   document.getElementById('successDetail').innerHTML = '<strong>'+name+'</strong> &mdash; '+dog+'<br>'+selectedService+'<br>'+fmtDateLong(selectedDate)+' at '+fmtTime12(selectedTime);
-  setTimeout(function(){
-    window.open('https://wa.me/'+BIZ_WA+'?text='+encodeURIComponent(msg),'_blank');
-  },400);
+  // Open WhatsApp immediately (not in setTimeout - Safari blocks delayed window.open)
+  var waUrl = 'https://wa.me/'+BIZ_WA+'?text='+encodeURIComponent(msg);
+  window.open(waUrl,'_blank');
+  // Also show a fallback WhatsApp button in case popup was blocked
+  var waNote = document.querySelector('.wa-note');
+  if(waNote){
+    waNote.innerHTML = 'A WhatsApp message should have opened. If not, <a href="'+waUrl+'" target="_blank" style="color:#1a4f37;font-weight:600;">tap here to send it</a>. Becky will confirm your appointment shortly.';
+  }
 }
 </script>
 </body>
