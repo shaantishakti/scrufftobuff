@@ -461,45 +461,56 @@ function fillCustomer(name){
     calcFinish();
   }
 
-  // Fill dogs
+  // Fill dogs — IDs are 0-based (f-dog-0, f-service-0-0, etc.)
   setDogCount(Math.max(1,c.dogs?c.dogs.length:1));
-  if(c.dogs&&c.dogs.length){
-    c.dogs.forEach(function(d,i){
-      if(i>=MAX_DOGS)return;
-      var idx=i+1;
-      var nameEl=document.getElementById('f-dog-'+idx);
-      var breedEl=document.getElementById('f-breed-'+idx);
-      var svcEl=document.getElementById('f-service-'+idx);
-      var priceEl=document.getElementById('f-price-'+idx);
-      var durEl=document.getElementById('f-duration-'+idx);
-      if(nameEl)nameEl.value=d.name||'';
-      if(breedEl)breedEl.value=d.breed||'';
-      if(svcEl&&d.lastService){
-        var opts=Array.from(svcEl.options).map(function(o){return o.value;});
-        if(opts.indexOf(d.lastService)>=0)svcEl.value=d.lastService;
-      }
-      if(priceEl&&d.lastPrice)priceEl.value=d.lastPrice.toFixed(2);
-      if(durEl&&d.lastDuration){
-        // Only use lastDuration if the current service doesn't have a known fixed duration
-        var _svcEl=document.getElementById('f-service-'+idx+'-0');
-        var _svc=_svcEl?_svcEl.value:'';
-        if(!SVC_DURATIONS[_svc]){durEl.value=d.lastDuration;calcFinish();}
-        var dh=document.getElementById('durationHint-'+idx);
-        if(dh){
-          var dm=d.lastDuration;
-          var hrs=Math.floor(dm/60),mins=dm%60;
-          var dlabel=hrs>0&&mins>0?hrs+'hr '+mins+'min':hrs>0?hrs+' hour'+(hrs>1?'s':''):mins+' mins';
-          dh.style.display='block';
-          dh.textContent='Last groom duration: '+dlabel;
+  setTimeout(function(){
+    if(c.dogs&&c.dogs.length){
+      c.dogs.forEach(function(d,i){
+        if(i>=MAX_DOGS)return;
+        var nameEl=document.getElementById('f-dog-'+i);
+        var breedEl=document.getElementById('f-breed-'+i);
+        var svcEl=document.getElementById('f-service-'+i+'-0');
+        var priceEl=document.getElementById('f-price-'+i+'-0');
+        var durEl=document.getElementById('f-duration-'+i+'-0');
+        if(nameEl)nameEl.value=d.name||'';
+        if(breedEl)breedEl.value=d.breed||'';
+        if(svcEl&&d.lastService){
+          // Set in dogServices so renderDogRows picks it up
+          if(!dogServices[i])dogServices[i]=[{service:'',duration:60,price:''}];
+          dogServices[i][0].service=d.lastService;
+          if(d.lastDuration)dogServices[i][0].duration=d.lastDuration;
+          if(d.lastPrice)dogServices[i][0].price=d.lastPrice;
+          renderServiceRows(i);
+          // Also set directly on the element
+          var svcEl2=document.getElementById('f-service-'+i+'-0');
+          if(svcEl2){
+            svcEl2.value=d.lastService;
+            onSvcChange(i,0);
+          }
         }
-      }
-      if(d.lastPrice){
-        var ph=document.getElementById('f-price-hint-'+idx);
-        if(ph){ph.style.display='block';ph.textContent='Last price: £'+d.lastPrice.toFixed(2);}
-      }
-      autoFillDurationForDog(idx);
-    });
-  }
+        if(durEl&&d.lastDuration){
+          var _svc=svcEl?svcEl.value:'';
+          if(!SVC_DURATIONS[_svc]){durEl.value=d.lastDuration;calcFinish();}
+          var dh=document.getElementById('durationHint-'+i);
+          if(dh){
+            var dm=d.lastDuration;
+            var hrs=Math.floor(dm/60),mins=dm%60;
+            var dlabel=hrs>0&&mins>0?hrs+'hr '+mins+'min':hrs>0?hrs+' hour'+(hrs>1?'s':''):mins+' mins';
+            dh.style.display='block';
+            dh.textContent='Last groom duration: '+dlabel;
+          }
+        }
+        if(d.lastPrice){
+          var priceEl2=document.getElementById('f-price-'+i+'-0');
+          if(priceEl2)priceEl2.value=d.lastPrice.toFixed(2);
+          var ph=document.getElementById('f-price-hint-'+i);
+          if(ph){ph.style.display='block';ph.textContent='Last price: £'+d.lastPrice.toFixed(2);}
+        }
+        autoFillDurationForDog(i);
+      });
+      calcFinish();
+    }
+  },200);
   checkDiscount(c.name,next,c.dogs&&c.dogs[0]?c.dogs[0].lastPrice:null);
 }
 
@@ -1158,6 +1169,13 @@ function saveBooking(){
   upsertCustomer(booking);
   saveAll();
   syncToSheet(booking, editId ? 'update' : 'add');
+  // If this booking came from a sheet request, dismiss it now
+  if(window._sheetRequestId){
+    dismissSheetRequest(window._sheetRequestId, null);
+    window._sheetRequestId = null;
+  }
+  // Also clear localStorage pending request
+  localStorage.removeItem('pendingRequest');
   closeMain();renderCal();
 }
 
@@ -1523,6 +1541,68 @@ function dismissPrefill(){
   } catch(e) {}
 })();
 
+// ── CHECK FOR NEW BOOKING REQUESTS FROM SHEET ─────────────────────────────
+function checkSheetRequests(){
+  fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'getRequests'})})
+    .then(function(r){return r.json();})
+    .then(function(requests){
+      if(!requests || !requests.length) return;
+      // Show each new request in the banner
+      var banner = document.getElementById('reminderBanner');
+      var list = document.getElementById('reminderList');
+      var html = '';
+      requests.forEach(function(p){
+        html += '<div class="banner-chip" data-request-id="'+p.id+'" style="border-color:#f59e0b;flex-direction:column;align-items:flex-start;gap:4px;min-width:240px;">'
+          +'<div style="font-weight:600;color:#92400e;">&#128276; New Booking Request</div>'
+          +'<div><strong>'+p.name+'</strong> &mdash; '+p.dog+(p.breed?' ('+p.breed+')':'')+'</div>'
+          +'<div style="font-size:0.75rem;color:#92400e;">'+p.service+' &bull; '+fmtDD(p.date)+' at '+fmtTime(p.time)+'</div>'
+          +(p.notes?'<div style="font-size:0.72rem;font-style:italic;color:#7a5c00;">'+p.notes+'</div>':'')
+          +'<div style="display:flex;gap:6px;margin-top:4px;">'
+          +'<button class="btn-wa-sm" style="background:#3a9e6e;padding:5px 10px;" onclick="addFromSheetRequest('+JSON.stringify(p)+')">&#10003; Add to Diary</button>'
+          +'<button class="btn-wa-sm" style="background:#e05252;padding:5px 10px;" data-rid="'+p.id+'" onclick="dismissSheetRequest(this.dataset.rid,this)">&#10007; Dismiss</button>'
+          +'<button class="btn-wa-sm" style="background:#0ea5e9;padding:5px 10px;" data-phone="'+p.phone+'" onclick="waReplySheetRequest(this.dataset.phone)">WhatsApp</button>'
+          +'</div></div>';
+      });
+      if(html){
+        banner.style.background='#fff8e0';
+        banner.style.borderBottomColor='#f59e0b';
+        banner.classList.add('show');
+        // Prepend to existing banner content
+        list.innerHTML = html + list.innerHTML;
+      }
+    }).catch(function(){});
+}
+
+function addFromSheetRequest(p){
+  // Store the sheet request ID so we can dismiss it after saving
+  window._sheetRequestId = p.id;
+  window._prefill = p;
+  localStorage.setItem('pendingRequest', JSON.stringify(p));
+  addFromPrefill();
+  // Don't dismiss yet - will be dismissed when booking is saved
+}
+
+function dismissSheetRequest(id, btn){
+  fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'dismissRequest', id:id})}).catch(function(){});
+  // Find and remove the chip by request ID
+  var chip = btn ? btn.closest('.banner-chip') : document.querySelector('[data-request-id="'+id+'"]');
+  if(chip) chip.remove();
+  // Hide banner if no more chips
+  var list = document.getElementById('reminderList');
+  if(list && !list.querySelector('.banner-chip') && !list.querySelector('.banner-slot')){
+    var banner = document.getElementById('reminderBanner');
+    banner.classList.remove('show');
+    banner.style.background='';
+    banner.style.borderBottomColor='';
+  }
+}
+
+function waReplySheetRequest(phone){
+  var c = String(phone).replace(/\s+/g,'').replace(/^\+/,'');
+  if(c.charAt(0)==='0') c='44'+c.slice(1);
+  window.open('https://wa.me/'+c,'_blank');
+}
+
 // ── INIT ───────────────────────────────────────────────────────────────────
 document.getElementById('mainOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('mainOverlay'))closeMain();});
 document.getElementById('blockOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('blockOverlay'))closeBlock();});
@@ -1532,6 +1612,7 @@ document.getElementById('p-paid').addEventListener('change',function(){showPayMe
 document.getElementById('p-unpaid').addEventListener('change',function(){showPayMethod(false);});
 renderCal();
 setTimeout(checkPrefill,300);
+setTimeout(checkSheetRequests,1000); // Check for new booking requests from Sheet
 window.addEventListener('resize',function(){mobileOffset=0;renderCal();});
 
 // ── Drag & Drop to reschedule ──────────────────────────────────────────────
