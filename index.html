@@ -301,7 +301,23 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
     <div id="dogRows"></div>
 
     <div class="fg"><label>Payment Status</label><div class="tog"><input type="radio" name="pay" id="p-unpaid" value="unpaid" checked><label for="p-unpaid">Unpaid</label><input type="radio" name="pay" id="p-paid" value="paid"><label for="p-paid">Paid</label></div></div>
-    <div class="fg" id="payMethodGroup" style="display:none"><label>Payment Method</label><div class="tog frow3"><input type="radio" name="pm" id="pm-cash" value="cash"><label for="pm-cash">Cash</label><input type="radio" name="pm" id="pm-card" value="card"><label for="pm-card">Card</label><input type="radio" name="pm" id="pm-monzo" value="monzo"><label for="pm-monzo">Monzo</label></div></div>
+    <div class="fg" id="payMethodGroup" style="display:none">
+      <label>Payment Method</label>
+      <div class="tog" style="flex-wrap:wrap;gap:4px;">
+        <input type="radio" name="pm" id="pm-cash" value="cash" onchange="showSplitFields()"><label for="pm-cash">Cash</label>
+        <input type="radio" name="pm" id="pm-card" value="card" onchange="showSplitFields()"><label for="pm-card">Card</label>
+        <input type="radio" name="pm" id="pm-monzo" value="monzo" onchange="showSplitFields()"><label for="pm-monzo">Monzo</label>
+        <input type="radio" name="pm" id="pm-split" value="split" onchange="showSplitFields()"><label for="pm-split">Split</label>
+      </div>
+      <div id="splitFields" style="display:none;margin-top:8px;background:#f0f6ff;border-radius:8px;padding:10px;border:1.5px solid var(--tan-light);">
+        <div style="font-size:0.78rem;font-weight:600;color:#2a5080;margin-bottom:6px;">Split Payment Amounts</div>
+        <div class="frow" style="gap:8px;">
+          <div class="fg"><label>Cash £</label><input type="number" id="pm-split-cash" min="0" step="0.50" placeholder="0.00" style="width:100%;"></div>
+          <div class="fg"><label>Card £</label><input type="number" id="pm-split-card" min="0" step="0.50" placeholder="0.00" style="width:100%;"></div>
+          <div class="fg"><label>Monzo £</label><input type="number" id="pm-split-monzo" min="0" step="0.50" placeholder="0.00" style="width:100%;"></div>
+        </div>
+      </div>
+    </div>
     <div class="wa-section" id="waSection" style="display:none">
       <div class="wa-reminder"><strong>Reminder:</strong> Make sure your <u>work WhatsApp</u> is active before sending.</div>
       <h3>WhatsApp Messages</h3>
@@ -806,6 +822,13 @@ function checkDiscountFromForm(){
 // ── PAYMENT ───────────────────────────────────────────────────────────────
 function showPayMethod(show){
   document.getElementById('payMethodGroup').style.display=(show&&document.getElementById('p-paid').checked)?'block':'none';
+  showSplitFields();
+}
+
+function showSplitFields(){
+  var split = document.getElementById('pm-split');
+  var fields = document.getElementById('splitFields');
+  if(fields) fields.style.display = (split && split.checked) ? 'block' : 'none';
 }
 
 // ── CALENDAR ───────────────────────────────────────────────────────────────
@@ -891,7 +914,17 @@ function renderCal(){
     // Bookings - render each dog+service as its own coloured block back to back
     bookings.filter(function(b){return b.date===ds;}).forEach(function(bk){
       var dogs=bk.dogs&&bk.dogs.length?bk.dogs:[{name:bk.dog||'',breed:bk.breed||'',service:bk.service||'',duration:bk.duration||60,services:null}];
-      var pm=bk.payMethod?'<span class="pay-badge '+bk.payMethod+'">'+bk.payMethod.charAt(0).toUpperCase()+bk.payMethod.slice(1)+'</span>':'';
+      var pm='';
+      if(bk.payMethod==='split'&&bk.splitPayment){
+        var sp=bk.splitPayment;
+        var parts=[];
+        if(sp.cash)parts.push('Cash £'+sp.cash.toFixed(2));
+        if(sp.card)parts.push('Card £'+sp.card.toFixed(2));
+        if(sp.monzo)parts.push('Monzo £'+sp.monzo.toFixed(2));
+        pm='<span class="pay-badge split" style="background:#8b5cf6;color:white;">Split: '+parts.join(' + ')+'</span>';
+      } else if(bk.payMethod){
+        pm='<span class="pay-badge '+bk.payMethod+'">'+bk.payMethod.charAt(0).toUpperCase()+bk.payMethod.slice(1)+'</span>';
+      }
       var slotTime=bk.time;
       // Flatten all dogs+services into individual blocks
       var allBlocks=[];
@@ -1013,6 +1046,16 @@ function openEdit(id){
   calcFinish();
   document.getElementById('f-notes').value=b.notes||'';
   document.getElementById(b.paid?'p-paid':'p-unpaid').checked=true;
+  showPayMethod(b.paid);
+  if(b.payMethod){
+    var pmEl=document.getElementById('pm-'+b.payMethod);
+    if(pmEl){pmEl.checked=true;showSplitFields();}
+  }
+  if(b.splitPayment){
+    document.getElementById('pm-split-cash').value=b.splitPayment.cash||'';
+    document.getElementById('pm-split-card').value=b.splitPayment.card||'';
+    document.getElementById('pm-split-monzo').value=b.splitPayment.monzo||'';
+  }
   if(b.paid){document.getElementById('payMethodGroup').style.display='block';if(b.payMethod)document.getElementById('pm-'+b.payMethod).checked=true;}
   var ctVal=b.ct||'existing';
   document.getElementById('ct-'+ctVal).checked=true;
@@ -1135,6 +1178,9 @@ function saveBooking(){
   if(!dogs.length){alert('Please enter at least one dog name.');return;}
   var paid=document.getElementById('p-paid').checked;
   var pmEl=document.querySelector('input[name=pm]:checked');
+  var splitCash = parseFloat(document.getElementById('pm-split-cash').value)||0;
+  var splitCard = parseFloat(document.getElementById('pm-split-card').value)||0;
+  var splitMonzo = parseFloat(document.getElementById('pm-split-monzo').value)||0;
   var finRaw=document.getElementById('f-finish').dataset.raw||'';
   var ct=document.getElementById('ct-new').checked?'new':'existing';
   var totalDur=getTotalDuration();
@@ -1156,6 +1202,7 @@ function saveBooking(){
     notes:document.getElementById('f-notes').value.trim(),
     paid:paid,
     payMethod:paid&&pmEl?pmEl.value:null,
+    splitPayment:(paid&&pmEl&&pmEl.value==='split')?{cash:splitCash,card:splitCard,monzo:splitMonzo}:null,
     visits:parseInt(document.getElementById('f-visits').value)||1,
     ct:ct
   };
@@ -1406,9 +1453,21 @@ function renderEarnings(){
     return total>0;
   });
   var total=paid.reduce(function(s,b){return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.price||0);},0):parseFloat(b.lastprice)||0);},0);
-  var cash=paid.filter(function(b){return b.payMethod==='cash';}).reduce(function(s,b){return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.price||0);},0):parseFloat(b.lastprice)||0);},0);
-  var card=paid.filter(function(b){return b.payMethod==='card';}).reduce(function(s,b){return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.price||0);},0):parseFloat(b.lastprice)||0);},0);
-  var monzo=paid.filter(function(b){return b.payMethod==='monzo';}).reduce(function(s,b){return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.price||0);},0):parseFloat(b.lastprice)||0);},0);
+  var cash=paid.reduce(function(s,b){
+    if(b.payMethod==='cash') return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.price||0);},0):parseFloat(b.lastprice)||0);
+    if(b.payMethod==='split'&&b.splitPayment) return s+(b.splitPayment.cash||0);
+    return s;
+  },0);
+  var card=paid.reduce(function(s,b){
+    if(b.payMethod==='card') return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.price||0);},0):parseFloat(b.lastprice)||0);
+    if(b.payMethod==='split'&&b.splitPayment) return s+(b.splitPayment.card||0);
+    return s;
+  },0);
+  var monzo=paid.reduce(function(s,b){
+    if(b.payMethod==='monzo') return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.price||0);},0):parseFloat(b.lastprice)||0);
+    if(b.payMethod==='split'&&b.splitPayment) return s+(b.splitPayment.monzo||0);
+    return s;
+  },0);
   document.getElementById('earnSummary').innerHTML='<div class="earn-card total"><div class="ec-label">Total Earned</div><div class="ec-val">£'+total.toFixed(2)+'</div></div><div class="earn-card cash-c"><div class="ec-label">Cash</div><div class="ec-val">£'+cash.toFixed(2)+'</div></div><div class="earn-card card-c"><div class="ec-label">Card</div><div class="ec-val">£'+card.toFixed(2)+'</div></div><div class="earn-card monzo-c"><div class="ec-label">Monzo</div><div class="ec-val">£'+monzo.toFixed(2)+'</div></div>';
   var tbody=document.getElementById('earnBody');
   if(!paid.length){tbody.innerHTML='<tr><td colspan="5" class="earn-empty">No paid bookings in this period.</td></tr>';return;}
