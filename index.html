@@ -604,7 +604,24 @@ function onSvcChange(dogIdx,svcIdx){
   calcFinish();
 }
 
+function saveServiceRowsToState(dogIdx){
+  // Save current DOM values back to dogServices before re-rendering
+  var svcs = dogServices[dogIdx];
+  if(!svcs) return;
+  for(var s=0; s<svcs.length; s++){
+    var svcEl = document.getElementById('f-service-'+dogIdx+'-'+s);
+    var durEl = document.getElementById('f-duration-'+dogIdx+'-'+s);
+    var priceEl = document.getElementById('f-price-'+dogIdx+'-'+s);
+    var otherEl = document.getElementById('f-svc-other-'+dogIdx+'-'+s);
+    if(svcEl) svcs[s].service = svcEl.value;
+    if(durEl) svcs[s].duration = parseInt(durEl.value)||60;
+    if(priceEl) svcs[s].price = priceEl.value;
+    if(otherEl) svcs[s].otherText = otherEl.value;
+  }
+}
+
 function addServiceRow(dogIdx){
+  saveServiceRowsToState(dogIdx); // Save existing values first
   if(!dogServices[dogIdx])dogServices[dogIdx]=[];
   dogServices[dogIdx].push({service:'',duration:60,price:''});
   renderServiceRows(dogIdx);
@@ -612,6 +629,7 @@ function addServiceRow(dogIdx){
 }
 
 function removeServiceRow(dogIdx,svcIdx){
+  saveServiceRowsToState(dogIdx); // Save existing values first
   if(dogServices[dogIdx].length<=1)return;
   dogServices[dogIdx].splice(svcIdx,1);
   renderServiceRows(dogIdx);
