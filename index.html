@@ -900,7 +900,7 @@ function checkReminders(){
     var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
     var today2=new Date();today2.setHours(0,0,0,0);
     var apptDate=new Date(b.date+'T12:00:00');
-    var daysAway=Math.round((apptDate-today2)/864e5);
+    var daysAway=Math.floor((apptDate-today2)/864e5);
     var daysLabel=daysAway===0?'TODAY':daysAway===1?'Tomorrow':daysAway+' days';
     var urgentStyle=daysAway<=1?'border-color:#e05252;background:#fdeaea;':'';
     return '<div class="banner-chip" style="'+urgentStyle+'">'
