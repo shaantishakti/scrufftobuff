@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="STB Diary">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{--cream:#f0f6ff;--brown:#1e3a5f;--tan:#5b9bd5;--tan-light:#c2d9f0;--unpaid:#e05252;--unpaid-bg:#fdeaea;--paid:#3a9e6e;--paid-bg:#e6f7ef;--blocked:#64748b;--blocked-bg:#cbd5e1;--wa:#25D366;--wa-dark:#128C7E;--cash:#f59e0b;--card:#6366f1;--monzo:#ef4444;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -245,6 +246,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 
       <button class="export-btn" onclick="exportData()">&#8595; Export</button>
       <label class="export-btn import-lbl">&#8593; Import<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)"></label>
+      <button class="export-btn" onclick="exportWeeklyCash()" title="Export this week's cash transactions to Excel" style="background:#f59e0b;color:white;font-weight:600;">&#163; Cash Export</button>
       <button class="add-btn" onclick="syncFromCloud()" id="syncBtn">&#9729; Sync</button>
       <button class="add-btn" onclick="pushAllToSheet()" id="pushAllBtn" style="background:#3a9e6e;">⬆ Push All</button>
       <button class="add-btn" onclick="clearAndPushAll()" id="clearPushBtn" style="background:#e05252;">🔄 Clear & Push All</button>
@@ -860,21 +862,54 @@ function changeWeek(dir){
   renderCal();
 }
 
+function getDismissedReminders(){
+  try{return JSON.parse(localStorage.getItem('stbDismissedReminders')||'[]');}catch(e){return[];}
+}
+function dismissReminder(id){
+  var dismissed=getDismissedReminders();
+  if(dismissed.indexOf(id)<0)dismissed.push(id);
+  // Also clean up any dismissed IDs for past bookings to keep storage tidy
+  var today=fmtISO(new Date());
+  dismissed=dismissed.filter(function(did){
+    var bk=bookings.find(function(b){return b.id===did;});
+    return bk&&bk.date>=today;
+  });
+  localStorage.setItem('stbDismissedReminders',JSON.stringify(dismissed));
+  checkReminders();
+}
 function checkReminders(){
-  var in4=fmtISO(addDays(new Date(),4));
+  var today=new Date();today.setHours(0,0,0,0);
+  var todayStr=fmtISO(today);
+  var in4=fmtISO(addDays(today,4));
+  var dismissed=getDismissedReminders();
+  // Show bookings that are within 4 days OR have already appeared (past 4-day mark) but not yet dismissed
   var due=bookings.filter(function(b){
-    if(b.date!==in4)return false;
+    if(b.date<todayStr)return false;
+    if(dismissed.indexOf(b.id)>=0)return false;
+    if(b.date>in4)return false;
     if(!b.bookedOn)return true;
     var bo=new Date(b.bookedOn);bo.setHours(0,0,0,0);
-    return Math.round((new Date(b.date+'T12:00:00')-bo)/864e5)>=7;
+    var daysBooked=Math.round((new Date(b.date+'T12:00:00')-bo)/864e5);
+    return daysBooked>=3;
   });
   var banner=document.getElementById('reminderBanner');
   if(!due.length){banner.classList.remove('show');return;}
   banner.classList.add('show');
+  document.getElementById('reminderBanner').querySelector('h3').textContent='Upcoming appointments — send reminders or dismiss:';
   document.getElementById('reminderList').innerHTML=due.map(function(b){
-    return '<div class="banner-chip"><strong>'+b.name+'</strong> \u2014 '+(b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'')+' \u2014 '+fmtTime(b.time)
-      +'<button class="btn-wa-sm" onclick="sendReminderMsg(\''+ b.id +'\')">Reminder</button>'
-      +'<button class="btn-wa-sm" style="background:#f59e0b;margin-left:4px;" onclick="sendReminderPayMsgId(\''+b.id+'\')">Reminder + Pay</button></div>';
+    var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
+    var today2=new Date();today2.setHours(0,0,0,0);
+    var apptDate=new Date(b.date+'T12:00:00');
+    var daysAway=Math.round((apptDate-today2)/864e5);
+    var daysLabel=daysAway===0?'TODAY':daysAway===1?'Tomorrow':daysAway+' days';
+    var urgentStyle=daysAway<=1?'border-color:#e05252;background:#fdeaea;':'';
+    return '<div class="banner-chip" style="'+urgentStyle+'">'
+      +'<strong>'+b.name+'</strong> \u2014 '+dogNames+' \u2014 '+fmtTime(b.time)
+      +' <span style="font-size:0.72rem;font-weight:600;color:'+(daysAway<=1?'#e05252':'#4a7aaa')+';">('+daysLabel+')</span>'
+      +'<button class="btn-wa-sm" onclick="sendReminderMsg(\''+b.id+'\')">Reminder</button>'
+      +'<button class="btn-wa-sm" style="background:#f59e0b;margin-left:4px;" onclick="sendReminderPayMsgId(\''+b.id+'\')">Reminder + Pay</button>'
+      +'<button class="btn-wa-sm" style="background:#64748b;margin-left:4px;" onclick="dismissReminder(\''+b.id+'\')" title="Dismiss this reminder">\u2713 Done</button>'
+      +'</div>';
   }).join('');
 }
 
@@ -1689,7 +1724,8 @@ document.getElementById('p-paid').addEventListener('change',function(){showPayMe
 document.getElementById('p-unpaid').addEventListener('change',function(){showPayMethod(false);});
 renderCal();
 setTimeout(checkPrefill,300);
-setTimeout(checkSheetRequests,1000); // Check for new booking requests from Sheet
+setTimeout(checkSheetRequests,1000);
+setTimeout(checkSundayAutoExport,2000);
 
 // ── SWIPE TO CHANGE WEEK ──────────────────────────────────────────────────
 (function(){
@@ -1711,6 +1747,145 @@ setTimeout(checkSheetRequests,1000); // Check for new booking requests from Shee
   }, {passive:true});
 })();
 window.addEventListener('resize',function(){mobileOffset=0;renderCal();});
+
+// ── WEEKLY CASH EXPORT ─────────────────────────────────────────────────────
+function exportWeeklyCash(forceWeekStart){
+  // Determine the week to export: Mon–Sun ending on last Sunday
+  var today=new Date();today.setHours(0,0,0,0);
+  // Find the most recent Sunday (or today if it IS Sunday)
+  var lastSunday=new Date(today);
+  var dayOfWeek=lastSunday.getDay(); // 0=Sun,1=Mon...
+  if(dayOfWeek===0){
+    // Today IS Sunday — export this week (Mon to today)
+  } else {
+    lastSunday.setDate(lastSunday.getDate()-dayOfWeek);
+  }
+  var weekEndDate=fmtISO(lastSunday);
+  var weekStartDate=fmtISO(addDays(lastSunday,-6));
+  if(forceWeekStart){weekStartDate=forceWeekStart;weekEndDate=fmtISO(addDays(new Date(forceWeekStart+'T12:00:00'),6));}
+
+  // Collect cash transactions in range
+  var rows=[];
+  var cashTotal=0;
+  bookings
+    .filter(function(b){
+      if(!b.paid||b.date<weekStartDate||b.date>weekEndDate)return false;
+      // Include if payment method is cash or split (partial cash)
+      if(b.payMethod==='cash')return true;
+      if(b.payMethod==='split'&&b.splitPayment&&b.splitPayment.cash>0)return true;
+      return false;
+    })
+    .sort(function(a,b){return a.date.localeCompare(b.date)||a.time.localeCompare(b.time);})
+    .forEach(function(b){
+      var dogs=b.dogs&&b.dogs.length?b.dogs:[{name:b.dog||'',service:b.service||'',price:parseFloat(b.lastprice)||0}];
+      var services=dogs.map(function(d){
+        var svcs=d.services&&d.services.length?d.services:[{service:d.service||''}];
+        return svcs.map(function(sv){return sv.service||d.service||'-';}).join(' + ');
+      }).join(' | ');
+      var cashAmt=b.payMethod==='split'&&b.splitPayment?(b.splitPayment.cash||0)
+        :dogs.reduce(function(s,d){return s+(d.price||0);},0);
+      if(cashAmt<=0&&b.payMethod==='cash'){
+        cashAmt=dogs.reduce(function(s,d){return s+(d.price||0);},0);
+      }
+      cashTotal+=cashAmt;
+      // Format date as DD/MM/YYYY
+      var dp=b.date.split('-');
+      var dateFormatted=dp[2]+'/'+dp[1]+'/'+dp[0];
+      rows.push({
+        'Date of Grooming':dateFormatted,
+        'Customer Name':b.name||'',
+        'Service(s)':services,
+        'Cash Amount (£)':Math.round(cashAmt*100)/100
+      });
+    });
+
+  if(!rows.length){
+    alert('No cash transactions found for the week of '+weekStartDate+' to '+weekEndDate+'.');
+    return;
+  }
+
+  // Build worksheet
+  var ws=XLSX.utils.json_to_sheet(rows,{header:['Date of Grooming','Customer Name','Service(s)','Cash Amount (£)']});
+
+  // Add total row
+  var totalRowIdx=rows.length+2; // 1-indexed: header=1, data=2..n+1, blank=n+2, total=n+3
+  XLSX.utils.sheet_add_aoa(ws,[['','','TOTAL CASH:',Math.round(cashTotal*100)/100]],{origin:{r:rows.length+1,c:0}});
+
+  // Column widths
+  ws['!cols']=[{wch:18},{wch:24},{wch:40},{wch:18}];
+
+  // Style header row bold (openpyxl-style not available in SheetJS CE, but we can set cell types)
+  // Mark total row label bold using cell comment workaround isn't needed — SheetJS CE does basic styles
+  // We'll apply bold to header and total via cell styles where supported
+  var range=XLSX.utils.decode_range(ws['!ref']);
+  // Header row (row 0 = row 1 in spreadsheet)
+  for(var c=range.s.c;c<=range.e.c;c++){
+    var hdrCell=XLSX.utils.encode_cell({r:0,c:c});
+    if(!ws[hdrCell])ws[hdrCell]={v:'',t:'s'};
+    ws[hdrCell].s={font:{bold:true},fill:{fgColor:{rgb:'1E3A5F'}},alignment:{horizontal:'center'}};
+  }
+  // Total row styling
+  var totalRow=rows.length+1;
+  var totalLabelCell=XLSX.utils.encode_cell({r:totalRow,c:2});
+  var totalValCell=XLSX.utils.encode_cell({r:totalRow,c:3});
+  if(ws[totalLabelCell])ws[totalLabelCell].s={font:{bold:true}};
+  if(ws[totalValCell])ws[totalValCell].s={font:{bold:true,color:{rgb:'3A9E6E'}}};
+
+  // Format cash column as currency
+  for(var r=1;r<=rows.length;r++){
+    var cell=XLSX.utils.encode_cell({r:r,c:3});
+    if(ws[cell])ws[cell].z='£#,##0.00';
+  }
+  if(ws[totalValCell])ws[totalValCell].z='£#,##0.00';
+
+  // Build workbook
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Cash Transactions');
+
+  // Add a summary sheet
+  var summaryData=[
+    ['Scruff to Buff Dogs — Weekly Cash Summary'],
+    ['Week:',weekStartDate+' to '+weekEndDate],
+    ['Generated:',new Date().toLocaleDateString('en-GB')],
+    [],
+    ['Total Cash Transactions:',rows.length],
+    ['Total Cash Received:','£'+cashTotal.toFixed(2)]
+  ];
+  var ws2=XLSX.utils.aoa_to_sheet(summaryData);
+  ws2['!cols']=[{wch:28},{wch:30}];
+  if(ws2['A1'])ws2['A1'].s={font:{bold:true,sz:14}};
+  XLSX.utils.book_append_sheet(wb,ws2,'Summary');
+
+  var filename='STB-Cash-'+weekStartDate+'-to-'+weekEndDate+'.xlsx';
+  XLSX.writeFile(wb,filename);
+}
+
+function checkSundayAutoExport(){
+  var today=new Date();today.setHours(0,0,0,0);
+  var todayStr=fmtISO(today);
+  var lastExport=localStorage.getItem('stbLastCashExport');
+  // Only auto-export on Sundays
+  if(today.getDay()!==0)return;
+  // Don't export again if already exported today
+  if(lastExport===todayStr)return;
+  // Check there are cash bookings this week before prompting
+  var lastSunday=new Date(today);
+  var weekEnd=fmtISO(lastSunday);
+  var weekStart=fmtISO(addDays(lastSunday,-6));
+  var cashCount=bookings.filter(function(b){
+    if(!b.paid||b.date<weekStart||b.date>weekEnd)return false;
+    if(b.payMethod==='cash')return true;
+    if(b.payMethod==='split'&&b.splitPayment&&b.splitPayment.cash>0)return true;
+    return false;
+  }).length;
+  if(!cashCount)return;
+  localStorage.setItem('stbLastCashExport',todayStr);
+  setTimeout(function(){
+    if(confirm('📊 It\'s Sunday!\n\nWould you like to export this week\'s cash transactions ('+cashCount+' booking'+(cashCount!==1?'s':'')+') to Excel?')){
+      exportWeeklyCash();
+    }
+  },1500);
+}
 
 // ── Drag & Drop to reschedule ──────────────────────────────────────────────
 var _drag={active:false,bkId:null,clone:null,origEls:[],startX:0,startY:0,moved:false,offsetY:0};
