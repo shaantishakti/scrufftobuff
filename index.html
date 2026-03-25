@@ -247,6 +247,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
       <button class="export-btn" onclick="exportData()">&#8595; Export</button>
       <label class="export-btn import-lbl">&#8593; Import<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)"></label>
       <button class="export-btn" onclick="exportWeeklyCash()" title="Export this week's cash transactions to Excel" style="background:#f59e0b;color:white;font-weight:600;">&#163; Cash Export</button>
+      <button class="export-btn" onclick="sendPoppySchedule()" title="Send next week's schedule to Poppy Cooper" style="background:#ff1493;color:white;font-weight:600;">&#128205; Poppy's Schedule</button>
       <button class="add-btn" onclick="syncFromCloud()" id="syncBtn">&#9729; Sync</button>
       <button class="add-btn" onclick="pushAllToSheet()" id="pushAllBtn" style="background:#3a9e6e;">⬆ Push All</button>
       <button class="add-btn" onclick="clearAndPushAll()" id="clearPushBtn" style="background:#e05252;">🔄 Clear & Push All</button>
@@ -1237,6 +1238,27 @@ function saveBooking(){
   var finRaw=document.getElementById('f-finish').dataset.raw||'';
   var ct=document.getElementById('ct-new').checked?'new':'existing';
   var totalDur=getTotalDuration();
+
+  // Snapshot first appointment times for next week BEFORE saving
+  var today=new Date();today.setHours(0,0,0,0);
+  var dayOfWeek=today.getDay();
+  var daysUntilMon=dayOfWeek===0?1:(dayOfWeek===6?2:8-dayOfWeek);
+  var nextMon=addDays(today,daysUntilMon);
+  var nextFri=addDays(nextMon,4);
+  function getFirstTimes(){
+    var times={};
+    for(var i=0;i<5;i++){
+      var ds=fmtISO(addDays(nextMon,i));
+      var dayBks=bookings.filter(function(b){return b.date===ds&&b.time;});
+      dayBks.sort(function(a,b){return a.time.localeCompare(b.time);});
+      times[ds]=dayBks.length?dayBks[0].time:null;
+    }
+    return times;
+  }
+  // Only track if the booking falls within next week (Mon-Fri)
+  var isNextWeek=date>=fmtISO(nextMon)&&date<=fmtISO(nextFri);
+  var firstTimesBefore=isNextWeek?getFirstTimes():null;
+
   var booking={
     id:editId||('b'+Date.now()),
     bookedOn:editId?(bookings.find(function(b){return b.id===editId;})||{}).bookedOn||fmtISO(new Date()):fmtISO(new Date()),
@@ -1274,9 +1296,24 @@ function saveBooking(){
     dismissSheetRequest(window._sheetRequestId, null);
     window._sheetRequestId = null;
   }
-  // Also clear localStorage pending request
   localStorage.removeItem('pendingRequest');
   closeMain();renderCal();
+
+  // Check if first appointment time changed for any day next week
+  if(isNextWeek&&firstTimesBefore){
+    var firstTimesAfter=getFirstTimes();
+    var changed=false;
+    Object.keys(firstTimesBefore).forEach(function(ds){
+      if(firstTimesBefore[ds]!==firstTimesAfter[ds])changed=true;
+    });
+    if(changed){
+      setTimeout(function(){
+        if(confirm('📅 The schedule for next week has changed!\n\nWould you like to send Poppy an updated schedule?')){
+          sendPoppySchedule();
+        }
+      },600);
+    }
+  }
 }
 
 function deleteBooking(){
@@ -1726,6 +1763,7 @@ renderCal();
 setTimeout(checkPrefill,300);
 setTimeout(checkSheetRequests,1000);
 setTimeout(checkSundayAutoExport,2000);
+setTimeout(checkFridayScheduleReminder,2500);
 
 // ── SWIPE TO CHANGE WEEK ──────────────────────────────────────────────────
 (function(){
@@ -1870,6 +1908,51 @@ function exportWeeklyCash(){
   // Mark these bookings as exported so they won't appear again
   markCashIdsExported(exportedBookingIds);
   alert('✅ Exported '+rows.length+' cash transaction'+(rows.length!==1?'s':'')+' (£'+cashTotal.toFixed(2)+' total).\n\nThese won\'t be included in future exports.');
+}
+
+function buildPoppyScheduleMsg(){
+  var today=new Date();today.setHours(0,0,0,0);
+  var dayOfWeek=today.getDay();
+  var daysUntilMon=dayOfWeek===0?1:8-dayOfWeek;
+  var nextMon=addDays(today,daysUntilMon);
+  var weekDays=['Monday','Tuesday','Wednesday','Thursday','Friday'];
+  var lines=[];
+  for(var i=0;i<5;i++){
+    var d=addDays(nextMon,i);
+    var ds=fmtISO(d);
+    var dayBookings=bookings.filter(function(b){return b.date===ds&&b.time;});
+    dayBookings.sort(function(a,b){return a.time.localeCompare(b.time);});
+    if(dayBookings.length){
+      lines.push(weekDays[i]+': '+fmtTime(dayBookings[0].time));
+    } else {
+      lines.push(weekDays[i]+': No appointments');
+    }
+  }
+  var msg='Hi Poppy! 😊 Here\'s next week\'s schedule — please remember I need you 10 minutes before each appointment:\n\n'
+    +lines.join('\n')
+    +'\n\nSee you next week!\nBecky x';
+  return msg;
+}
+
+function sendPoppySchedule(){
+  var msg=buildPoppyScheduleMsg();
+  openWA('07847506835',msg);
+  localStorage.setItem('stbLastPoppySchedule',fmtISO(new Date()));
+}
+
+function checkFridayScheduleReminder(){
+  var today=new Date();today.setHours(0,0,0,0);
+  var todayStr=fmtISO(today);
+  // Only on Fridays
+  if(today.getDay()!==5)return;
+  // Don't prompt again if already done today
+  var lastSent=localStorage.getItem('stbLastPoppySchedule');
+  if(lastSent===todayStr)return;
+  setTimeout(function(){
+    if(confirm('📅 It\'s Friday!\n\nWould you like to send Poppy Cooper next week\'s schedule on WhatsApp?')){
+      sendPoppySchedule();
+    }
+  },2500);
 }
 
 function checkSundayAutoExport(){
