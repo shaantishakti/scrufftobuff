@@ -236,6 +236,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
       <button onclick="changeWeek(-1)">&#8249;</button>
       <span class="week-label" id="weekLabel"></span>
       <button onclick="changeWeek(1)">&#8250;</button>
+      <button onclick="goToToday()" style="background:#6366f1;color:white;border:none;border-radius:7px;padding:6px 20px 6px 20px;font-size:0.88rem;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;min-width:80px;">Today</button>
     </div>
     <div class="toolbar-right">
       <div class="time-step-toggle">
@@ -439,9 +440,14 @@ function upsertCustomer(b){
       var existing=c.dogs.find(function(x){return x.name.toLowerCase()===d.name.toLowerCase();});
       if(!existing){existing={name:titleCase(d.name),breed:'',lastService:'',lastPrice:null,lastDuration:null};c.dogs.push(existing);}
       if(d.breed)existing.breed=titleCase(d.breed);
-      if(d.service)existing.lastService=d.service;
-      if(d.price)existing.lastPrice=parseFloat(d.price);
-      if(d.duration)existing.lastDuration=parseInt(d.duration);
+      // Use first service in the services array if available, otherwise fall back to d.service
+      var firstSvc=d.services&&d.services.length?d.services[0]:null;
+      var svcName=firstSvc?firstSvc.service:d.service;
+      var svcDur=firstSvc?firstSvc.duration:d.duration;
+      var svcPrice=firstSvc?firstSvc.price:d.price;
+      if(svcName)existing.lastService=svcName;
+      if(svcPrice)existing.lastPrice=parseFloat(svcPrice);
+      if(svcDur)existing.lastDuration=parseInt(svcDur);
     });
   }
   localStorage.setItem('stbCustomers',JSON.stringify(customers));
@@ -480,52 +486,51 @@ function fillCustomer(name){
     calcFinish();
   }
 
-  // Fill dogs — IDs are 0-based (f-dog-0, f-service-0-0, etc.)
+  // Pre-populate dogServices BEFORE rendering rows so they pick up correct values
+  if(c.dogs&&c.dogs.length){
+    c.dogs.forEach(function(d,i){
+      if(i>=MAX_DOGS)return;
+      var idx=i+1; // form elements are 1-based
+      dogServices[idx]=[{
+        service:d.lastService||'',
+        duration:d.lastDuration||60,
+        price:d.lastPrice||''
+      }];
+    });
+  }
+
   setDogCount(Math.max(1,c.dogs?c.dogs.length:1));
+
   setTimeout(function(){
     if(c.dogs&&c.dogs.length){
       c.dogs.forEach(function(d,i){
         if(i>=MAX_DOGS)return;
-        var nameEl=document.getElementById('f-dog-'+i);
-        var breedEl=document.getElementById('f-breed-'+i);
-        var svcEl=document.getElementById('f-service-'+i+'-0');
-        var priceEl=document.getElementById('f-price-'+i+'-0');
-        var durEl=document.getElementById('f-duration-'+i+'-0');
+        var idx=i+1; // 1-based
+        var nameEl=document.getElementById('f-dog-'+idx);
+        var breedEl=document.getElementById('f-breed-'+idx);
         if(nameEl)nameEl.value=d.name||'';
         if(breedEl)breedEl.value=d.breed||'';
+
+        // Set service dropdown directly
+        var svcEl=document.getElementById('f-service-'+idx+'-0');
         if(svcEl&&d.lastService){
-          // Set in dogServices so renderDogRows picks it up
-          if(!dogServices[i])dogServices[i]=[{service:'',duration:60,price:''}];
-          dogServices[i][0].service=d.lastService;
-          if(d.lastDuration)dogServices[i][0].duration=d.lastDuration;
-          if(d.lastPrice)dogServices[i][0].price=d.lastPrice;
-          renderServiceRows(i);
-          // Also set directly on the element
-          var svcEl2=document.getElementById('f-service-'+i+'-0');
-          if(svcEl2){
-            svcEl2.value=d.lastService;
-            onSvcChange(i,0);
-          }
+          svcEl.value=d.lastService;
+          // Show "Other" field if needed
+          var otherGroup=document.getElementById('f-other-group-'+idx+'-0');
+          if(otherGroup)otherGroup.style.display=d.lastService==='Other'?'block':'none';
         }
+
+        // Set duration — use saved value, don't let autoFill override it
+        var durEl=document.getElementById('f-duration-'+idx+'-0');
         if(durEl&&d.lastDuration){
-          var _svc=svcEl?svcEl.value:'';
-          if(!SVC_DURATIONS[_svc]){durEl.value=d.lastDuration;calcFinish();}
-          var dh=document.getElementById('durationHint-'+i);
-          if(dh){
-            var dm=d.lastDuration;
-            var hrs=Math.floor(dm/60),mins=dm%60;
-            var dlabel=hrs>0&&mins>0?hrs+'hr '+mins+'min':hrs>0?hrs+' hour'+(hrs>1?'s':''):mins+' mins';
-            dh.style.display='block';
-            dh.textContent='Last groom duration: '+dlabel;
-          }
+          durEl.value=d.lastDuration;
         }
-        if(d.lastPrice){
-          var priceEl2=document.getElementById('f-price-'+i+'-0');
-          if(priceEl2)priceEl2.value=d.lastPrice.toFixed(2);
-          var ph=document.getElementById('f-price-hint-'+i);
-          if(ph){ph.style.display='block';ph.textContent='Last price: £'+d.lastPrice.toFixed(2);}
+
+        // Set price
+        var priceEl=document.getElementById('f-price-'+idx+'-0');
+        if(priceEl&&d.lastPrice){
+          priceEl.value=parseFloat(d.lastPrice).toFixed(2);
         }
-        autoFillDurationForDog(i);
       });
       calcFinish();
     }
@@ -853,6 +858,12 @@ function showSplitFields(){
 }
 
 // ── CALENDAR ───────────────────────────────────────────────────────────────
+function goToToday(){
+  weekStart=getMonday(new Date());
+  mobileOffset=0;
+  renderCal();
+}
+
 function changeWeek(dir){
   var isMobile=window.innerWidth<=640;
   if(isMobile){
@@ -1009,7 +1020,7 @@ function renderCal(){
         else if(svc==='Anal Glands')svcCls='svc-anal-glands';
         else if(svc==='De-shed Treatment')svcCls='svc-deshed';
         else svcCls=bk.paid?'paid':'unpaid';
-        body+='<div class="bk '+svcCls+'" style="top:'+tp+'px;height:'+hp+'px;padding-top:7px;" data-bkid="'+bk.id+'" onmousedown="startDrag(event,\''+bk.id+'\')" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">'
+        body+='<div class="bk '+svcCls+'" style="top:'+tp+'px;height:'+hp+'px;padding-top:7px;" data-bkid="'+bk.id+'" onmousedown="startDrag(event,\''+bk.id+'\')" ontouchstart="startDrag(event,\''+bk.id+'\')" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">'
           +'<div class="pay-dot '+(bk.paid?'paid':'unpaid')+'"></div>'
           +(function(){
             var sessionBadge='';
@@ -1979,64 +1990,81 @@ function checkSundayAutoExport(){
 }
 
 // ── Drag & Drop to reschedule ──────────────────────────────────────────────
-var _drag={active:false,bkId:null,clone:null,origEls:[],startX:0,startY:0,moved:false,offsetY:0};
+var _drag={active:false,bkId:null,clone:null,origEls:[],startX:0,startY:0,moved:false,offsetY:0,touchTimer:null};
 function startDrag(e,id){
-  if(e.button!==0)return;
+  // Handle both mouse and touch
+  var isTouch=e.touches||e.changedTouches;
+  if(!isTouch&&e.button!==0)return;
+  var clientX=isTouch?(e.touches[0]||e.changedTouches[0]).clientX:e.clientX;
+  var clientY=isTouch?(e.touches[0]||e.changedTouches[0]).clientY:e.clientY;
   var bk=bookings.find(function(x){return x.id===id;});
   if(!bk)return;
-  _drag.bkId=id;_drag.startX=e.clientX;_drag.startY=e.clientY;_drag.moved=false;_drag.active=false;
-  // offset within the clicked block so it doesn't jump
+  _drag.bkId=id;_drag.startX=clientX;_drag.startY=clientY;_drag.moved=false;_drag.active=false;
   var srcEl=e.currentTarget||e.target.closest('.bk');
-  _drag.offsetY=srcEl?e.clientY-srcEl.getBoundingClientRect().top:0;
+  _drag.offsetY=srcEl?clientY-srcEl.getBoundingClientRect().top:0;
+
+  function beginDrag(cx,cy){
+    if(_drag.active)return;
+    _drag.active=true;
+    _drag.origEls=Array.from(document.querySelectorAll('[data-bkid="'+id+'"]'));
+    _drag.origEls.forEach(function(el){el.style.opacity='0.25';});
+    var totalDur=bk.dogs&&bk.dogs.length
+      ?bk.dogs.reduce(function(s,d){var svcs=d.services&&d.services.length?d.services:[{duration:d.duration||60}];return s+svcs.reduce(function(a,sv){return a+(sv.duration||60);},0);},0)
+      :bk.duration||60;
+    var cloneH=Math.max(28,durationToRows(totalDur)*ROW_H-2);
+    var cloneW=_drag.origEls.length?_drag.origEls[0].offsetWidth:120;
+    var dogs=bk.dogs&&bk.dogs.length?bk.dogs.map(function(d){return d.name;}).join(' & '):bk.dog||'';
+    var c=document.createElement('div');
+    c.style.cssText='position:fixed;z-index:9999;width:'+cloneW+'px;height:'+cloneH+'px;border-radius:6px;padding:3px 6px;font-size:0.72rem;font-weight:600;background:#3b82f6;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,0.28);pointer-events:none;overflow:hidden;line-height:1.4;';
+    c.innerHTML='<div style="font-weight:700">'+bk.name+'</div><div style="font-size:0.67rem;opacity:0.9">'+dogs+'</div><div id="drag-time-label" style="font-size:0.67rem;margin-top:2px;opacity:0.9"></div>';
+    document.body.appendChild(c);_drag.clone=c;
+    // vibrate on mobile to confirm drag started
+    if(navigator.vibrate)navigator.vibrate(40);
+  }
 
   function onMove(ev){
-    var dx=ev.clientX-_drag.startX,dy=ev.clientY-_drag.startY;
-    if(!_drag.active&&Math.sqrt(dx*dx+dy*dy)<6)return;
+    var cx=ev.touches?ev.touches[0].clientX:ev.clientX;
+    var cy=ev.touches?ev.touches[0].clientY:ev.clientY;
+    var dx=cx-_drag.startX,dy=cy-_drag.startY;
     if(!_drag.active){
-      _drag.active=true;
-      // collect all blocks for this booking and dim them
-      _drag.origEls=Array.from(document.querySelectorAll('[data-bkid="'+id+'"]'));
-      _drag.origEls.forEach(function(el){el.style.opacity='0.25';});
-      // build a single floating clone representing the whole booking
-      var totalDur=bk.dogs&&bk.dogs.length
-        ?bk.dogs.reduce(function(s,d){var svcs=d.services&&d.services.length?d.services:[{duration:d.duration||60}];return s+svcs.reduce(function(a,sv){return a+(sv.duration||60);},0);},0)
-        :bk.duration||60;
-      var cloneH=Math.max(28,durationToRows(totalDur)*ROW_H-2);
-      var cloneW=_drag.origEls.length?_drag.origEls[0].offsetWidth:120;
-      var dogs=bk.dogs&&bk.dogs.length?bk.dogs.map(function(d){return d.name;}).join(' & '):bk.dog||'';
-      var c=document.createElement('div');
-      c.style.cssText='position:fixed;z-index:9999;width:'+cloneW+'px;height:'+cloneH+'px;border-radius:6px;padding:3px 6px;font-size:0.72rem;font-weight:600;background:#3b82f6;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,0.28);pointer-events:none;overflow:hidden;line-height:1.4;';
-      c.innerHTML='<div style="font-weight:700">'+bk.name+'</div><div style="font-size:0.67rem;opacity:0.9">'+dogs+'</div><div id="drag-time-label" style="font-size:0.67rem;margin-top:2px;opacity:0.9"></div>';
-      document.body.appendChild(c);_drag.clone=c;
+      // Cancel long-press timer if finger moved too much
+      if(Math.sqrt(dx*dx+dy*dy)>10&&_drag.touchTimer){clearTimeout(_drag.touchTimer);_drag.touchTimer=null;return;}
+      if(!isTouch&&Math.sqrt(dx*dx+dy*dy)<6)return;
+      if(!isTouch)beginDrag(cx,cy);
+      else return;
     }
+    if(ev.cancelable)ev.preventDefault();
     _drag.moved=true;
-    // position clone under cursor
-    var cloneH=parseInt(_drag.clone.style.height);
-    _drag.clone.style.left=(ev.clientX+8)+'px';
-    _drag.clone.style.top=(ev.clientY-_drag.offsetY)+'px';
-    // highlight day col + show snapped time
+    _drag.clone.style.left=(cx+8)+'px';
+    _drag.clone.style.top=(cy-_drag.offsetY)+'px';
     document.querySelectorAll('.day-col').forEach(function(col){col.classList.remove('drag-over');});
-    var el=document.elementFromPoint(ev.clientX,ev.clientY);
+    var el=document.elementFromPoint(cx,cy);
     var col=el&&el.closest?el.closest('.day-col'):null;
     if(col){
       col.classList.add('drag-over');
       var rect=col.getBoundingClientRect();
-      var relY=ev.clientY-rect.top-_drag.offsetY;
-      var snapped=Math.round(relY/(ROW_H*1.5))*(15)+GRID_START; // snap to 15 min
+      var relY=cy-rect.top-_drag.offsetY;
+      var snapped=Math.round(relY/(ROW_H*1.5))*15+GRID_START;
       snapped=Math.max(GRID_START,Math.min(snapped,18*60));
       var lbl=document.getElementById('drag-time-label');
       if(lbl)lbl.textContent=fmtTime((Math.floor(snapped/60)<10?'0':'')+Math.floor(snapped/60)+':'+(snapped%60<10?'0':'')+snapped%60);
     }
   }
+
   function onUp(ev){
+    if(_drag.touchTimer){clearTimeout(_drag.touchTimer);_drag.touchTimer=null;}
     document.removeEventListener('mousemove',onMove);
     document.removeEventListener('mouseup',onUp);
+    document.removeEventListener('touchmove',onMove);
+    document.removeEventListener('touchend',onUp);
     document.querySelectorAll('.day-col').forEach(function(col){col.classList.remove('drag-over');});
     _drag.origEls.forEach(function(el){el.style.opacity='';});
     if(_drag.clone){_drag.clone.remove();_drag.clone=null;}
     if(!_drag.moved||!_drag.active){_drag.active=false;return;}
     _drag.active=false;
-    var el=document.elementFromPoint(ev.clientX,ev.clientY);
+    var cx=ev.changedTouches?ev.changedTouches[0].clientX:ev.clientX;
+    var cy=ev.changedTouches?ev.changedTouches[0].clientY:ev.clientY;
+    var el=document.elementFromPoint(cx,cy);
     var col=el&&el.closest?el.closest('.day-col'):null;
     if(!col){renderCal();return;}
     var m=col.getAttribute('onclick')||'';
@@ -2044,7 +2072,7 @@ function startDrag(e,id){
     if(!dateMatch){renderCal();return;}
     var newDate=dateMatch[1];
     var rect=col.getBoundingClientRect();
-    var relY=ev.clientY-rect.top-_drag.offsetY;
+    var relY=cy-rect.top-_drag.offsetY;
     var snapped=Math.round(relY/(ROW_H*1.5))*15+GRID_START;
     snapped=Math.max(GRID_START,Math.min(snapped,18*60));
     var hh=Math.floor(snapped/60),mm=snapped%60;
@@ -2057,8 +2085,19 @@ function startDrag(e,id){
       openWA(bk.phone,'Hi '+titleCase(bk.name)+'! Just to let you know that '+dogs+'\'s appointment has been moved to '+fmtDD(newDate)+' at '+fmtTime(newTime)+'. Please let me know if you have any questions!\n\nSee you then!\nBecky - Scruff to Buff Dogs');
     },200);
   }
-  document.addEventListener('mousemove',onMove);
-  document.addEventListener('mouseup',onUp);
+
+  if(isTouch){
+    // Long press (400ms) to start drag on touch
+    _drag.touchTimer=setTimeout(function(){
+      _drag.touchTimer=null;
+      beginDrag(clientX,clientY);
+    },400);
+    document.addEventListener('touchmove',onMove,{passive:false});
+    document.addEventListener('touchend',onUp,{passive:true});
+  } else {
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('mouseup',onUp);
+  }
 }
 
 </script>
