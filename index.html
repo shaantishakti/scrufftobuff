@@ -30,6 +30,22 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 .banner h3{font-size:0.87rem;font-weight:600;color:#1e4a8a;margin-bottom:7px;}
 .banner-list{display:flex;flex-wrap:wrap;gap:7px;}
 .banner-chip{background:white;border:1.5px solid #5b9bd5;border-radius:7px;padding:5px 10px;font-size:0.79rem;display:flex;align-items:center;gap:7px;}
+.rebook-chip{background:#fff8e0;border:1.5px solid #f59e0b;}
+.day-summary-overlay{display:none;position:fixed;inset:0;background:rgba(30,58,95,0.45);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(2px);padding:16px;}
+.day-summary-overlay.open{display:flex;}
+.day-summary-modal{background:#f0f6ff;border-radius:15px;padding:24px;width:420px;max-width:100%;box-shadow:0 20px 50px rgba(30,58,95,0.25);animation:up 0.17s ease;}
+.day-summary-modal h2{font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:16px;}
+.ds-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.ds-card{background:white;border-radius:9px;padding:12px 14px;border:1.5px solid var(--tan-light);text-align:center;}
+.ds-card .ds-label{font-size:0.74rem;color:#4a7aaa;margin-bottom:3px;}
+.ds-card .ds-val{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--brown);}
+.ds-card.highlight .ds-val{color:var(--paid);}
+.ds-appt-list{background:white;border-radius:9px;border:1.5px solid var(--tan-light);overflow:hidden;margin-bottom:14px;}
+.ds-appt-row{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:1px solid var(--tan-light);font-size:0.81rem;}
+.ds-appt-row:last-child{border-bottom:none;}
+.ds-appt-row .ds-time{color:#4a7aaa;font-size:0.75rem;min-width:55px;}
+.ds-appt-row .ds-name{flex:1;font-weight:500;}
+.ds-appt-row .ds-amt{font-weight:600;color:var(--brown);}
 .btn-wa-sm{background:var(--wa);color:white;border:none;border-radius:5px;padding:3px 8px;font-size:0.74rem;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .btn-wa-sm:hover{background:var(--wa-dark);}
 .toolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 28px 8px;flex-wrap:wrap;gap:10px;}
@@ -248,6 +264,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
       <button class="export-btn" onclick="exportData()">&#8595; Export</button>
       <label class="export-btn import-lbl">&#8593; Import<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)"></label>
       <button class="export-btn" onclick="exportWeeklyCash()" title="Export this week's cash transactions to Excel" style="background:#f59e0b;color:white;font-weight:600;">&#163; Cash Export</button>
+      <button class="export-btn" onclick="openDaySummary()" title="End of day summary" style="background:#3a9e6e;color:white;font-weight:600;">&#128202; Day Summary</button>
       <button class="export-btn" onclick="sendPoppySchedule()" title="Send next week's schedule to Poppy Cooper" style="background:#ff1493;color:white;font-weight:600;">&#128205; Poppy's Schedule</button>
       <button class="add-btn" onclick="syncFromCloud()" id="syncBtn">&#9729; Sync</button>
       <button class="add-btn" onclick="pushAllToSheet()" id="pushAllBtn" style="background:#3a9e6e;">⬆ Push All</button>
@@ -274,11 +291,23 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
   </div>
 </div>
 
+<!-- DAY SUMMARY MODAL -->
+<div class="day-summary-overlay" id="daySummaryOverlay">
+  <div class="day-summary-modal">
+    <h2 id="daySummaryTitle">Today's Summary</h2>
+    <div class="ds-grid" id="daySummaryCards"></div>
+    <div class="ds-appt-list" id="daySummaryList"></div>
+    <div style="display:flex;justify-content:flex-end;">
+      <button class="btn-cancel" onclick="document.getElementById('daySummaryOverlay').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- BOOKING MODAL -->
 <div class="overlay" id="mainOverlay">
   <div class="modal">
     <h2 id="modalTitle">New Booking</h2>
-    <div class="fg"><label>Customer Type</label><div class="tog"><input type="radio" name="ctype" id="ct-existing" checked onchange="renderWaButtons()"><label for="ct-existing">Existing Customer</label><input type="radio" name="ctype" id="ct-new" onchange="renderWaButtons()"><label for="ct-new">New Customer</label></div></div>
+    <div class="fg"><label>Customer Type</label><div class="tog"><input type="radio" name="ctype" id="ct-existing" checked onchange="renderWaButtons();document.getElementById('referralGroup').style.display='none';"><label for="ct-existing">Existing Customer</label><input type="radio" name="ctype" id="ct-new" onchange="renderWaButtons();document.getElementById('referralGroup').style.display='block';"><label for="ct-new">New Customer</label></div></div>
     <div class="fg sug-wrap"><label>Customer Name</label><input type="text" id="f-name" placeholder="Start typing to find a returning customer..." autocomplete="off" oninput="onNameInput(this.value)"><div class="sug-box" id="sugBox"></div></div>
     <div class="frow">
       <div class="fg"><label>WhatsApp Number</label><input type="tel" id="f-phone" placeholder="07700 900000"></div>
@@ -292,6 +321,10 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
     <div class="frow">
       <div class="fg"><label>Finish Time</label><input type="text" id="f-finish" readonly placeholder="Auto-calculated"></div>
       <div class="fg"><label>Notes (optional)</label><input type="text" id="f-notes" placeholder="Any special requirements..."></div>
+    </div>
+    <div class="fg" id="referralGroup" style="display:none">
+      <label>Referred by (optional)</label>
+      <div class="sug-wrap"><input type="text" id="f-referral" placeholder="Who recommended Scruff to Buff?" autocomplete="off" oninput="onReferralInput(this.value)"><div class="sug-box" id="referralSugBox"></div></div>
     </div>
 
     <!-- DOG ROWS -->
@@ -432,21 +465,27 @@ function upsertCustomer(b){
   c.visits=parseInt(b.visits)||c.visits;
   // Store last appointment time
   if(b.time)c.lastTime=b.time;
+  // Store referral (only set once — first time)
+  if(b.referral&&!c.referredBy)c.referredBy=b.referral;
   // Upsert each dog
   if(!c.dogs)c.dogs=[];
   if(b.dogs&&b.dogs.length){
     b.dogs.forEach(function(d){
       if(!d.name)return;
       var existing=c.dogs.find(function(x){return x.name.toLowerCase()===d.name.toLowerCase();});
-      if(!existing){existing={name:titleCase(d.name),breed:'',lastService:'',lastPrice:null,lastDuration:null};c.dogs.push(existing);}
+      if(!existing){existing={name:titleCase(d.name),breed:'',lastService:'',lastPrice:null,lastDuration:null,lastPriceDate:null};c.dogs.push(existing);}
       if(d.breed)existing.breed=titleCase(d.breed);
-      // Use first service in the services array if available, otherwise fall back to d.service
       var firstSvc=d.services&&d.services.length?d.services[0]:null;
       var svcName=firstSvc?firstSvc.service:d.service;
       var svcDur=firstSvc?firstSvc.duration:d.duration;
       var svcPrice=firstSvc?firstSvc.price:d.price;
       if(svcName)existing.lastService=svcName;
-      if(svcPrice)existing.lastPrice=parseFloat(svcPrice);
+      if(svcPrice){
+        var newPrice=parseFloat(svcPrice);
+        // Only update lastPriceDate if price has changed or never set
+        if(existing.lastPrice!==newPrice)existing.lastPriceDate=fmtISO(new Date());
+        existing.lastPrice=newPrice;
+      }
       if(svcDur)existing.lastDuration=parseInt(svcDur);
     });
   }
@@ -1066,11 +1105,11 @@ function getClickTime(event,col){
 
 // ── MODAL OPEN/CLOSE ───────────────────────────────────────────────────────
 function clearForm(){
-  ['f-name','f-phone','f-notes'].forEach(function(id){document.getElementById(id).value='';});
+  ['f-name','f-phone','f-notes','f-referral'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('f-visits').value=1;
   document.getElementById('sugBox').innerHTML='';
   document.getElementById('discFlag').style.display='none';
-  document.getElementById('timeHint').style.display='none';
+  document.getElementById('referralGroup').style.display='none';
   document.getElementById('p-unpaid').checked=true;
   document.getElementById('payMethodGroup').style.display='none';
   document.getElementById('ct-existing').checked=true;
@@ -1124,6 +1163,8 @@ function openEdit(id){
   if(b.paid){document.getElementById('payMethodGroup').style.display='block';if(b.payMethod)document.getElementById('pm-'+b.payMethod).checked=true;}
   var ctVal=b.ct||'existing';
   document.getElementById('ct-'+ctVal).checked=true;
+  document.getElementById('referralGroup').style.display=ctVal==='new'?'block':'none';
+  document.getElementById('f-referral').value=b.referral||'';
 
   // Fill dogs - support both old single-dog and new multi-dog format
   if(b.dogs&&b.dogs.length){
@@ -1286,6 +1327,7 @@ function saveBooking(){
     duration:totalDur,
     finishTime:finRaw,
     notes:document.getElementById('f-notes').value.trim(),
+    referral:document.getElementById('f-referral').value.trim(),
     paid:paid,
     payMethod:paid&&pmEl?pmEl.value:null,
     splitPayment:(paid&&pmEl&&pmEl.value==='split')?{cash:splitCash,card:splitCard,monzo:splitMonzo}:null,
@@ -1334,6 +1376,7 @@ function deleteBooking(){
   saveAll();
   if(bk) syncToSheet(bk, 'delete');
   closeMain();renderCal();
+  if(bk) checkDeleteCancellationFee(bk);
   if(bk&&bk.phone){
     setTimeout(function(){
       openWA(bk.phone,'Hi '+titleCase(bk.name)+'! We\'re sorry to inform you that your appointment with Scruff to Buff Dogs on '+fmtDD(bk.date)+' at '+fmtTime(bk.time)+' has been cancelled. If you haven\'t already, then please get in touch to rebook. Many thanks,\n\nBecky - Scruff to Buff Dogs');
@@ -1461,8 +1504,10 @@ function renderWaButtons(){
   if(b&&b.dogs){b.dogs.forEach(function(d){var svcs=d.services&&d.services.length?d.services:[{service:d.service}];svcs.forEach(function(sv){if((sv.service||'').indexOf('Hand Strip')>-1)isStrip=true;});});}
   var stripBtn=isStrip?'<button class="btn-wa" style="background:#6b4226;" onclick="sendHandStripPriceMsg()"><span><span class="wa-title">Send Hand Stripping Price Notice</span><span class="wa-sub">Let client know current rate is £65/hr</span></span></button>':'';
   var rebookBtn='<button class="btn-wa" style="background:#0ea5e9;" onclick="sendRebookMsg()"><span><span class="wa-title">Send Rebook Link</span><span class="wa-sub">Let client choose 6–10 weeks ahead on same day</span></span></button>';
-  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookBtn;}
-  else{cont.innerHTML='<button class="btn-wa" onclick="sendConfirmMsg(null)"><span><span class="wa-title">Send Confirmation</span><span class="wa-sub">Booking confirmed with appointment details</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookBtn;}
+  var reviewBtn='<button class="btn-wa" style="background:#34a853;" onclick="sendGoogleReviewMsg()"><span><span class="wa-title">Request Google Review ⭐</span><span class="wa-sub">Send link to your Google review page</span></span></button>';
+  var cancelFeeBtn='<button class="btn-wa" style="background:#e05252;" onclick="sendCancelFeeMsg()"><span><span class="wa-title">Send Cancellation Fee Notice</span><span class="wa-sub">Politely request late cancellation fee</span></span></button>';
+  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
+  else{cont.innerHTML='<button class="btn-wa" onclick="sendConfirmMsg(null)"><span><span class="wa-title">Send Confirmation</span><span class="wa-sub">Booking confirmed with appointment details</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
 }
 function getCurrent(){return editId?bookings.find(function(b){return b.id===editId;}):null;}
 
@@ -1767,6 +1812,7 @@ function waReplySheetRequest(phone){
 document.getElementById('mainOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('mainOverlay'))closeMain();});
 document.getElementById('blockOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('blockOverlay'))closeBlock();});
 document.getElementById('payOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('payOverlay'))closePay();});
+document.getElementById('daySummaryOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('daySummaryOverlay'))document.getElementById('daySummaryOverlay').classList.remove('open');});
 document.addEventListener('click',function(e){if(!e.target.closest('#f-name')&&!e.target.closest('#sugBox'))document.getElementById('sugBox').innerHTML='';});
 document.getElementById('p-paid').addEventListener('change',function(){showPayMethod(true);});
 document.getElementById('p-unpaid').addEventListener('change',function(){showPayMethod(false);});
@@ -1775,6 +1821,8 @@ setTimeout(checkPrefill,300);
 setTimeout(checkSheetRequests,1000);
 setTimeout(checkSundayAutoExport,2000);
 setTimeout(checkFridayScheduleReminder,2500);
+setTimeout(checkRebookNudge,3000);
+setTimeout(checkPriceNudge,3500);
 
 // ── SWIPE TO CHANGE WEEK ──────────────────────────────────────────────────
 (function(){
@@ -1964,6 +2012,172 @@ function checkFridayScheduleReminder(){
       sendPoppySchedule();
     }
   },2500);
+}
+
+function openDaySummary(){
+  var todayStr=fmtISO(new Date());
+  var todayBookings=bookings.filter(function(b){return b.date===todayStr;});
+  todayBookings.sort(function(a,b){return a.time.localeCompare(b.time);});
+
+  var totalAppts=todayBookings.length;
+  var totalCash=0,totalCard=0,totalMonzo=0,totalEarned=0;
+  todayBookings.forEach(function(b){
+    if(!b.paid)return;
+    var amt=b.dogs&&b.dogs.length?b.dogs.reduce(function(s,d){return s+(d.price||0);},0):parseFloat(b.lastprice)||0;
+    totalEarned+=amt;
+    if(b.payMethod==='cash')totalCash+=amt;
+    else if(b.payMethod==='card')totalCard+=amt;
+    else if(b.payMethod==='monzo')totalMonzo+=amt;
+    else if(b.payMethod==='split'&&b.splitPayment){
+      totalCash+=b.splitPayment.cash||0;
+      totalCard+=b.splitPayment.card||0;
+      totalMonzo+=b.splitPayment.monzo||0;
+    }
+  });
+  var unpaidCount=todayBookings.filter(function(b){return !b.paid;}).length;
+
+  document.getElementById('daySummaryTitle').textContent='Today — '+new Date().getDate()+' '+FMONS[new Date().getMonth()];
+  document.getElementById('daySummaryCards').innerHTML=
+    '<div class="ds-card"><div class="ds-label">Appointments</div><div class="ds-val">'+totalAppts+'</div></div>'
+    +'<div class="ds-card highlight"><div class="ds-label">Total Earned</div><div class="ds-val">£'+totalEarned.toFixed(2)+'</div></div>'
+    +'<div class="ds-card"><div class="ds-label">Cash</div><div class="ds-val">£'+totalCash.toFixed(2)+'</div></div>'
+    +'<div class="ds-card"><div class="ds-label">Card / Monzo</div><div class="ds-val">£'+(totalCard+totalMonzo).toFixed(2)+'</div></div>'
+    +(unpaidCount?'<div class="ds-card" style="grid-column:1/-1;border-color:#e05252;background:#fdeaea;"><div class="ds-label" style="color:#e05252;">Outstanding (unpaid)</div><div class="ds-val" style="color:#e05252;">'+unpaidCount+' booking'+(unpaidCount!==1?'s':'')+'</div></div>':'');
+
+  document.getElementById('daySummaryList').innerHTML=totalAppts?todayBookings.map(function(b){
+    var dogs=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
+    var amt=b.dogs&&b.dogs.length?b.dogs.reduce(function(s,d){return s+(d.price||0);},0):parseFloat(b.lastprice)||0;
+    return '<div class="ds-appt-row">'
+      +'<span class="ds-time">'+fmtTime(b.time)+'</span>'
+      +'<span class="ds-name">'+b.name+' <span style="font-weight:400;color:#4a7aaa;font-size:0.75rem;">('+dogs+')</span></span>'
+      +'<span class="ds-amt" style="color:'+(b.paid?'var(--paid)':'var(--unpaid)')+';">'+(amt>0?'£'+amt.toFixed(2):(b.paid?'Paid':'Unpaid'))+'</span>'
+      +'</div>';
+  }).join(''):'<div style="padding:16px;text-align:center;color:#4a7aaa;font-size:0.85rem;">No appointments today.</div>';
+
+  document.getElementById('daySummaryOverlay').classList.add('open');
+}
+
+function sendGoogleReviewMsg(){
+  var b=getCurrent();if(!b||!b.phone)return;
+  var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'your pup';
+  openWA(b.phone,'Hi '+titleCase(b.name)+'! 😊 It was so lovely seeing '+dogNames+' today — hope you\'re both happy with the groom!\n\nIf you have a spare moment, we\'d absolutely love it if you could leave us a quick Google review — it really does make a huge difference to a small business like ours 🙏⭐\n\nhttps://g.page/r/CbljwCuZR3gjEBM/review\n\nThank you so much!\nBecky - Scruff to Buff Dogs');
+}
+
+function sendCancelFeeMsg(){
+  var b=getCurrent();if(!b||!b.phone)return;
+  openWA(b.phone,'Hi '+titleCase(b.name)+', I hope you\'re well!\n\nAs your recent appointment was cancelled with less than 48 hours notice, a cancellation fee is applicable as per our terms and conditions.\n\nIf you\'d like to pay this, you\'re welcome to do so here:\n'+SUMUP+'\n\nI completely understand that things come up unexpectedly, and I do appreciate your understanding. Please don\'t hesitate to get in touch if you\'d like to discuss this.\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
+}
+
+function onReferralInput(val){
+  var box=document.getElementById('referralSugBox');
+  if(!val||val.length<2){box.innerHTML='';return;}
+  var hits=customers.filter(function(c){return c.name.toLowerCase().indexOf(val.toLowerCase())>=0;});
+  if(!hits.length){box.innerHTML='';return;}
+  box.innerHTML=hits.map(function(c){
+    return '<div class="sug-item" onclick="document.getElementById(\'f-referral\').value=\''+c.name.replace(/'/g,"\\'")+'\';">'+c.name+'</div>';
+  }).join('');
+}
+
+function checkPriceNudge(){
+  var today=new Date();today.setHours(0,0,0,0);
+  var todayStr=fmtISO(today);
+  var twelveMonthsAgo=fmtISO(addDays(today,-365));
+  var nudged=[];
+  customers.forEach(function(c){
+    if(!c.dogs||!c.dogs.length)return;
+    c.dogs.forEach(function(d){
+      if(!d.lastPrice||!d.lastPriceDate)return;
+      if(d.lastPriceDate>twelveMonthsAgo)return;
+      // Check they have a future or recent booking
+      var hasBooking=bookings.some(function(b){
+        return b.name&&b.name.toLowerCase()===c.name.toLowerCase()&&b.date>=todayStr;
+      });
+      if(!hasBooking)return;
+      nudged.push({customer:c.name,dog:d.name,price:d.lastPrice,since:d.lastPriceDate});
+    });
+  });
+  if(!nudged.length)return;
+  var banner=document.getElementById('reminderBanner');
+  var list=document.getElementById('reminderList');
+  banner.classList.add('show');
+  list.innerHTML+=nudged.map(function(n){
+    var months=Math.floor((today-new Date(n.since+'T12:00:00'))/(30*864e5));
+    return '<div class="banner-chip" style="background:#f0fdf4;border-color:#3a9e6e;">'
+      +'<span>💰</span>'
+      +'<strong>'+n.customer+'</strong> ('+n.dog+')'
+      +' — £'+parseFloat(n.price).toFixed(2)+' for '+months+' months — consider a price review!'
+      +'</div>';
+  }).join('');
+}
+
+function checkLateCancellations(){
+  var today=new Date();today.setHours(0,0,0,0);
+  var todayStr=fmtISO(today);
+  var yesterday=fmtISO(addDays(today,-1));
+  // Find bookings deleted in last 2 days — we can't track deletions directly,
+  // but we CAN flag if today's or tomorrow's bookings were only recently added (bookedOn within 48hrs)
+  // and are now missing. Instead, show a prompt when deleting within 48hrs — handled in deleteBooking
+}
+
+function checkDeleteCancellationFee(bk){
+  if(!bk||!bk.date||!bk.phone)return;
+  var apptDate=new Date(bk.date+'T12:00:00');
+  var now=new Date();
+  var hoursUntil=(apptDate-now)/3600000;
+  if(hoursUntil<48&&hoursUntil>-24){
+    setTimeout(function(){
+      if(confirm('⚠️ This appointment is within 48 hours — a cancellation fee may apply.\n\nWould you like to send '+bk.name+' a cancellation fee notice?')){
+        editId=bk.id;
+        sendCancelFeeMsg();
+        editId=null;
+      }
+    },400);
+  }
+}
+
+function checkRebookNudge(){
+  var today=new Date();today.setHours(0,0,0,0);
+  var todayStr=fmtISO(today);
+  var eightWeeksAgo=fmtISO(addDays(today,-56));
+
+  // Find customers whose last appointment was 8+ weeks ago and have no future booking
+  var overdue=[];
+  customers.forEach(function(c){
+    if(!c.name)return;
+    // Find their most recent past booking
+    var pastBookings=bookings.filter(function(b){
+      return b.name&&b.name.toLowerCase()===c.name.toLowerCase()&&b.date<=todayStr;
+    });
+    if(!pastBookings.length)return;
+    pastBookings.sort(function(a,b){return b.date.localeCompare(a.date);});
+    var lastDate=pastBookings[0].date;
+    if(lastDate>eightWeeksAgo)return; // seen recently enough
+    // Check they have no future booking
+    var hasFuture=bookings.some(function(b){
+      return b.name&&b.name.toLowerCase()===c.name.toLowerCase()&&b.date>todayStr;
+    });
+    if(!hasFuture)overdue.push({name:c.name,phone:c.phone||'',lastDate:lastDate});
+  });
+
+  if(!overdue.length)return;
+  var banner=document.getElementById('reminderBanner');
+  var list=document.getElementById('reminderList');
+  banner.classList.add('show');
+  var html=overdue.map(function(o){
+    var weeks=Math.floor((today-new Date(o.lastDate+'T12:00:00'))/(7*864e5));
+    return '<div class="banner-chip rebook-chip">'
+      +'<span>&#128337;</span>'
+      +'<strong>'+o.name+'</strong>'
+      +' — last seen '+weeks+' weeks ago'
+      +(o.phone?'<button class="btn-wa-sm" style="background:#f59e0b;" onclick="sendRebookNudge(\''+o.name+'\',\''+o.phone+'\')">Rebook</button>':'')
+      +'</div>';
+  }).join('');
+  list.innerHTML=list.innerHTML+html;
+}
+
+function sendRebookNudge(name,phone){
+  if(!phone)return;
+  openWA(phone,'Hi '+titleCase(name)+'! 🐾 We haven\'t seen your pup in a while — whenever you\'re ready to book in again, you can choose your next appointment here:\n\nhttps://shaantishakti.github.io/scrufftobuff/book.html\n\nWould love to see you both again soon!\nBecky - Scruff to Buff Dogs');
 }
 
 function checkSundayAutoExport(){
