@@ -194,6 +194,10 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 }
 
 .dog-row{background:#f8fbff;border:1.5px solid var(--tan-light);border-radius:9px;padding:12px;margin-bottom:10px;}
+.noshow-flag{background:#fff0f0;border:2px solid #e05252;border-radius:9px;padding:10px 14px;margin-bottom:12px;display:none;font-size:0.85rem;color:#c0392b;font-weight:600;}
+.noshow-flag span{font-weight:400;color:#7a2020;display:block;margin-top:2px;font-size:0.78rem;}
+.btn-noshow{background:#e05252;color:white;border:none;border-radius:7px;padding:6px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;margin-left:8px;}
+.btn-noshow:hover{background:#c0392b;}
 .svc-full-groom{background:#a8c8e8!important;border-left:4px solid #7aaad0!important;}
 .svc-hand-stripping{background:#c2610a!important;border-left:4px solid #9a4d08!important;}
 .svc-nails{background:#6b3fa0!important;border-left:4px solid #4e2c78!important;}
@@ -313,6 +317,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
       <div class="fg"><label>WhatsApp Number</label><input type="tel" id="f-phone" placeholder="07700 900000"></div>
       <div class="fg"><label>Visit Number</label><input type="number" id="f-visits" min="1" value="1" onchange="checkDiscountFromForm()"></div>
     </div>
+    <div class="noshow-flag" id="noshowFlag">⚠️ Previous No Show — reminders will be sent automatically!<span id="noshowDetail"></span></div>
     <div class="disc-flag" id="discFlag" style="display:none"><strong>6th Visit Loyalty Discount!</strong><br>This is <span id="discName"></span>'s 6th visit &#8212; remember to apply 10% discount.<br>Last price: <strong id="discLast"></strong> &rarr; Discounted: <strong id="discNew"></strong></div>
     <div class="frow">
       <div class="fg"><label>Date</label><input type="date" id="f-date"></div>
@@ -362,6 +367,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
     </div>
     <div class="modal-btns">
       <button class="btn-del" id="btnDel" onclick="deleteBooking()" style="display:none">Delete</button>
+      <button class="btn-noshow" id="btnNoShow" onclick="markNoShow()" style="display:none">&#10007; No Show</button>
       <button class="btn-cancel" onclick="closeMain()">Cancel</button>
       <button class="btn-save" onclick="saveBooking()">Save Booking</button>
     </div>
@@ -397,6 +403,7 @@ const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const MONS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const FMONS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const SVC_DURATIONS={'Nail Clip - £13':10,'Nail Clip Fussy - £16':10,'Nail Clip Problematic - £20':10,'Anal Glands':10,'Puppy Intro (Inc. Bath) - £28':40,'Puppy Intro (Exc. Bath) - £15':20,'Emmi-Pet Teeth Consultation':30,'Emmi-Pet Teeth Cleaning':30,'Emmi-Pet Teeth Cleaning PAYG':30,'Emmi-Pet Teeth Cleaning x4':30,'Emmi-Pet Teeth Cleaning x9':30,'Emmi-Pet Teeth Maintenance':20};
+const SVC_PRICES={'Nail Clip - £13':13,'Nail Clip Fussy - £16':16,'Nail Clip Problematic - £20':20,'Puppy Intro (Inc. Bath) - £28':28,'Puppy Intro (Exc. Bath) - £15':15,'Teeth Descaling - £30':30};
 const BREED_TIMES={'labrador':{min:60,max:70},'cockapoo':{min:70,max:90},'spaniel':{min:60,max:90},'spinone':{min:100,max:150},'golden retriever':{min:90,max:100},'jack russell':{min:45,max:60},'border terrier':{min:60,max:90},'airedale':{min:90,max:150}};
 const AUTO_SVCS=['Full Groom','Hand Stripping'];
 const GRID_START=480;
@@ -500,8 +507,9 @@ function onNameInput(val){
   if(!hits.length){box.innerHTML='';return;}
   box.innerHTML=hits.map(function(c){
     var dogList=c.dogs&&c.dogs.length?c.dogs.map(function(d){return d.name;}).join(', '):'';
+    var nsBadge=c.noShow?'<span style="background:#e05252;color:white;font-size:0.68rem;font-weight:700;border-radius:4px;padding:1px 6px;margin-left:6px;">NO SHOW</span>':'';
     return '<div class="sug-item" onclick="fillCustomer(\''+c.name.replace(/'/g,"\\'")+'\')">'
-      +'<div class="sug-name">'+c.name+'</div>'
+      +'<div class="sug-name">'+c.name+nsBadge+'</div>'
       +'<div class="sug-detail">'+(dogList||'No dogs on record')+' | '+c.visits+' visit'+(c.visits!==1?'s':'')+(c.lastTime?' | Last appt: '+fmtTime(c.lastTime):'')+' </div>'
       +'</div>';
   }).join('');
@@ -512,6 +520,7 @@ function fillCustomer(name){
   if(!c)return;
   document.getElementById('sugBox').innerHTML='';
   document.getElementById('f-name').value=c.name;
+  checkNoshowFlag(c.name);
   document.getElementById('f-phone').value=c.phone||'';
   var next=(c.visits||0)+1;
   document.getElementById('f-visits').value=next;
@@ -586,17 +595,34 @@ function setDogCount(n){
 
 // dogServices[dogIdx] = [{service, duration, price}, ...]
 var dogServices = {};
+// dogInfo[dogIdx] = {name, breed}
+var dogInfo = {};
+
+function saveDogInfoToState(){
+  for(var i=1;i<=dogCount;i++){
+    var nameEl=document.getElementById('f-dog-'+i);
+    var breedEl=document.getElementById('f-breed-'+i);
+    if(nameEl||breedEl){
+      dogInfo[i]={name:nameEl?nameEl.value:'',breed:breedEl?breedEl.value:''};
+    }
+  }
+}
 
 function renderDogRows(){
+  saveDogInfoToState();
+  // Also save service state for all existing dogs
+  for(var k=1;k<=dogCount;k++) saveServiceRowsToState(k);
   var cont=document.getElementById('dogRows');
   var html='';
   for(var i=1;i<=dogCount;i++){
     if(!dogServices[i]) dogServices[i]=[{service:'',duration:60,price:''}];
+    var savedName=(dogInfo[i]&&dogInfo[i].name)||'';
+    var savedBreed=(dogInfo[i]&&dogInfo[i].breed)||'';
     html+='<div class="dog-row" id="dog-row-'+i+'">'
       +(dogCount>1?'<div class="dog-row-label">Dog '+i+'</div>':'')
       +'<div class="frow">'
-      +'<div class="fg"><label>Dogs Name</label><input type="text" id="f-dog-'+i+'" placeholder="Buddy"></div>'
-      +'<div class="fg" style="position:relative;"><label>Breed</label><input type="text" id="f-breed-'+i+'" placeholder="Cockapoo" autocomplete="off" oninput="onBreedInput(this.value,'+i+')" onblur="setTimeout(function(){hideBreedSug('+i+')},150)"><div class="breed-sug-box" id="breed-sug-'+i+'" style="display:none;"></div></div>'
+      +'<div class="fg"><label>Dogs Name</label><input type="text" id="f-dog-'+i+'" placeholder="Buddy" value="'+savedName.replace(/"/g,'&quot;')+'"></div>'
+      +'<div class="fg" style="position:relative;"><label>Breed</label><input type="text" id="f-breed-'+i+'" placeholder="Cockapoo" autocomplete="off" oninput="onBreedInput(this.value,'+i+')" onblur="setTimeout(function(){hideBreedSug('+i+')},150)" value="'+savedBreed.replace(/"/g,'&quot;')+'"><div class="breed-sug-box" id="breed-sug-'+i+'" style="display:none;"></div></div>'
       +'</div>'
       +'<div id="svc-rows-'+i+'"></div>'
       +'<button type="button" class="dog-count-btn" onclick="addServiceRow('+i+')" style="margin-top:6px;">+ Add Service</button>'
@@ -647,6 +673,10 @@ function onSvcChange(dogIdx,svcIdx){
   if(SVC_DURATIONS[v]){
     var sel=document.getElementById('f-duration-'+dogIdx+'-'+svcIdx);
     if(sel)sel.value=SVC_DURATIONS[v];
+  }
+  if(SVC_PRICES[v]){
+    var priceEl=document.getElementById('f-price-'+dogIdx+'-'+svcIdx);
+    if(priceEl&&!priceEl.value)priceEl.value=SVC_PRICES[v].toFixed(2);
   }
   calcFinish();
 }
@@ -941,7 +971,8 @@ function checkReminders(){
     if(!b.bookedOn)return true;
     var bo=new Date(b.bookedOn);bo.setHours(0,0,0,0);
     var daysBooked=Math.round((new Date(b.date+'T12:00:00')-bo)/864e5);
-    return daysBooked>=3;
+    var customerIsNoShow=customers.some(function(cu){return cu.name.toLowerCase()===b.name.toLowerCase()&&cu.noShow;});
+    return customerIsNoShow||daysBooked>=3;
   });
   var banner=document.getElementById('reminderBanner');
   if(!due.length){banner.classList.remove('show');return;}
@@ -953,10 +984,13 @@ function checkReminders(){
     var apptDate=new Date(b.date+'T12:00:00');
     var daysAway=Math.floor((apptDate-today2)/864e5);
     var daysLabel=daysAway===0?'TODAY':daysAway===1?'Tomorrow':daysAway+' days';
-    var urgentStyle=daysAway<=1?'border-color:#e05252;background:#fdeaea;':'';
+    var custNs=customers.find(function(cu){return cu.name.toLowerCase()===b.name.toLowerCase();});
+    var isNoShow=custNs&&custNs.noShow;
+    var urgentStyle=(daysAway<=1||isNoShow)?'border-color:#e05252;background:#fdeaea;':'';
+    var nsBadge=isNoShow?'<span style="background:#e05252;color:white;font-size:0.68rem;font-weight:700;border-radius:4px;padding:1px 6px;margin-left:4px;">NO SHOW</span>':'';
     return '<div class="banner-chip" style="'+urgentStyle+'">'
-      +'<strong>'+b.name+'</strong> \u2014 '+dogNames+' \u2014 '+fmtTime(b.time)
-      +' <span style="font-size:0.72rem;font-weight:600;color:'+(daysAway<=1?'#e05252':'#4a7aaa')+';">('+daysLabel+')</span>'
+      +'<strong>'+b.name+'</strong>'+nsBadge+' — '+dogNames+' — '+fmtTime(b.time)
+      +' <span style="font-size:0.72rem;font-weight:600;color:'+((daysAway<=1||isNoShow)?'#e05252':'#4a7aaa')+';">('+daysLabel+')</span>'
       +'<button class="btn-wa-sm" onclick="sendReminderMsg(\''+b.id+'\')">Reminder</button>'
       +'<button class="btn-wa-sm" style="background:#f59e0b;margin-left:4px;" onclick="sendReminderPayMsgId(\''+b.id+'\')">Reminder + Pay</button>'
       +'<button class="btn-wa-sm" style="background:#64748b;margin-left:4px;" onclick="dismissReminder(\''+b.id+'\')" title="Dismiss this reminder">\u2713 Done</button>'
@@ -1113,6 +1147,7 @@ function clearForm(){
   document.getElementById('p-unpaid').checked=true;
   document.getElementById('payMethodGroup').style.display='none';
   document.getElementById('ct-existing').checked=true;
+  dogInfo={};dogServices={};
   setDogCount(1);
   buildTimeDropdown();
   calcFinish();
@@ -1122,6 +1157,8 @@ function openAdd(){
   editId=null;
   document.getElementById('modalTitle').textContent='New Booking';
   document.getElementById('btnDel').style.display='none';
+  document.getElementById('btnNoShow').style.display='none';
+  document.getElementById('noshowFlag').style.display='none';
   document.getElementById('waSection').style.display='none';
   clearForm();
   document.getElementById('f-date').value=fmtISO(new Date());
@@ -1142,6 +1179,12 @@ function openEdit(id){
   editId=id;clearForm();
   document.getElementById('modalTitle').textContent='Edit Booking';
   document.getElementById('btnDel').style.display='block';
+  var cNs=getCustomer(b.name);
+  var btnNs=document.getElementById('btnNoShow');
+  btnNs.style.display='block';
+  if(cNs&&cNs.noShow){btnNs.textContent='✓ Undo No Show';btnNs.style.background='#64748b';}
+  else{btnNs.textContent='✗ No Show';btnNs.style.background='#e05252';}
+  checkNoshowFlag(b.name);
   document.getElementById('f-name').value=b.name;
   document.getElementById('f-phone').value=b.phone||'';
   document.getElementById('f-date').value=b.date;
@@ -1550,7 +1593,11 @@ function sendReminderMsg(id){
   var b=id?bookings.find(function(x){return x.id===id;}):getCurrent();
   if(!b||!b.phone)return;
   var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
-  openWA(b.phone,'Just a friendly reminder that '+dogNames+' has a grooming appointment with '+BIZ+' in 4 days! Please let me know ASAP if you need to make any changes, to avoid any cancellation fees.\n\nDID YOU KNOW you can book your fluffy friend\'s next appointment right now \uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html');
+  var today=new Date();today.setHours(0,0,0,0);
+  var apptDate=new Date(b.date+'T12:00:00');
+  var daysAway=Math.round((apptDate-today)/864e5);
+  var daysStr=daysAway===0?'today':daysAway===1?'tomorrow':'in '+daysAway+' days';
+  openWA(b.phone,'Just a friendly reminder that '+dogNames+' has a grooming appointment with '+BIZ+' '+daysStr+'! Please let me know ASAP if you need to make any changes, to avoid any cancellation fees.\n\nDID YOU KNOW you can book your fluffy friend\'s next appointment right now \uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html');
 }
 function sendPaymentChase(){
   var b=getCurrent();if(!b||!b.phone)return;
@@ -1562,14 +1609,22 @@ function sendReminderPayMsgId(id){
   var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
   var total=b.dogs&&b.dogs.length?b.dogs.reduce(function(s,d){return s+(d.price||0);},0):parseFloat(b.lastprice)||0;
   var priceStr=total>0?'£'+total.toFixed(2):'the same as last time';
-  openWA(b.phone,'Just a friendly reminder that '+dogNames+' has a grooming appointment with '+BIZ+' in 4 days! Please let me know ASAP if you need to make any changes, to avoid any cancellation fees.\n\nIf you would like to pay your bill of '+priceStr+' in advance, you are welcome to do so here:\n'+SUMUP+'\n\nDID YOU KNOW you can book your fluffy friend\'s next appointment right now \uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html');
+  var today=new Date();today.setHours(0,0,0,0);
+  var apptDate=new Date(b.date+'T12:00:00');
+  var daysAway=Math.round((apptDate-today)/864e5);
+  var daysStr=daysAway===0?'today':daysAway===1?'tomorrow':'in '+daysAway+' days';
+  openWA(b.phone,'Just a friendly reminder that '+dogNames+' has a grooming appointment with '+BIZ+' '+daysStr+'! Please let me know ASAP if you need to make any changes, to avoid any cancellation fees.\n\nIf you would like to pay your bill of '+priceStr+' in advance, you are welcome to do so here:\n'+SUMUP+'\n\nDID YOU KNOW you can book your fluffy friend\'s next appointment right now \uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html');
 }
 function sendReminderPayMsg(){
   var b=getCurrent();if(!b||!b.phone)return;
   var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
   var total=b.dogs&&b.dogs.length?b.dogs.reduce(function(s,d){return s+(d.price||0);},0):parseFloat(b.lastprice)||0;
   var priceStr=total>0?'£'+total.toFixed(2):'the same as last time';
-  openWA(b.phone,'Just a friendly reminder that '+dogNames+' has a grooming appointment with '+BIZ+' in 4 days! Please let me know ASAP if you need to make any changes, to avoid any cancellation fees.\n\nIf you would like to pay your bill of '+priceStr+' in advance, you are welcome to do so here:\n'+SUMUP+'\n\nDID YOU KNOW you can book your fluffy friend\'s next appointment right now \uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html');
+  var today=new Date();today.setHours(0,0,0,0);
+  var apptDate=new Date(b.date+'T12:00:00');
+  var daysAway=Math.round((apptDate-today)/864e5);
+  var daysStr=daysAway===0?'today':daysAway===1?'tomorrow':'in '+daysAway+' days';
+  openWA(b.phone,'Just a friendly reminder that '+dogNames+' has a grooming appointment with '+BIZ+' '+daysStr+'! Please let me know ASAP if you need to make any changes, to avoid any cancellation fees.\n\nIf you would like to pay your bill of '+priceStr+' in advance, you are welcome to do so here:\n'+SUMUP+'\n\nDID YOU KNOW you can book your fluffy friend\'s next appointment right now \uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html');
 }
 function openPay(){document.getElementById('f-price-pay').value='';document.getElementById('payOverlay').classList.add('open');}
 function sendPayment(){
@@ -2313,6 +2368,47 @@ function startDrag(e,id){
     document.addEventListener('mouseup',onUp);
   }
 }
+
+// ── NO SHOW ────────────────────────────────────────────────────────────────
+function checkNoshowFlag(name){
+  var c=getCustomer(name);
+  var flag=document.getElementById('noshowFlag');
+  var detail=document.getElementById('noshowDetail');
+  if(c&&c.noShow){
+    flag.style.display='block';
+    detail.textContent='Marked as no show on '+(c.noShowDate||'unknown date')+'. Reminders will appear in the banner immediately.';
+  } else {
+    flag.style.display='none';
+  }
+}
+
+function markNoShow(){
+  var b=editId?bookings.find(function(x){return x.id===editId;}):null;
+  if(!b)return;
+  var c=getCustomer(b.name);
+  var alreadyNoShow=c&&c.noShow;
+  if(alreadyNoShow){
+    if(!confirm('Remove the no show flag from '+b.name+'?'))return;
+    if(c){c.noShow=false;c.noShowDate=null;localStorage.setItem('stbCustomers',JSON.stringify(customers));}
+    b.noShow=false;
+    saveAll();
+    checkNoshowFlag(b.name);
+    checkReminders();
+    document.getElementById('btnNoShow').textContent='\u2717 No Show';
+    document.getElementById('btnNoShow').style.background='#e05252';
+    return;
+  }
+  if(!confirm('Mark '+b.name+' as a no show?\n\nThis will flag their record so future bookings appear in the reminder banner straight away.'))return;
+  if(c){c.noShow=true;c.noShowDate=fmtISO(new Date());localStorage.setItem('stbCustomers',JSON.stringify(customers));}
+  b.noShow=true;
+  saveAll();
+  checkNoshowFlag(b.name);
+  checkReminders();
+  document.getElementById('btnNoShow').textContent='\u2713 Undo No Show';
+  document.getElementById('btnNoShow').style.background='#64748b';
+  alert(b.name+' has been marked as a no show. Their next booking will appear in the reminder banner immediately.');
+}
+
 
 </script>
 </body>
