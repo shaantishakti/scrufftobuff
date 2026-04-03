@@ -534,51 +534,40 @@ function fillCustomer(name){
     calcFinish();
   }
 
-  // Pre-populate dogServices BEFORE rendering rows so they pick up correct values
+  // Pre-populate dogServices AND dogInfo BEFORE rendering so renderDogRows restores correct values
   if(c.dogs&&c.dogs.length){
     c.dogs.forEach(function(d,i){
       if(i>=MAX_DOGS)return;
-      var idx=i+1; // form elements are 1-based
+      var idx=i+1;
       dogServices[idx]=[{
         service:d.lastService||'',
         duration:d.lastDuration||60,
         price:d.lastPrice||''
       }];
+      dogInfo[idx]={name:d.name||'',breed:d.breed||''};
     });
   }
 
-  setDogCount(Math.max(1,c.dogs?c.dogs.length:1));
+  setDogCount(Math.max(1,c.dogs?c.dogs.length:1),true);
 
   setTimeout(function(){
     if(c.dogs&&c.dogs.length){
       c.dogs.forEach(function(d,i){
         if(i>=MAX_DOGS)return;
-        var idx=i+1; // 1-based
-        var nameEl=document.getElementById('f-dog-'+idx);
-        var breedEl=document.getElementById('f-breed-'+idx);
-        if(nameEl)nameEl.value=d.name||'';
-        if(breedEl)breedEl.value=d.breed||'';
-
+        var idx=i+1;
         // Set service dropdown directly
         var svcEl=document.getElementById('f-service-'+idx+'-0');
         if(svcEl&&d.lastService){
           svcEl.value=d.lastService;
-          // Show "Other" field if needed
           var otherGroup=document.getElementById('f-other-group-'+idx+'-0');
           if(otherGroup)otherGroup.style.display=d.lastService==='Other'?'block':'none';
         }
-
-        // Set duration — use saved value, don't let autoFill override it
+        // Set duration
         var durEl=document.getElementById('f-duration-'+idx+'-0');
-        if(durEl&&d.lastDuration){
-          durEl.value=d.lastDuration;
-        }
-
+        if(durEl&&d.lastDuration)durEl.value=d.lastDuration;
         // Set price
         var priceEl=document.getElementById('f-price-'+idx+'-0');
-        if(priceEl&&d.lastPrice){
-          priceEl.value=parseFloat(d.lastPrice).toFixed(2);
-        }
+        if(priceEl&&d.lastPrice)priceEl.value=parseFloat(d.lastPrice).toFixed(2);
       });
       calcFinish();
     }
@@ -587,7 +576,8 @@ function fillCustomer(name){
 }
 
 // ── DOG ROWS ───────────────────────────────────────────────────────────────
-function setDogCount(n){
+function setDogCount(n,skipSave){
+  if(!skipSave)saveDogInfoToState();
   dogCount=Math.min(Math.max(1,n),MAX_DOGS);
   renderDogRows();
   updateDogCountBtns();
@@ -602,14 +592,19 @@ function saveDogInfoToState(){
   for(var i=1;i<=dogCount;i++){
     var nameEl=document.getElementById('f-dog-'+i);
     var breedEl=document.getElementById('f-breed-'+i);
-    if(nameEl||breedEl){
-      dogInfo[i]={name:nameEl?nameEl.value:'',breed:breedEl?breedEl.value:''};
+    // Only read from DOM if the elements exist — don't overwrite pre-populated dogInfo
+    if(nameEl){
+      if(!dogInfo[i])dogInfo[i]={name:'',breed:''};
+      dogInfo[i].name=nameEl.value;
+    }
+    if(breedEl){
+      if(!dogInfo[i])dogInfo[i]={name:'',breed:''};
+      dogInfo[i].breed=breedEl.value;
     }
   }
 }
 
 function renderDogRows(){
-  saveDogInfoToState();
   // Also save service state for all existing dogs
   for(var k=1;k<=dogCount;k++) saveServiceRowsToState(k);
   var cont=document.getElementById('dogRows');
