@@ -459,6 +459,13 @@ function saveAll(){
   localStorage.setItem('stbBlocks',JSON.stringify(blocks));
 }
 
+
+function showDebug(msg){
+  var el=document.getElementById('debugPanel');
+  if(!el)return;
+  el.style.display='block';
+  el.innerHTML+='<div style="margin-bottom:6px;word-break:break-all;">'+msg+'</div>';
+}
 // ── CUSTOMER / DOG MANAGEMENT ──────────────────────────────────────────────
 function getCustomer(name){
   return customers.find(function(c){return c.name.toLowerCase()===name.toLowerCase();});
@@ -1207,6 +1214,7 @@ function openEdit(id){
   document.getElementById('f-referral').value=b.referral||'';
 
   // Fill dogs - support both old single-dog and new multi-dog format
+  showDebug('BOOKING: '+JSON.stringify(b));
   if(b.dogs&&b.dogs.length){
     // Pre-populate dogServices so renderDogRows uses the saved data
     b.dogs.forEach(function(d,i){
@@ -1214,6 +1222,7 @@ function openEdit(id){
       dogServices[idx]=d.services&&d.services.length?d.services.map(function(sv){return {service:sv.service||'',duration:sv.duration||60,price:sv.price||''};}):[{service:d.service||'',duration:d.duration||60,price:d.price||''}];
       dogInfo[idx]={name:d.name||'',breed:d.breed||''};
     });
+    showDebug('DOGSERVICES: '+JSON.stringify(dogServices));
     setDogCount(b.dogs.length,true);
   } else {
     // Legacy single dog
@@ -2385,5 +2394,8 @@ function markNoShow(){
 
 
 </script>
+<div id="debugPanel" style="display:none;position:fixed;bottom:0;left:0;right:0;max-height:40vh;overflow-y:auto;background:#1e1e1e;color:#00ff88;font-family:monospace;font-size:11px;padding:10px;z-index:99999;border-top:2px solid #00ff88;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong>DEBUG</strong><button onclick="document.getElementById('debugPanel').innerHTML='';document.getElementById('debugPanel').style.display='none';" style="background:#e05252;color:white;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;">Clear</button></div>
+</div>
 </body>
 </html>
