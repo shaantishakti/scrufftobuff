@@ -1212,37 +1212,14 @@ function openEdit(id){
     b.dogs.forEach(function(d,i){
       var idx=i+1;
       dogServices[idx]=d.services&&d.services.length?d.services.map(function(sv){return {service:sv.service||'',duration:sv.duration||60,price:sv.price||''};}):[{service:d.service||'',duration:d.duration||60,price:d.price||''}];
+      dogInfo[idx]={name:d.name||'',breed:d.breed||''};
     });
-    setDogCount(b.dogs.length);
-    b.dogs.forEach(function(d,i){
-      var idx=i+1;
-      setTimeout(function(){
-        var nameEl=document.getElementById('f-dog-'+idx);
-        var breedEl=document.getElementById('f-breed-'+idx);
-        if(nameEl)nameEl.value=d.name||'';
-        if(breedEl)breedEl.value=d.breed||'';
-        calcFinish();
-      },50);
-    });
+    setDogCount(b.dogs.length,true);
   } else {
     // Legacy single dog
-    setDogCount(1);
-    setTimeout(function(){
-      var nameEl=document.getElementById('f-dog-1');
-      var breedEl=document.getElementById('f-breed-1');
-      var svcEl=document.getElementById('f-service-1');
-      var priceEl=document.getElementById('f-price-1');
-      if(nameEl)nameEl.value=b.dog||'';
-      if(breedEl)breedEl.value=b.breed||'';
-      if(svcEl){
-        if(SVC_OPTIONS.indexOf(b.service)>=0)svcEl.value=b.service;
-        else{svcEl.value='Other';var oth=document.getElementById('f-svc-other-1');if(oth)oth.value=b.service;document.getElementById('f-other-group-1').style.display='block';}
-      }
-      if(priceEl&&b.lastprice)priceEl.value=parseFloat(b.lastprice).toFixed(2);
-      var durEl=document.getElementById('f-duration-1');
-      if(durEl&&b.duration)durEl.value=b.duration;
-      calcFinish();
-    },50);
+    dogServices[1]=[{service:b.service||'',duration:b.duration||60,price:b.lastprice||''}];
+    dogInfo[1]={name:b.dog||'',breed:b.breed||''};
+    setDogCount(1,true);
   }
   document.getElementById('waSection').style.display=b.phone?'block':'none';
   renderWaButtons();
