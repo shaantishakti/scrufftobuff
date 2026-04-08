@@ -1140,10 +1140,10 @@ function renderCal(){
   var ftr='<div class="day-total-empty" style="height:36px;"></div>';
   days.forEach(function(day){
     var ds=fmtISO(day);
-    var dayBks=bookings.filter(function(b){return b.date===ds;});
+    var dayBks=bookings.filter(function(b){return b.date===ds&&b.paid;});
     var total=0;
     dayBks.forEach(function(bk){
-      var amt=bk.dogs&&bk.dogs.length?bk.dogs.reduce(function(s,d){return s+(d.services&&d.services.length?d.services.reduce(function(ss,sv){return ss+(sv.price||0);},0):(d.price||0));},0):parseFloat(bk.lastprice)||0;
+      var amt=bk.dogs&&bk.dogs.length?bk.dogs.reduce(function(s,d){return s+(d.services&&d.services.length?d.services.reduce(function(ss,sv){return ss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):parseFloat(bk.lastprice)||0;
       total+=amt;
     });
     ftr+='<div style="display:flex;align-items:center;justify-content:center;height:36px;font-size:0.82rem;font-weight:800;border-top:2px solid #d0dcea;background:#f0f6ff;">'
@@ -1660,23 +1660,21 @@ function renderEarnings(){
   var range=getEarnRange();
   document.getElementById('earnPeriodLabel').textContent=range.label;
   var paid=bookings.filter(function(b){
-    if(!b.paid||b.date<range.start||b.date>range.end)return false;
-    var total=b.dogs&&b.dogs.length?b.dogs.reduce(function(s,d){return s+(d.services&&d.services.length?d.services.reduce(function(ss,sv){return ss+(sv.price||0);},0):(d.price||0));},0):parseFloat(b.lastprice)||0;
-    return total>0;
+    return b.paid&&b.date>=range.start&&b.date<=range.end;
   });
-  var total=paid.reduce(function(s,b){return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.services&&d.services.length?d.services.reduce(function(sss,sv){return sss+(sv.price||0);},0):(d.price||0));},0):parseFloat(b.lastprice)||0);},0);
+  var total=paid.reduce(function(s,b){return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.services&&d.services.length?d.services.reduce(function(sss,sv){return sss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):parseFloat(b.lastprice)||0);},0);
   var cash=paid.reduce(function(s,b){
-    if(b.payMethod==='cash') return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.services&&d.services.length?d.services.reduce(function(sss,sv){return sss+(sv.price||0);},0):(d.price||0));},0):parseFloat(b.lastprice)||0);
+    if(b.payMethod==='cash') return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.services&&d.services.length?d.services.reduce(function(sss,sv){return sss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):parseFloat(b.lastprice)||0);
     if(b.payMethod==='split'&&b.splitPayment) return s+(b.splitPayment.cash||0);
     return s;
   },0);
   var card=paid.reduce(function(s,b){
-    if(b.payMethod==='card') return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.services&&d.services.length?d.services.reduce(function(sss,sv){return sss+(sv.price||0);},0):(d.price||0));},0):parseFloat(b.lastprice)||0);
+    if(b.payMethod==='card') return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.services&&d.services.length?d.services.reduce(function(sss,sv){return sss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):parseFloat(b.lastprice)||0);
     if(b.payMethod==='split'&&b.splitPayment) return s+(b.splitPayment.card||0);
     return s;
   },0);
   var monzo=paid.reduce(function(s,b){
-    if(b.payMethod==='monzo') return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.services&&d.services.length?d.services.reduce(function(sss,sv){return sss+(sv.price||0);},0):(d.price||0));},0):parseFloat(b.lastprice)||0);
+    if(b.payMethod==='monzo') return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.services&&d.services.length?d.services.reduce(function(sss,sv){return sss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):parseFloat(b.lastprice)||0);
     if(b.payMethod==='split'&&b.splitPayment) return s+(b.splitPayment.monzo||0);
     return s;
   },0);
@@ -1685,7 +1683,7 @@ function renderEarnings(){
   if(!paid.length){tbody.innerHTML='<tr><td colspan="5" class="earn-empty">No paid bookings in this period.</td></tr>';return;}
   paid.sort(function(a,b){return a.date.localeCompare(b.date);});
   tbody.innerHTML=paid.map(function(b){
-    var amt=b.dogs&&b.dogs.length?b.dogs.reduce(function(s,d){return s+(d.services&&d.services.length?d.services.reduce(function(ss,sv){return ss+(sv.price||0);},0):(d.price||0));},0):parseFloat(b.lastprice)||0;
+    var amt=b.dogs&&b.dogs.length?b.dogs.reduce(function(s,d){return s+(d.services&&d.services.length?d.services.reduce(function(ss,sv){return ss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):parseFloat(b.lastprice)||0;
     var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'-';
     var services=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.service;}).join(', '):b.service||'-';
     return'<tr><td>'+fmtDD(b.date)+'</td><td>'+b.name+'</td><td>'+dogNames+'</td><td>'+services+'</td><td><strong>£'+amt.toFixed(2)+'</strong></td><td>'+(b.payMethod?'<span class="pay-badge '+b.payMethod+'">'+b.payMethod.charAt(0).toUpperCase()+b.payMethod.slice(1)+'</span>':'-')+'</td></tr>';
