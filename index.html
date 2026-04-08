@@ -678,6 +678,8 @@ function onSvcChange(dogIdx,svcIdx){
 
 function saveServiceRowsToState(dogIdx){
   // Save current DOM values back to dogServices before re-rendering
+  // Only proceed if the container for this dog's services actually exists in the DOM
+  if(!document.getElementById('svc-rows-'+dogIdx)) return;
   var svcs = dogServices[dogIdx];
   if(!svcs) return;
   for(var s=0; s<svcs.length; s++){
@@ -1143,7 +1145,7 @@ function clearForm(){
   document.getElementById('payMethodGroup').style.display='none';
   document.getElementById('ct-existing').checked=true;
   dogInfo={};dogServices={};
-  setDogCount(1);
+  setDogCount(1,true);
   buildTimeDropdown();
   calcFinish();
 }
