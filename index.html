@@ -594,8 +594,10 @@ function setDogCount(n,skipSave){
 var dogServices = {};
 // dogInfo[dogIdx] = {name, breed}
 var dogInfo = {};
+var suppressSaveState = false;
 
 function saveDogInfoToState(){
+  if(suppressSaveState) return;
   for(var i=1;i<=dogCount;i++){
     var nameEl=document.getElementById('f-dog-'+i);
     var breedEl=document.getElementById('f-breed-'+i);
@@ -687,6 +689,7 @@ function onSvcChange(dogIdx,svcIdx){
 function saveServiceRowsToState(dogIdx){
   // Save current DOM values back to dogServices before re-rendering
   // Only proceed if the container for this dog's services actually exists in the DOM
+  if(suppressSaveState) return;
   if(!document.getElementById('svc-rows-'+dogIdx)) return;
   var svcs = dogServices[dogIdx];
   if(!svcs) return;
@@ -1216,6 +1219,7 @@ function openEdit(id){
 
   // Fill dogs - support both old single-dog and new multi-dog format
   showDebug('BOOKING: '+JSON.stringify(b));
+  suppressSaveState=true;
   if(b.dogs&&b.dogs.length){
     // Pre-populate dogServices so renderDogRows uses the saved data
     b.dogs.forEach(function(d,i){
@@ -1231,6 +1235,7 @@ function openEdit(id){
     dogInfo[1]={name:b.dog||'',breed:b.breed||''};
     setDogCount(1,true);
   }
+  suppressSaveState=false;
   document.getElementById('waSection').style.display=b.phone?'block':'none';
   renderWaButtons();
   document.getElementById('mainOverlay').classList.add('open');
