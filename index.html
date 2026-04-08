@@ -264,15 +264,19 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
         <select id="timeStep"><option value="10" selected>10 min</option><option value="5">5 min</option></select>
       </div>
       <button class="block-btn" onclick="openBlock()">+ Block</button>
-
-      <button class="export-btn" onclick="exportData()">&#8595; Export</button>
-      <label class="export-btn import-lbl">&#8593; Import<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)"></label>
       <button class="export-btn" onclick="exportWeeklyCash()" title="Export this week's cash transactions to Excel" style="background:#f59e0b;color:white;font-weight:600;">&#163; Cash Export</button>
       <button class="export-btn" onclick="openDaySummary()" title="End of day summary" style="background:#3a9e6e;color:white;font-weight:600;">&#128202; Day Summary</button>
       <button class="export-btn" onclick="sendPoppySchedule()" title="Send next week's schedule to Poppy Cooper" style="background:#ff1493;color:white;font-weight:600;">&#128205; Poppy's Schedule</button>
-      <button class="add-btn" onclick="syncFromCloud()" id="syncBtn">&#9729; Sync</button>
-      <button class="add-btn" onclick="pushAllToSheet()" id="pushAllBtn" style="background:#3a9e6e;">⬆ Push All</button>
-      <button class="add-btn" onclick="clearAndPushAll()" id="clearPushBtn" style="background:#e05252;">🔄 Clear & Push All</button>
+      <div style="position:relative;display:inline-block;">
+        <button class="export-btn" onclick="toggleMoreMenu()" style="background:#64748b;color:white;font-weight:600;">&#9881; More</button>
+        <div id="moreMenu" style="display:none;position:absolute;right:0;top:110%;background:white;border:1.5px solid #d0dcea;border-radius:10px;box-shadow:0 4px 18px rgba(0,0,0,0.13);z-index:999;min-width:190px;padding:6px 0;">
+          <div onclick="exportData();toggleMoreMenu()" style="padding:10px 18px;cursor:pointer;font-size:0.88rem;font-weight:600;color:#1e3a5f;border-bottom:1px solid #f0f4fa;">&#8595; Export Data</div>
+          <label style="padding:10px 18px;cursor:pointer;font-size:0.88rem;font-weight:600;color:#1e3a5f;border-bottom:1px solid #f0f4fa;display:block;">&#8593; Import Data<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this);toggleMoreMenu()"></label>
+          <div onclick="syncFromCloud();toggleMoreMenu()" id="syncBtn" style="padding:10px 18px;cursor:pointer;font-size:0.88rem;font-weight:600;color:#1e3a5f;border-bottom:1px solid #f0f4fa;">&#9729; Sync from Cloud</div>
+          <div onclick="pushAllToSheet();toggleMoreMenu()" id="pushAllBtn" style="padding:10px 18px;cursor:pointer;font-size:0.88rem;font-weight:600;color:#3a9e6e;border-bottom:1px solid #f0f4fa;">⬆ Push All to Sheet</div>
+          <div onclick="clearAndPushAll();toggleMoreMenu()" id="clearPushBtn" style="padding:10px 18px;cursor:pointer;font-size:0.88rem;font-weight:600;color:#e05252;">🔄 Clear &amp; Push All</div>
+        </div>
+      </div>
     </div>
   </div>
   <div class="cal-wrap"><div class="cal-outer" id="calOuter"></div></div>
@@ -453,6 +457,17 @@ function showPage(id,tab){
   if(id==='earnPage')renderEarnings();
 }
 
+
+function toggleMoreMenu(){
+  var m=document.getElementById('moreMenu');
+  m.style.display=m.style.display==='block'?'none':'block';
+}
+document.addEventListener('click',function(e){
+  var menu=document.getElementById('moreMenu');
+  if(menu&&menu.style.display==='block'&&!menu.contains(e.target)&&!e.target.closest('[onclick="toggleMoreMenu()"]')){
+    menu.style.display='none';
+  }
+});
 function saveAll(){
   localStorage.setItem('stbBookings',JSON.stringify(bookings));
   localStorage.setItem('stbCustomers',JSON.stringify(customers));
@@ -460,12 +475,6 @@ function saveAll(){
 }
 
 
-function showDebug(msg){
-  var el=document.getElementById('debugPanel');
-  if(!el)return;
-  el.style.display='block';
-  el.innerHTML+='<div style="margin-bottom:6px;word-break:break-all;">'+msg+'</div>';
-}
 // ── CUSTOMER / DOG MANAGEMENT ──────────────────────────────────────────────
 function getCustomer(name){
   return customers.find(function(c){return c.name.toLowerCase()===name.toLowerCase();});
@@ -640,7 +649,6 @@ function renderServiceRows(dogIdx){
   var cont=document.getElementById('svc-rows-'+dogIdx);
   if(!cont)return;
   var svcs=dogServices[dogIdx]||[{service:'',duration:60,price:''}];
-  showDebug('renderServiceRows dog'+dogIdx+': '+JSON.stringify(svcs));
   var html='';
   for(var s=0;s<svcs.length;s++){
     html+='<div class="svc-row" id="svc-row-'+dogIdx+'-'+s+'" style="background:#f0f6ff;border-radius:7px;padding:8px;margin-bottom:6px;">'
@@ -1128,9 +1136,31 @@ function renderCal(){
     });
     body+='</div>';
   });
+  // Build daily earnings footer
+  var ftr='<div class="day-total-empty" style="height:36px;"></div>';
+  days.forEach(function(day){
+    var ds=fmtISO(day);
+    var dayBks=bookings.filter(function(b){return b.date===ds;});
+    var paid=0,unpaid=0;
+    dayBks.forEach(function(bk){
+      var dogs=bk.dogs&&bk.dogs.length?bk.dogs:[{services:[{price:bk.lastprice||null}]}];
+      var total=0;
+      dogs.forEach(function(d){
+        var svcs=d.services&&d.services.length?d.services:[{price:d.price||null}];
+        svcs.forEach(function(sv){if(sv.price)total+=parseFloat(sv.price)||0;});
+      });
+      if(bk.paid)paid+=total; else unpaid+=total;
+    });
+    var total=paid+unpaid;
+    ftr+='<div style="display:flex;align-items:center;justify-content:center;height:36px;font-size:0.82rem;font-weight:800;border-top:2px solid #d0dcea;background:#f0f6ff;">'
+      +(total>0?'<span style="color:#e05252;">£'+total.toFixed(2)+'</span>':'<span style="color:#b0bec5;">—</span>')
+      +'</div>';
+  });
+
   outer.innerHTML=
     '<div class="cal-header" style="display:grid;grid-template-columns:'+gridCols+'">'+hdr+'</div>'
-    +'<div class="cal-body" style="display:grid;grid-template-columns:'+gridCols+';grid-template-rows:repeat(60,'+ROW_H+'px);height:'+totalH+'px;">'+body+'</div>';
+    +'<div class="cal-body" style="display:grid;grid-template-columns:'+gridCols+';grid-template-rows:repeat(60,'+ROW_H+'px);height:'+totalH+'px;">'+body+'</div>'
+    +'<div class="cal-footer" style="display:grid;grid-template-columns:'+gridCols+';position:sticky;bottom:0;z-index:10;background:#f0f6ff;">'+ftr+'</div>';
   checkReminders();
 }
 
@@ -1218,7 +1248,6 @@ function openEdit(id){
   document.getElementById('f-referral').value=b.referral||'';
 
   // Fill dogs - support both old single-dog and new multi-dog format
-  showDebug('BOOKING: '+JSON.stringify(b));
   suppressSaveState=true;
   if(b.dogs&&b.dogs.length){
     // Pre-populate dogServices so renderDogRows uses the saved data
@@ -1227,7 +1256,6 @@ function openEdit(id){
       dogServices[idx]=d.services&&d.services.length?d.services.map(function(sv){return {service:sv.service||'',duration:sv.duration||60,price:sv.price||''};}):[{service:d.service||'',duration:d.duration||60,price:d.price||''}];
       dogInfo[idx]={name:d.name||'',breed:d.breed||''};
     });
-    showDebug('DOGSERVICES: '+JSON.stringify(dogServices));
     setDogCount(b.dogs.length,true);
   } else {
     // Legacy single dog
@@ -2400,8 +2428,6 @@ function markNoShow(){
 
 
 </script>
-<div id="debugPanel" style="display:none;position:fixed;bottom:0;left:0;right:0;max-height:40vh;overflow-y:auto;background:#1e1e1e;color:#00ff88;font-family:monospace;font-size:11px;padding:10px;z-index:99999;border-top:2px solid #00ff88;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong>DEBUG</strong><button onclick="document.getElementById('debugPanel').innerHTML='';document.getElementById('debugPanel').style.display='none';" style="background:#e05252;color:white;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;">Clear</button></div>
-</div>
+
 </body>
 </html>
