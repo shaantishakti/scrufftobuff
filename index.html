@@ -68,7 +68,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 .breed-sug-item:last-child{border-bottom:none;}
 .breed-sug-item:hover{background:var(--tan-light);}
 
-.cal-wrap{padding:0 28px 28px;overflow-x:auto;}
+.cal-wrap{padding:0 28px 60px;overflow-x:auto;}
 .cal-outer{border-radius:12px;overflow:hidden;border:1.5px solid var(--tan-light);background:white;box-shadow:0 4px 20px rgba(30,58,95,0.10);}
 .cal-header{display:grid;}
 .cal-body{display:grid;position:relative;}
@@ -181,7 +181,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
   .week-label{font-size:0.85rem;}
   .add-btn,.block-btn,.export-btn{padding:5px 9px;font-size:0.76rem;}
   .time-step-toggle{font-size:0.72rem;}
-  .cal-wrap{padding:0 8px 16px;}
+  .cal-wrap{padding:0 8px 60px;}
   .day-hdr{padding:5px 2px;font-size:0.7rem;}
   .day-hdr .dn{font-size:0.8rem;}
   .time-lbl{font-size:0.6rem;padding:2px 3px 0;}
@@ -1141,17 +1141,11 @@ function renderCal(){
   days.forEach(function(day){
     var ds=fmtISO(day);
     var dayBks=bookings.filter(function(b){return b.date===ds;});
-    var paid=0,unpaid=0;
+    var total=0;
     dayBks.forEach(function(bk){
-      var dogs=bk.dogs&&bk.dogs.length?bk.dogs:[{services:[{price:bk.lastprice||null}]}];
-      var total=0;
-      dogs.forEach(function(d){
-        var svcs=d.services&&d.services.length?d.services:[{price:d.price||null}];
-        svcs.forEach(function(sv){if(sv.price)total+=parseFloat(sv.price)||0;});
-      });
-      if(bk.paid)paid+=total; else unpaid+=total;
+      var amt=bk.dogs&&bk.dogs.length?bk.dogs.reduce(function(s,d){return s+(d.price||0);},0):parseFloat(bk.lastprice)||0;
+      total+=amt;
     });
-    var total=paid+unpaid;
     ftr+='<div style="display:flex;align-items:center;justify-content:center;height:36px;font-size:0.82rem;font-weight:800;border-top:2px solid #d0dcea;background:#f0f6ff;">'
       +(total>0?'<span style="color:#e05252;">£'+total.toFixed(2)+'</span>':'<span style="color:#b0bec5;">—</span>')
       +'</div>';
@@ -1160,7 +1154,7 @@ function renderCal(){
   outer.innerHTML=
     '<div class="cal-header" style="display:grid;grid-template-columns:'+gridCols+'">'+hdr+'</div>'
     +'<div class="cal-body" style="display:grid;grid-template-columns:'+gridCols+';grid-template-rows:repeat(60,'+ROW_H+'px);height:'+totalH+'px;">'+body+'</div>'
-    +'<div class="cal-footer" style="display:grid;grid-template-columns:'+gridCols+';position:sticky;bottom:0;z-index:10;background:#f0f6ff;">'+ftr+'</div>';
+    +'<div class="cal-footer" style="display:grid;grid-template-columns:'+gridCols+';background:#f0f6ff;">'+ftr+'</div>';
   checkReminders();
 }
 
