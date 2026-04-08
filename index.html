@@ -638,6 +638,7 @@ function renderServiceRows(dogIdx){
   var cont=document.getElementById('svc-rows-'+dogIdx);
   if(!cont)return;
   var svcs=dogServices[dogIdx]||[{service:'',duration:60,price:''}];
+  showDebug('renderServiceRows dog'+dogIdx+': '+JSON.stringify(svcs));
   var html='';
   for(var s=0;s<svcs.length;s++){
     html+='<div class="svc-row" id="svc-row-'+dogIdx+'-'+s+'" style="background:#f0f6ff;border-radius:7px;padding:8px;margin-bottom:6px;">'
