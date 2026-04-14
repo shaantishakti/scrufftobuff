@@ -269,6 +269,8 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
         <label for="timeStep">Step:</label>
         <select id="timeStep"><option value="10" selected>10 min</option><option value="5">5 min</option></select>
       </div>
+      <button class="block-btn" onclick="openAdd()">+ Add Booking</button>
+      <button class="block-btn" onclick="openExpense()" style="background:#3a9e6e;">+ Add Expense</button>
       <button class="block-btn" onclick="openBlock()">+ Block</button>
       <button class="export-btn" onclick="exportWeeklyCash()" title="Export this week's cash transactions to Excel" style="background:#f59e0b;color:white;font-weight:600;">&#163; Cash Export</button>
       <button class="export-btn" onclick="openDaySummary()" title="End of day summary" style="background:#3a9e6e;color:white;font-weight:600;">&#128202; Day Summary</button>
@@ -289,7 +291,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 </div>
 <div class="page" id="earnPage">
   <div class="earnings-page">
-    <h2>Earnings <button class="btn-add-exp" onclick="openExpense()">+ Add Expense</button></h2>
+    <h2>Earnings</h2>
     <div class="earn-tabs">
       <div class="earn-tab active" onclick="setEarnView('day',this)">Day</div>
       <div class="earn-tab" onclick="setEarnView('week',this)">Week</div>
@@ -578,13 +580,19 @@ function fillCustomer(name){
   var next=(c.visits||0)+1;
   document.getElementById('f-visits').value=next;
 
-  // Suggest last appointment time
+  // Suggest last appointment time — only overwrite if no slot was pre-selected
   if(c.lastTime){
-    document.getElementById('f-time').value=c.lastTime;
+    var timeEl=document.getElementById('f-time');
     var hint=document.getElementById('timeHint');
-    hint.style.display='block';
-    hint.textContent='Last appointment was at '+fmtTime(c.lastTime);
-    calcFinish();
+    if(!timeEl.value){
+      timeEl.value=c.lastTime;
+      hint.style.display='block';
+      hint.textContent='Last appointment was at '+fmtTime(c.lastTime);
+      calcFinish();
+    } else {
+      hint.style.display='block';
+      hint.textContent='Last appointment was at '+fmtTime(c.lastTime);
+    }
   }
 
   // Pre-populate dogServices AND dogInfo BEFORE rendering so renderDogRows restores correct values
