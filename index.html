@@ -1223,7 +1223,7 @@ function renderCal(){
     body+='</div>';
   });
   // Build daily earnings footer
-  var ftr='<div class="day-total-empty" style="height:36px;"></div>';
+  var ftr='<div class="day-total-empty" style="min-height:52px;"></div>';
   days.forEach(function(day){
     var ds=fmtISO(day);
     var dayBks=bookings.filter(function(b){return b.date===ds;});
@@ -1234,10 +1234,14 @@ function renderCal(){
       else unpaidTotal+=amt;
     });
     var grandTotal=paidTotal+unpaidTotal;
-    ftr+='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:36px;font-size:0.78rem;font-weight:800;border-top:2px solid #d0dcea;background:#f0f6ff;">'
-      +(grandTotal>0
-        ?'<span style="color:var(--brown);">£'+grandTotal.toFixed(2)+'</span>'
+    var dayExpenses=expenses.filter(function(e){return e.date===ds;});
+    var expTotal=dayExpenses.reduce(function(s,e){return s+(parseFloat(e.amount)||0);},0);
+    var hasAnything=grandTotal>0||expTotal>0;
+    ftr+='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:52px;padding:4px 2px;font-size:0.78rem;font-weight:800;border-top:2px solid #d0dcea;background:#f0f6ff;box-sizing:border-box;">'
+      +(hasAnything
+        ?(grandTotal>0?'<span style="color:var(--brown);">£'+grandTotal.toFixed(2)+'</span>':'')
          +(unpaidTotal>0?'<span style="color:#e05252;font-size:0.65rem;font-weight:600;">(£'+unpaidTotal.toFixed(2)+' unpaid)</span>':'')
+         +(expTotal>0?'<span style="color:#e07a3a;font-size:0.65rem;font-weight:600;">-£'+expTotal.toFixed(2)+' expenses</span>':'')
         :'<span style="color:#b0bec5;">—</span>')
       +'</div>';
   });
