@@ -2097,14 +2097,25 @@ function exportWeeklyCash(){
     })
     .sort(function(a,b){return a.date.localeCompare(b.date)||a.time.localeCompare(b.time);});
 
-  if(!cashBookings.length){
+  // Collect cash expenses not yet exported, up to and including today
+  var cashExpenses=expenses
+    .filter(function(e){
+      if(!e.date||e.date>todayStr)return false;
+      if(exportedIds.indexOf(e.id)>=0)return false;
+      return true;
+    })
+    .sort(function(a,b){return a.date.localeCompare(b.date);});
+
+  if(!cashBookings.length&&!cashExpenses.length){
     alert('No new cash transactions to export — everything is already up to date!');
     return;
   }
 
   var rows=[];
   var cashTotal=0;
+  var expenseTotal=0;
   var exportedBookingIds=[];
+  var exportedExpenseIds=[];
 
   cashBookings.forEach(function(b){
     var dogs=b.dogs&&b.dogs.length?b.dogs:[{name:b.dog||'',service:b.service||'',price:parseFloat(b.lastprice)||0}];
@@ -2121,30 +2132,52 @@ function exportWeeklyCash(){
     var dp=b.date.split('-');
     var dateFormatted=dp[2]+'/'+dp[1]+'/'+dp[0];
     rows.push({
-      'Date of Grooming':dateFormatted,
-      'Customer Name':b.name||'',
-      'Service(s)':services,
+      'Date':dateFormatted,
+      'Description':b.name||'',
+      'Detail':services,
+      'Type':'Income',
       'Cash Amount (£)':Math.round(cashAmt*100)/100
     });
     exportedBookingIds.push(b.id);
   });
 
+  // Add cash expenses as negative rows
+  cashExpenses.forEach(function(e){
+    var dp=e.date.split('-');
+    var dateFormatted=dp[2]+'/'+dp[1]+'/'+dp[0];
+    var amt=Math.round((parseFloat(e.amount)||0)*100)/100;
+    expenseTotal+=amt;
+    rows.push({
+      'Date':dateFormatted,
+      'Description':'EXPENSE: '+e.desc,
+      'Detail':e.cat||'',
+      'Type':'Expense',
+      'Cash Amount (£)':-amt
+    });
+    exportedExpenseIds.push(e.id);
+  });
+
+  // Sort all rows by date
+  rows.sort(function(a,b){return a['Date'].split('/').reverse().join('').localeCompare(b['Date'].split('/').reverse().join(''));});
+
   // Build worksheet
-  var ws=XLSX.utils.json_to_sheet(rows,{header:['Date of Grooming','Customer Name','Service(s)','Cash Amount (£)','Running Total (£)']});
+  var ws=XLSX.utils.json_to_sheet(rows,{header:['Date','Description','Detail','Type','Cash Amount (£)','Running Total (£)']});
 
   // Running total column
   var runningTotal=0;
   rows.forEach(function(row,i){
     runningTotal+=row['Cash Amount (£)'];
-    var cell=XLSX.utils.encode_cell({r:i+1,c:4});
+    var cell=XLSX.utils.encode_cell({r:i+1,c:5});
     ws[cell]={v:Math.round(runningTotal*100)/100,t:'n',z:'£#,##0.00'};
   });
 
+  var netTotal=Math.round((cashTotal-expenseTotal)*100)/100;
+
   // Total row
-  XLSX.utils.sheet_add_aoa(ws,[['','','','TOTAL:',Math.round(cashTotal*100)/100]],{origin:{r:rows.length+1,c:0}});
+  XLSX.utils.sheet_add_aoa(ws,[['','','','','NET TOTAL:',netTotal]],{origin:{r:rows.length+1,c:0}});
 
   // Column widths
-  ws['!cols']=[{wch:18},{wch:24},{wch:40},{wch:18},{wch:20}];
+  ws['!cols']=[{wch:14},{wch:30},{wch:36},{wch:10},{wch:18},{wch:20}];
 
   // Header row styling
   var range=XLSX.utils.decode_range(ws['!ref']);
@@ -2154,30 +2187,45 @@ function exportWeeklyCash(){
     ws[hdrCell].s={font:{bold:true},fill:{fgColor:{rgb:'1E3A5F'}},alignment:{horizontal:'center'}};
   }
 
+  // Row styling — red for expenses, currency format for amount column
+  rows.forEach(function(row,i){
+    var isExp=row['Type']==='Expense';
+    var amtCell=XLSX.utils.encode_cell({r:i+1,c:4});
+    if(ws[amtCell]){
+      ws[amtCell].z='£#,##0.00';
+      if(isExp)ws[amtCell].s={font:{color:{rgb:'C0392B'},bold:true}};
+    }
+    // Shade expense rows lightly
+    if(isExp){
+      for(var col=0;col<6;col++){
+        var rc=XLSX.utils.encode_cell({r:i+1,c:col});
+        if(ws[rc]){if(!ws[rc].s)ws[rc].s={};ws[rc].s.fill={fgColor:{rgb:'FDECEA'}};}
+      }
+    }
+  });
+
   // Total row styling
   var totalRow=rows.length+1;
-  var totalLabelCell=XLSX.utils.encode_cell({r:totalRow,c:3});
-  var totalValCell=XLSX.utils.encode_cell({r:totalRow,c:4});
+  var totalLabelCell=XLSX.utils.encode_cell({r:totalRow,c:4});
+  var totalValCell=XLSX.utils.encode_cell({r:totalRow,c:5});
   if(ws[totalLabelCell])ws[totalLabelCell].s={font:{bold:true}};
-  if(ws[totalValCell])ws[totalValCell].s={font:{bold:true,color:{rgb:'3A9E6E'}}};
-
-  // Currency format
-  for(var r=1;r<=rows.length;r++){
-    var cell=XLSX.utils.encode_cell({r:r,c:3});
-    if(ws[cell])ws[cell].z='£#,##0.00';
-  }
-  if(ws[totalValCell])ws[totalValCell].z='£#,##0.00';
+  if(ws[totalValCell]){ws[totalValCell].s={font:{bold:true,color:{rgb:netTotal>=0?'3A9E6E':'C0392B'}}};ws[totalValCell].z='£#,##0.00';}
 
   // Summary sheet
-  var firstDate=cashBookings[0].date;
-  var lastDate=cashBookings[cashBookings.length-1].date;
+  var allDates=rows.map(function(r){return r['Date'].split('/').reverse().join('-');}).sort();
+  var firstDate=allDates[0];
+  var lastDate=allDates[allDates.length-1];
   var summaryData=[
     ['Scruff to Buff Dogs — Cash Export'],
     ['Period:',firstDate+' to '+lastDate],
     ['Generated:',new Date().toLocaleDateString('en-GB')],
     [],
-    ['Total Cash Transactions:',rows.length],
-    ['Total Cash Received:','£'+cashTotal.toFixed(2)]
+    ['Cash Income Entries:',cashBookings.length],
+    ['Cash Expense Entries:',cashExpenses.length],
+    [],
+    ['Total Cash Received:','£'+cashTotal.toFixed(2)],
+    ['Total Cash Expenses:','-£'+expenseTotal.toFixed(2)],
+    ['Net Cash:','£'+netTotal.toFixed(2)]
   ];
   var ws2=XLSX.utils.aoa_to_sheet(summaryData);
   ws2['!cols']=[{wch:28},{wch:30}];
@@ -2190,9 +2238,9 @@ function exportWeeklyCash(){
   var filename='STB-Cash-'+firstDate+'-to-'+lastDate+'.xlsx';
   XLSX.writeFile(wb,filename);
 
-  // Mark these bookings as exported so they won't appear again
-  markCashIdsExported(exportedBookingIds);
-  alert('✅ Exported '+rows.length+' cash transaction'+(rows.length!==1?'s':'')+' (£'+cashTotal.toFixed(2)+' total).\n\nThese won\'t be included in future exports.');
+  // Mark these bookings and expenses as exported so they won't appear again
+  markCashIdsExported(exportedBookingIds.concat(exportedExpenseIds));
+  alert('✅ Exported '+cashBookings.length+' income'+(cashBookings.length!==1?'s':'')+' (£'+cashTotal.toFixed(2)+') and '+cashExpenses.length+' expense'+(cashExpenses.length!==1?'s':'')+' (-£'+expenseTotal.toFixed(2)+').\nNet cash: £'+netTotal.toFixed(2)+'\n\nThese won\'t be included in future exports.');
 }
 
 function buildPoppyScheduleMsg(){
