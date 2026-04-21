@@ -244,7 +244,10 @@ body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--blue);
   <p>Your booking request has been received. Becky will confirm your appointment via WhatsApp shortly.</p>
   <div class="success-detail" id="successDetail"></div>
   <p>If you haven't heard back within 24 hours, please get in touch directly.</p>
-  <div class="wa-note">A WhatsApp message has been opened to notify Becky. Once she confirms, you'll receive a WhatsApp message back.</div>
+  <div class="wa-note" id="waNote">A WhatsApp message has been opened to notify Becky. Once she confirms, you'll receive a WhatsApp message back.</div>
+  <div id="diaryBtnWrap" style="display:none;margin-top:14px;">
+    <a id="diaryBtn" href="#" target="_blank" style="display:inline-block;background:#1e3a5f;color:white;border-radius:10px;padding:11px 22px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;text-decoration:none;">📅 Add to Diary</a>
+  </div>
 </div>
 
 <div class="footer">Scruff to Buff Dogs &bull; Spring Cottage, Cackle Street</div>
@@ -873,7 +876,8 @@ function submitRequest(){
   if(emmiSessions && emmiSessions.length > 1){
     emmiNote = '\nEmmi-Pet Sessions:\n' + emmiSessions.map(function(s,i){return circles[i]+' '+fmtDateLong(s.date)+' at '+fmtTime12(s.time);}).join('\n');
   }
-  var msg = 'NEW BOOKING REQUEST\n\nName: '+name+'\nWhatsApp: '+phone+'\nDog: '+dog+(breed?' ('+breed+')':'')+'\nService: '+selectedService+'\nDogs: '+selectedDogCount+'\nDate: '+fmtDateLong(selectedDate)+'\nTime: '+fmtTime12(selectedTime)+'\n'+(notes?'Notes: '+notes+'\n':'')+emmiNote+'\nTap to add to diary:\n'+diaryLink;
+  // Client-facing message — NO diary link
+  var msg = 'NEW BOOKING REQUEST\n\nName: '+name+'\nWhatsApp: '+phone+'\nDog: '+dog+(breed?' ('+breed+')':'')+'\nService: '+selectedService+'\nDogs: '+selectedDogCount+'\nDate: '+fmtDateLong(selectedDate)+'\nTime: '+fmtTime12(selectedTime)+'\n'+(notes?'Notes: '+notes+'\n':'')+emmiNote;
   var c = phone.replace(/\s+/g,'').replace(/^\+/,'');
   if(c.charAt(0)==='0') c='44'+c.slice(1);
   // Save request to Google Sheet requests tab
@@ -899,10 +903,20 @@ function submitRequest(){
   // Open WhatsApp immediately (not in setTimeout - Safari blocks delayed window.open)
   var waUrl = 'https://wa.me/'+BIZ_WA+'?text='+encodeURIComponent(msg);
   window.open(waUrl,'_blank');
-  // Also show a fallback WhatsApp button in case popup was blocked
-  var waNote = document.querySelector('.wa-note');
+  // Show fallback WhatsApp link in case popup was blocked
+  var waNote = document.getElementById('waNote');
   if(waNote){
     waNote.innerHTML = 'A WhatsApp message should have opened. If not, <a href="'+waUrl+'" target="_blank" style="color:#1a4f37;font-weight:600;">tap here to send it</a>. Becky will confirm your appointment shortly.';
+  }
+  // Show the diary button ONLY if owner mode is active (URL contains ?owner=1)
+  var isOwner = new URLSearchParams(window.location.search).get('owner') === '1';
+  if(isOwner){
+    var diaryBtnWrap = document.getElementById('diaryBtnWrap');
+    var diaryBtn = document.getElementById('diaryBtn');
+    if(diaryBtnWrap && diaryBtn){
+      diaryBtn.href = diaryLink;
+      diaryBtnWrap.style.display = 'block';
+    }
   }
 }
 </script>
