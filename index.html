@@ -2019,14 +2019,16 @@ function checkSheetRequests(){
       var banner = document.getElementById('reminderBanner');
       var list = document.getElementById('reminderList');
       var html = '';
+      if(!window._sheetRequests) window._sheetRequests = {};
       requests.forEach(function(p){
+        window._sheetRequests[p.id] = p;
         html += '<div class="banner-chip" data-request-id="'+p.id+'" style="border-color:#f59e0b;flex-direction:column;align-items:flex-start;gap:4px;min-width:240px;">'
           +'<div style="font-weight:600;color:#92400e;">&#128276; New Booking Request</div>'
           +'<div><strong>'+p.name+'</strong> &mdash; '+p.dog+(p.breed?' ('+p.breed+')':'')+'</div>'
           +'<div style="font-size:0.75rem;color:#92400e;">'+p.service+' &bull; '+fmtDD(p.date)+' at '+fmtTime(p.time)+'</div>'
           +(p.notes?'<div style="font-size:0.72rem;font-style:italic;color:#7a5c00;">'+p.notes+'</div>':'')
           +'<div style="display:flex;gap:6px;margin-top:4px;">'
-          +'<button class="btn-wa-sm" style="background:#3a9e6e;padding:5px 10px;" onclick="addFromSheetRequest('+JSON.stringify(p)+')">&#10003; Add to Diary</button>'
+          +'<button class="btn-wa-sm" style="background:#3a9e6e;padding:5px 10px;" onclick="addFromSheetRequest(this.dataset.rid)" data-rid="'+p.id+'">&#10003; Add to Diary</button>'
           +'<button class="btn-wa-sm" style="background:#e05252;padding:5px 10px;" data-rid="'+p.id+'" onclick="dismissSheetRequest(this.dataset.rid,this)">&#10007; Dismiss</button>'
           +'<button class="btn-wa-sm" style="background:#0ea5e9;padding:5px 10px;" data-phone="'+p.phone+'" onclick="waReplySheetRequest(this.dataset.phone)">WhatsApp</button>'
           +'</div></div>';
@@ -2041,13 +2043,15 @@ function checkSheetRequests(){
     }).catch(function(){});
 }
 
-function addFromSheetRequest(p){
-  // Store the sheet request ID so we can dismiss it after saving
+function addFromSheetRequest(id){
+  // Look up request safely by id
+  if(!window._sheetRequests) return;
+  var p = window._sheetRequests[id];
+  if(!p) return;
   window._sheetRequestId = p.id;
   window._prefill = p;
   localStorage.setItem('pendingRequest', JSON.stringify(p));
   addFromPrefill();
-  // Don't dismiss yet - will be dismissed when booking is saved
 }
 
 function dismissSheetRequest(id, btn){
