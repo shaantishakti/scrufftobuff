@@ -549,18 +549,21 @@ function upsertCustomer(b){
       var existing=c.dogs.find(function(x){return x.name.toLowerCase()===d.name.toLowerCase();});
       if(!existing){existing={name:titleCase(d.name),breed:'',lastService:'',lastPrice:null,lastDuration:null,lastPriceDate:null};c.dogs.push(existing);}
       if(d.breed)existing.breed=titleCase(d.breed);
-      var firstSvc=d.services&&d.services.length?d.services[0]:null;
-      var svcName=firstSvc?firstSvc.service:d.service;
-      var svcDur=firstSvc?firstSvc.duration:d.duration;
-      var svcPrice=firstSvc?firstSvc.price:d.price;
-      if(svcName)existing.lastService=svcName;
-      if(svcPrice){
-        var newPrice=parseFloat(svcPrice);
-        // Only update lastPriceDate if price has changed or never set
-        if(existing.lastPrice!==newPrice)existing.lastPriceDate=fmtISO(new Date());
-        existing.lastPrice=newPrice;
+      // Groom-type services take priority for storing last service/price/duration.
+      // If there's no groom in the booking (e.g. nails-only dog), fall back to whatever was done.
+      var GROOM_SVCS=['Full Groom','Wash & Dry','Trim & Tidy','Hand Stripping','De-shed Treatment','Puppy Groom','Puppy Intro (Inc. Bath) - £28','Puppy Intro (Exc. Bath) - £15'];
+      var allSvcs=d.services&&d.services.length?d.services:[{service:d.service,duration:d.duration,price:d.price}];
+      var groomSvc=allSvcs.find(function(sv){return GROOM_SVCS.indexOf(sv.service)>=0;});
+      var svcToStore=groomSvc||allSvcs[0];
+      if(svcToStore){
+        if(svcToStore.service)existing.lastService=svcToStore.service;
+        if(svcToStore.price){
+          var newPrice=parseFloat(svcToStore.price);
+          if(existing.lastPrice!==newPrice)existing.lastPriceDate=fmtISO(new Date());
+          existing.lastPrice=newPrice;
+        }
+        if(svcToStore.duration)existing.lastDuration=parseInt(svcToStore.duration);
       }
-      if(svcDur)existing.lastDuration=parseInt(svcDur);
     });
   }
   localStorage.setItem('stbCustomers',JSON.stringify(customers));
@@ -607,46 +610,89 @@ function fillCustomer(name){
     }
   }
 
-  // Pre-populate dogServices AND dogInfo BEFORE rendering so renderDogRows restores correct values
-  if(c.dogs&&c.dogs.length){
-    c.dogs.forEach(function(d,i){
-      if(i>=MAX_DOGS)return;
-      var idx=i+1;
-      dogServices[idx]=[{
-        service:d.lastService||'',
-        duration:d.lastDuration||60,
-        price:d.lastPrice||''
-      }];
-      dogInfo[idx]={name:d.name||'',breed:d.breed||''};
-    });
+  // If customer has multiple dogs, show a picker so user can choose which dogs to include
+  if(c.dogs&&c.dogs.length>1){
+    showDogPicker(c,next);
+  } else {
+    // Single dog — pre-populate directly
+    loadDogsFromCustomer(c,[0]);
+    checkDiscount(c.name,next,c.dogs&&c.dogs[0]?c.dogs[0].lastPrice:null);
   }
-
-  setDogCount(Math.max(1,c.dogs?c.dogs.length:1),true);
-
-  setTimeout(function(){
-    if(c.dogs&&c.dogs.length){
-      c.dogs.forEach(function(d,i){
-        if(i>=MAX_DOGS)return;
-        var idx=i+1;
-        // Set service dropdown directly
-        var svcEl=document.getElementById('f-service-'+idx+'-0');
-        if(svcEl&&d.lastService){
-          svcEl.value=d.lastService;
-          var otherGroup=document.getElementById('f-other-group-'+idx+'-0');
-          if(otherGroup)otherGroup.style.display=d.lastService==='Other'?'block':'none';
-        }
-        // Set duration
-        var durEl=document.getElementById('f-duration-'+idx+'-0');
-        if(durEl&&d.lastDuration)durEl.value=d.lastDuration;
-        // Set price
-        var priceEl=document.getElementById('f-price-'+idx+'-0');
-        if(priceEl&&d.lastPrice)priceEl.value=parseFloat(d.lastPrice).toFixed(2);
-      });
-      calcFinish();
-    }
-  },200);
-  checkDiscount(c.name,next,c.dogs&&c.dogs[0]?c.dogs[0].lastPrice:null);
 }
+
+function showDogPicker(c,nextVisit){
+  // Show a small overlay asking which dogs are coming today
+  var existing=document.getElementById('dogPickerOverlay');
+  if(existing)existing.remove();
+  var ov=document.createElement('div');
+  ov.id='dogPickerOverlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(30,58,95,0.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(2px);';
+  var html='<div style="background:#f0f6ff;border-radius:14px;padding:22px 24px;width:340px;max-width:100%;box-shadow:0 16px 40px rgba(30,58,95,0.25);animation:up 0.17s ease;">'
+    +'<div style="font-family:\'Playfair Display\',serif;font-size:1.1rem;margin-bottom:6px;color:#1e3a5f;">Which dog(s) today?</div>'
+    +'<div style="font-size:0.78rem;color:#4a7aaa;margin-bottom:14px;">Select the dog(s) coming in for this booking</div>';
+  c.dogs.forEach(function(d,i){
+    html+='<label style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:white;border:1.5px solid #c2d9f0;border-radius:8px;margin-bottom:8px;cursor:pointer;font-size:0.88rem;font-weight:500;color:#1e3a5f;">'
+      +'<input type="checkbox" id="dogpick-'+i+'" value="'+i+'" checked style="width:16px;height:16px;accent-color:#5b9bd5;cursor:pointer;">'
+      +'<span>'+d.name+(d.breed?' <span style="font-weight:400;color:#4a7aaa;font-size:0.78rem;">('+d.breed+')</span>':'')+'</span>'
+      +'</label>';
+  });
+  html+='<div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;">'
+    +'<button onclick="document.getElementById(\'dogPickerOverlay\').remove();" style="background:none;border:1.5px solid #c2d9f0;color:#1e3a5f;padding:7px 14px;border-radius:7px;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-size:0.84rem;">Cancel</button>'
+    +'<button onclick="confirmDogPicker('+JSON.stringify(c.dogs.map(function(_,i){return i;}))+',\''+c.name.replace(/'/g,"\\'")+'\')" style="background:#1e3a5f;color:white;border:none;padding:7px 16px;border-radius:7px;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-weight:600;font-size:0.84rem;">Confirm</button>'
+    +'</div></div>';
+  ov.innerHTML=html;
+  document.body.appendChild(ov);
+  // Store for confirmDogPicker
+  window._dogPickerCustomer=c;
+  window._dogPickerNextVisit=nextVisit;
+}
+
+function confirmDogPicker(allIndices,custName){
+  var selected=allIndices.filter(function(i){
+    var cb=document.getElementById('dogpick-'+i);
+    return cb&&cb.checked;
+  });
+  var ov=document.getElementById('dogPickerOverlay');
+  if(ov)ov.remove();
+  if(!selected.length)selected=[allIndices[0]]; // always load at least one
+  var c=window._dogPickerCustomer;
+  var nextVisit=window._dogPickerNextVisit;
+  loadDogsFromCustomer(c,selected);
+  checkDiscount(c.name,nextVisit,c.dogs&&c.dogs[selected[0]]?c.dogs[selected[0]].lastPrice:null);
+}
+
+function loadDogsFromCustomer(c,selectedIndices){
+  dogInfo={};dogServices={};
+  selectedIndices.forEach(function(dogOrigIdx,slotIdx){
+    var d=c.dogs[dogOrigIdx];
+    if(!d)return;
+    var idx=slotIdx+1;
+    dogServices[idx]=[{
+      service:d.lastService||'',
+      duration:d.lastDuration||60,
+      price:d.lastPrice||''
+    }];
+    dogInfo[idx]={name:d.name||'',breed:d.breed||''};
+  });
+  setDogCount(Math.max(1,selectedIndices.length),true);
+  setTimeout(function(){
+    selectedIndices.forEach(function(dogOrigIdx,slotIdx){
+      var d=c.dogs[dogOrigIdx];
+      if(!d)return;
+      var idx=slotIdx+1;
+      var svcEl=document.getElementById('f-service-'+idx+'-0');
+      if(svcEl&&d.lastService){
+        svcEl.value=d.lastService;
+        var otherGroup=document.getElementById('f-other-group-'+idx+'-0');
+        if(otherGroup)otherGroup.style.display=d.lastService==='Other'?'block':'none';
+      }
+      var durEl=document.getElementById('f-duration-'+idx+'-0');
+      if(durEl&&d.lastDuration)durEl.value=d.lastDuration;
+      var priceEl=document.getElementById('f-price-'+idx+'-0');
+      if(priceEl&&d.lastPrice)priceEl.value=parseFloat(d.lastPrice).toFixed(2);
+    });
+    calcFinish();
+  },200);
 
 // ── DOG ROWS ───────────────────────────────────────────────────────────────
 function setDogCount(n,skipSave){
@@ -1713,7 +1759,7 @@ function sendReminderMsg(id){
   var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
   var today=new Date();today.setHours(0,0,0,0);
   var apptDate=new Date(b.date+'T12:00:00');
-  var daysAway=Math.round((apptDate-today)/864e5);
+  var daysAway=Math.floor((apptDate-today)/864e5);
   var daysStr=daysAway===0?'today':daysAway===1?'tomorrow':'in '+daysAway+' days';
   openWA(b.phone,'Just a friendly reminder that '+dogNames+' has a grooming appointment with '+BIZ+' '+daysStr+'! Please let me know ASAP if you need to make any changes, to avoid any cancellation fees.\n\nDID YOU KNOW you can book your fluffy friend\'s next appointment right now \uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html');
 }
@@ -1729,7 +1775,7 @@ function sendReminderPayMsgId(id){
   var priceStr=total>0?'£'+total.toFixed(2):'the same as last time';
   var today=new Date();today.setHours(0,0,0,0);
   var apptDate=new Date(b.date+'T12:00:00');
-  var daysAway=Math.round((apptDate-today)/864e5);
+  var daysAway=Math.floor((apptDate-today)/864e5);
   var daysStr=daysAway===0?'today':daysAway===1?'tomorrow':'in '+daysAway+' days';
   openWA(b.phone,'Just a friendly reminder that '+dogNames+' has a grooming appointment with '+BIZ+' '+daysStr+'! Please let me know ASAP if you need to make any changes, to avoid any cancellation fees.\n\nIf you would like to pay your bill of '+priceStr+' in advance, you are welcome to do so here:\n'+SUMUP+'\n\nDID YOU KNOW you can book your fluffy friend\'s next appointment right now \uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html');
 }
@@ -1740,7 +1786,7 @@ function sendReminderPayMsg(){
   var priceStr=total>0?'£'+total.toFixed(2):'the same as last time';
   var today=new Date();today.setHours(0,0,0,0);
   var apptDate=new Date(b.date+'T12:00:00');
-  var daysAway=Math.round((apptDate-today)/864e5);
+  var daysAway=Math.floor((apptDate-today)/864e5);
   var daysStr=daysAway===0?'today':daysAway===1?'tomorrow':'in '+daysAway+' days';
   openWA(b.phone,'Just a friendly reminder that '+dogNames+' has a grooming appointment with '+BIZ+' '+daysStr+'! Please let me know ASAP if you need to make any changes, to avoid any cancellation fees.\n\nIf you would like to pay your bill of '+priceStr+' in advance, you are welcome to do so here:\n'+SUMUP+'\n\nDID YOU KNOW you can book your fluffy friend\'s next appointment right now \uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html');
 }
