@@ -736,7 +736,10 @@ function renderDogRows(){
     var savedName=(dogInfo[i]&&dogInfo[i].name)||'';
     var savedBreed=(dogInfo[i]&&dogInfo[i].breed)||'';
     html+='<div class="dog-row" id="dog-row-'+i+'">'
-      +(dogCount>1?'<div class="dog-row-label">Dog '+i+'</div>':'')
+      +(dogCount>1
+        ?'<div class="dog-row-label" style="display:flex;justify-content:space-between;align-items:center;">Dog '+i
+          +'<button type="button" class="dog-count-btn remove" onclick="removeDogSlot('+i+')" style="font-size:0.75rem;padding:3px 10px;">&#8722; Remove Dog</button></div>'
+        :'')
       +'<div class="frow">'
       +'<div class="fg"><label>Dogs Name</label><input type="text" id="f-dog-'+i+'" placeholder="Buddy" value="'+savedName.replace(/"/g,'&quot;')+'"></div>'
       +'<div class="fg" style="position:relative;"><label>Breed</label><input type="text" id="f-breed-'+i+'" placeholder="Cockapoo" autocomplete="off" oninput="onBreedInput(this.value,'+i+')" onblur="setTimeout(function(){hideBreedSug('+i+')},150)" value="'+savedBreed.replace(/"/g,'&quot;')+'"><div class="breed-sug-box" id="breed-sug-'+i+'" style="display:none;"></div></div>'
@@ -833,6 +836,20 @@ function removeServiceRow(dogIdx,svcIdx){
   calcFinish();
 }
 
+function removeDogSlot(dogIdx){
+  // Save current state first
+  for(var k=1;k<=dogCount;k++) saveServiceRowsToState(k);
+  // Shift all dogs above dogIdx down by one
+  for(var i=dogIdx;i<dogCount;i++){
+    dogServices[i]=dogServices[i+1];
+    dogInfo[i]=dogInfo[i+1];
+  }
+  delete dogServices[dogCount];
+  delete dogInfo[dogCount];
+  setDogCount(dogCount-1,true);
+  calcFinish();
+}
+
 function buildDurationDropdownFor(idx){
   var sel=document.getElementById('f-duration-'+idx);
   if(!sel)return;
@@ -849,7 +866,7 @@ function buildDurationDropdownFor(idx){
 }
 
 function updateDogCountBtns(){
-  document.getElementById('btnRemoveDog').style.display=dogCount>1?'inline-flex':'none';
+  // Remove button is now per-dog-row; just manage the Add Dog button
   document.getElementById('btnAddDog').style.display=dogCount<MAX_DOGS?'inline-flex':'none';
 }
 
