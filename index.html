@@ -769,12 +769,21 @@ function renderServiceRows(dogIdx){
       +'</div>';
   }
   cont.innerHTML=html;
-  for(var s2=0;s2<svcs.length;s2++) buildSvcDurationDropdown(dogIdx,s2,svcs[s2].duration);
+  for(var s2=0;s2<svcs.length;s2++) buildSvcDurationDropdown(dogIdx,s2,svcs[s2].duration,svcs[s2].service);
 }
 
-function buildSvcDurationDropdown(dogIdx,svcIdx,curVal){
+function buildSvcDurationDropdown(dogIdx,svcIdx,curVal,svcName){
   var sel=document.getElementById('f-duration-'+dogIdx+'-'+svcIdx);
   if(!sel)return;
+  var EMMI_FIXED=['Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning','Emmi-Pet Teeth Cleaning PAYG','Emmi-Pet Teeth Cleaning x4','Emmi-Pet Teeth Cleaning x9'];
+  if(svcName&&EMMI_FIXED.indexOf(svcName)>=0){
+    sel.innerHTML='<option value="30" selected>30 mins</option>';
+    sel.disabled=true;
+    sel.title='Emmi-Pet sessions are always 30 minutes';
+    return;
+  }
+  sel.disabled=false;
+  sel.title='';
   var cur=curVal||60;
   sel.innerHTML='';
   for(var mins=5;mins<=360;mins+=5){
@@ -790,10 +799,29 @@ function buildSvcDurationDropdown(dogIdx,svcIdx,curVal){
 function onSvcChange(dogIdx,svcIdx){
   var v=document.getElementById('f-service-'+dogIdx+'-'+svcIdx).value;
   document.getElementById('f-other-group-'+dogIdx+'-'+svcIdx).style.display=v==='Other'?'block':'none';
-  if(SVC_DURATIONS[v]){
-    var sel=document.getElementById('f-duration-'+dogIdx+'-'+svcIdx);
-    if(sel)sel.value=SVC_DURATIONS[v];
+
+  var sel=document.getElementById('f-duration-'+dogIdx+'-'+svcIdx);
+
+  // Emmi-Pet sessions (except Maintenance) are always 30 mins — lock the dropdown
+  var EMMI_FIXED=['Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning','Emmi-Pet Teeth Cleaning PAYG','Emmi-Pet Teeth Cleaning x4','Emmi-Pet Teeth Cleaning x9'];
+  if(EMMI_FIXED.indexOf(v)>=0){
+    if(sel){
+      sel.innerHTML='<option value="30" selected>30 mins</option>';
+      sel.disabled=true;
+      sel.title='Emmi-Pet sessions are always 30 minutes';
+    }
+  } else {
+    // Restore full dropdown if switching away from a locked Emmi service
+    if(sel&&sel.disabled){
+      sel.disabled=false;
+      sel.title='';
+      buildSvcDurationDropdown(dogIdx,svcIdx,SVC_DURATIONS[v]||60);
+    }
+    if(SVC_DURATIONS[v]){
+      if(sel)sel.value=SVC_DURATIONS[v];
+    }
   }
+
   if(SVC_PRICES[v]){
     var priceEl=document.getElementById('f-price-'+dogIdx+'-'+svcIdx);
     if(priceEl&&!priceEl.value)priceEl.value=SVC_PRICES[v].toFixed(2);
