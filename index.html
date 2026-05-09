@@ -769,21 +769,12 @@ function renderServiceRows(dogIdx){
       +'</div>';
   }
   cont.innerHTML=html;
-  for(var s2=0;s2<svcs.length;s2++) buildSvcDurationDropdown(dogIdx,s2,svcs[s2].duration,svcs[s2].service);
+  for(var s2=0;s2<svcs.length;s2++) buildSvcDurationDropdown(dogIdx,s2,svcs[s2].duration);
 }
 
-function buildSvcDurationDropdown(dogIdx,svcIdx,curVal,svcName){
+function buildSvcDurationDropdown(dogIdx,svcIdx,curVal){
   var sel=document.getElementById('f-duration-'+dogIdx+'-'+svcIdx);
   if(!sel)return;
-  var EMMI_FIXED=['Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning','Emmi-Pet Teeth Cleaning PAYG','Emmi-Pet Teeth Cleaning x4','Emmi-Pet Teeth Cleaning x9'];
-  if(svcName&&EMMI_FIXED.indexOf(svcName)>=0){
-    sel.innerHTML='<option value="30" selected>30 mins</option>';
-    sel.disabled=true;
-    sel.title='Emmi-Pet sessions are always 30 minutes';
-    return;
-  }
-  sel.disabled=false;
-  sel.title='';
   var cur=curVal||60;
   sel.innerHTML='';
   for(var mins=5;mins<=360;mins+=5){
@@ -799,29 +790,10 @@ function buildSvcDurationDropdown(dogIdx,svcIdx,curVal,svcName){
 function onSvcChange(dogIdx,svcIdx){
   var v=document.getElementById('f-service-'+dogIdx+'-'+svcIdx).value;
   document.getElementById('f-other-group-'+dogIdx+'-'+svcIdx).style.display=v==='Other'?'block':'none';
-
-  var sel=document.getElementById('f-duration-'+dogIdx+'-'+svcIdx);
-
-  // Emmi-Pet sessions (except Maintenance) are always 30 mins — lock the dropdown
-  var EMMI_FIXED=['Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning','Emmi-Pet Teeth Cleaning PAYG','Emmi-Pet Teeth Cleaning x4','Emmi-Pet Teeth Cleaning x9'];
-  if(EMMI_FIXED.indexOf(v)>=0){
-    if(sel){
-      sel.innerHTML='<option value="30" selected>30 mins</option>';
-      sel.disabled=true;
-      sel.title='Emmi-Pet sessions are always 30 minutes';
-    }
-  } else {
-    // Restore full dropdown if switching away from a locked Emmi service
-    if(sel&&sel.disabled){
-      sel.disabled=false;
-      sel.title='';
-      buildSvcDurationDropdown(dogIdx,svcIdx,SVC_DURATIONS[v]||60);
-    }
-    if(SVC_DURATIONS[v]){
-      if(sel)sel.value=SVC_DURATIONS[v];
-    }
+  if(SVC_DURATIONS[v]){
+    var sel=document.getElementById('f-duration-'+dogIdx+'-'+svcIdx);
+    if(sel)sel.value=SVC_DURATIONS[v];
   }
-
   if(SVC_PRICES[v]){
     var priceEl=document.getElementById('f-price-'+dogIdx+'-'+svcIdx);
     if(priceEl&&!priceEl.value)priceEl.value=SVC_PRICES[v].toFixed(2);
@@ -1742,25 +1714,19 @@ function deleteBlock(){
 // ── WHATSAPP ───────────────────────────────────────────────────────────────
 function renderWaButtons(){
   var b=editId?bookings.find(function(x){return x.id===editId;}):null;
-  var date=b?b.date:null;
-  var today=new Date();today.setHours(0,0,0,0);
-  var appt=date?new Date(date+'T12:00:00'):null;
-  var daysAway=appt?Math.round((appt-today)/864e5):999;
   var isNew=document.getElementById('ct-new').checked;
   var cont=document.getElementById('waButtons');
-  var remBtn=daysAway>=7?'<button class="btn-wa amber" onclick="sendReminderMsg(null)"><span><span class="wa-title">Send 4-Day Reminder</span><span class="wa-sub">Friendly reminder ahead of appointment</span></span></button>':'';  var remPayBtn=daysAway>=7?'<button class="btn-wa amber" onclick="sendReminderPayMsg()"><span><span class="wa-title">Send Reminder + Payment Link</span><span class="wa-sub">Reminder with option to prepay via SumUp</span></span></button>':'';
-  var payBtn='<button class="btn-wa purple" onclick="openPay()"><span><span class="wa-title">Send Payment Request</span><span class="wa-sub">After the groom - enter final price and send</span></span></button>';
   var isPaid=document.getElementById('p-paid').checked;
+  var payBtn='<button class="btn-wa purple" onclick="openPay()"><span><span class="wa-title">Send Payment Request</span><span class="wa-sub">After the groom - enter final price and send</span></span></button>';
   var chaseBtn=!isPaid?'<button class="btn-wa red" onclick="sendPaymentChase()"><span><span class="wa-title">Send Payment Reminder</span><span class="wa-sub">Politely chase outstanding payment</span></span></button>':'';
-  // Hand stripping price notice button
   var isStrip=false;
   if(b&&b.dogs){b.dogs.forEach(function(d){var svcs=d.services&&d.services.length?d.services:[{service:d.service}];svcs.forEach(function(sv){if((sv.service||'').indexOf('Hand Strip')>-1)isStrip=true;});});}
   var stripBtn=isStrip?'<button class="btn-wa" style="background:#6b4226;" onclick="sendHandStripPriceMsg()"><span><span class="wa-title">Send Hand Stripping Price Notice</span><span class="wa-sub">Let client know current rate is £65/hr</span></span></button>':'';
   var rebookBtn='<button class="btn-wa" style="background:#0ea5e9;" onclick="sendRebookMsg()"><span><span class="wa-title">Send Rebook Link</span><span class="wa-sub">Let client choose 6–10 weeks ahead on same day</span></span></button>';
   var reviewBtn='<button class="btn-wa" style="background:#34a853;" onclick="sendGoogleReviewMsg()"><span><span class="wa-title">Request Google Review ⭐</span><span class="wa-sub">Send link to your Google review page</span></span></button>';
   var cancelFeeBtn='<button class="btn-wa" style="background:#e05252;" onclick="sendCancelFeeMsg()"><span><span class="wa-title">Send Cancellation Fee Notice</span><span class="wa-sub">Politely request late cancellation fee</span></span></button>';
-  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
-  else{cont.innerHTML='<button class="btn-wa" onclick="sendConfirmMsg(null)"><span><span class="wa-title">Send Confirmation</span><span class="wa-sub">Booking confirmed with appointment details</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
+  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+payBtn+chaseBtn+stripBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
+  else{cont.innerHTML=payBtn+chaseBtn+stripBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
 }
 function getCurrent(){return editId?bookings.find(function(b){return b.id===editId;}):null;}
 
