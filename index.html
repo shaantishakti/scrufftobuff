@@ -2101,25 +2101,33 @@ function addFromPrefill(){
   var p=window._prefill;if(!p)return;
   openAddAt(p.date,p.time);
   setTimeout(function(){
+    // Name
     document.getElementById('f-name').value=p.name;
-    document.getElementById('f-phone').value=p.phone;
-    var dogEl=document.getElementById('f-dog-1');if(dogEl)dogEl.value=p.dog;
-    var breedEl=document.getElementById('f-breed-1');if(breedEl)breedEl.value=p.breed;
-    // Service may be a single value or comma-separated list from multi-select booking page
-    var services = p.service ? p.service.split(',').map(function(s){return s.trim();}) : [];
+    // Phone — store as-is for the form (keep leading 0)
+    var phoneVal=p.phone||'';
+    document.getElementById('f-phone').value=phoneVal;
+    // Services — use dogServices[1] (slot index starts at 1)
+    var services=p.service?p.service.split(',').map(function(s){return s.trim();}).filter(Boolean):[];
     if(services.length>0){
-      // Set first service in slot 0-0
-      dogServices[0] = services.map(function(svc,i){
-        var dur = SVC_DURATIONS[svc] || 60;
-        return {service:svc, duration:dur, price:''};
+      dogInfo[1]={name:p.dog||'',breed:p.breed||'',notes:'',dob:''};
+      dogServices[1]=services.map(function(svc){
+        return {service:svc,duration:SVC_DURATIONS[svc]||60,price:''};
       });
-      renderDogRows();
-      // trigger calcFinish after rows render
-      setTimeout(function(){ calcFinish(); }, 100);
+      setDogCount(1,true);
+      // After render, fill dog name and breed
+      setTimeout(function(){
+        var dogEl=document.getElementById('f-dog-1');if(dogEl)dogEl.value=p.dog||'';
+        var breedEl=document.getElementById('f-breed-1');if(breedEl)breedEl.value=p.breed||'';
+        calcFinish();
+      },200);
+    } else {
+      // No service — still fill dog name/breed
+      var dogEl=document.getElementById('f-dog-1');if(dogEl)dogEl.value=p.dog||'';
+      var breedEl=document.getElementById('f-breed-1');if(breedEl)breedEl.value=p.breed||'';
     }
     document.getElementById('ct-new').checked=true;
     dismissPrefill();
-  },200);
+  },300);
 }
 function waReplyPrefill(){
   var p=window._prefill;if(!p||!p.phone)return;
