@@ -458,6 +458,10 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 </div>
 <script>
 const SUMUP='https://pay.sumup.com/b2c/Q88WCHEE';
+const BANK_NAME='Scruff to Buff Dogs';
+const BANK_SORT='04-00-04';
+const BANK_ACC='20044824';
+const BANK_MSG='\n\n\uD83C\uDFE6 Bank transfer (preferred, no fees):\nAccount name: '+BANK_NAME+'\nSort code: '+BANK_SORT+'\nAccount number: '+BANK_ACC+'\nReference: your name\n\n\uD83D\uDCB3 Card payment: '+SUMUP;
 const SHEET_URL='https://script.google.com/macros/s/AKfycbwG00lLXzSbhkxVaigOD0arI9A9rns4f-i7GoUeKBXzUcRuxoYbXg7FP3cxhrIfVrB3/exec';
 const BIZ='Scruff to Buff Dogs';
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -1817,7 +1821,7 @@ function sendReminderMsg(id){
 }
 function sendPaymentChase(){
   var b=getCurrent();if(!b||!b.phone)return;
-  openWA(b.phone,'Hi '+titleCase(b.name)+',\n\nJust going through payments, and can\'t seem to see one from you, please could you check from your end?\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
+  openWA(b.phone,'Hi '+titleCase(b.name)+',\n\nJust going through payments, and can\'t seem to see one from you, please could you check from your end?'+BANK_MSG+'\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
 }
 function sendReminderPayMsgId(id){
   var b=id?bookings.find(function(x){return x.id===id;}):getCurrent();
@@ -1829,7 +1833,7 @@ function sendReminderPayMsgId(id){
   var apptDate=new Date(b.date+'T12:00:00');
   var daysAway=Math.floor((apptDate-today)/864e5);
   var daysStr=daysAway===0?'today':daysAway===1?'tomorrow':'in '+daysAway+' days';
-  openWA(b.phone,'Just a friendly reminder that '+dogNames+' has a grooming appointment with '+BIZ+' '+daysStr+'! Please let me know ASAP if you need to make any changes, to avoid any cancellation fees.\n\nIf you would like to pay your bill of '+priceStr+' in advance, you are welcome to do so here:\n'+SUMUP+'\n\nDID YOU KNOW you can book your fluffy friend\'s next appointment right now \uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html');
+  openWA(b.phone,'Just a friendly reminder that '+dogNames+' has a grooming appointment with '+BIZ+' '+daysStr+'! Please let me know ASAP if you need to make any changes, to avoid any cancellation fees.\n\nIf you would like to pay your bill of '+priceStr+' in advance:'+BANK_MSG+'\n\nDID YOU KNOW you can book your fluffy friend\'s next appointment right now \uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html');
 }
 function sendReminderPayMsg(){
   var b=getCurrent();if(!b||!b.phone)return;
@@ -1840,7 +1844,7 @@ function sendReminderPayMsg(){
   var apptDate=new Date(b.date+'T12:00:00');
   var daysAway=Math.floor((apptDate-today)/864e5);
   var daysStr=daysAway===0?'today':daysAway===1?'tomorrow':'in '+daysAway+' days';
-  openWA(b.phone,'Just a friendly reminder that '+dogNames+' has a grooming appointment with '+BIZ+' '+daysStr+'! Please let me know ASAP if you need to make any changes, to avoid any cancellation fees.\n\nIf you would like to pay your bill of '+priceStr+' in advance, you are welcome to do so here:\n'+SUMUP+'\n\nDID YOU KNOW you can book your fluffy friend\'s next appointment right now \uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html');
+  openWA(b.phone,'Just a friendly reminder that '+dogNames+' has a grooming appointment with '+BIZ+' '+daysStr+'! Please let me know ASAP if you need to make any changes, to avoid any cancellation fees.\n\nIf you would like to pay your bill of '+priceStr+' in advance:'+BANK_MSG+'\n\nDID YOU KNOW you can book your fluffy friend\'s next appointment right now \uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html');
 }
 function openPay(){document.getElementById('f-price-pay').value='';document.getElementById('payOverlay').classList.add('open');}
 function sendPayment(){
@@ -1848,7 +1852,7 @@ function sendPayment(){
   var price=parseFloat(document.getElementById('f-price-pay').value);
   if(!price||price<=0){alert('Please enter the final price.');return;}
   var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
-  openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\n'+dogNames+' was an absolute star today - thank you so much for bringing them in!\n\nTotal for today\'s groom: *£'+price.toFixed(2)+'*\n\nYou are welcome to pay by card when you collect, or if you would prefer to pay in advance:\n'+SUMUP+'\n\nThanks again - it was lovely to see you both!');
+  openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\n'+dogNames+' was an absolute star today - thank you so much for bringing them in!\n\nTotal for today\'s groom: *£'+price.toFixed(2)+'*'+BANK_MSG+'\n\nThanks again - it was lovely to see you both!');
   closePay();
 }
 
@@ -2493,7 +2497,7 @@ function sendGoogleReviewMsg(){
 
 function sendCancelFeeMsg(){
   var b=getCurrent();if(!b||!b.phone)return;
-  openWA(b.phone,'Hi '+titleCase(b.name)+', I hope you\'re well!\n\nAs your recent appointment was cancelled with less than 48 hours notice, a cancellation fee is applicable as per our terms and conditions.\n\nIf you\'d like to pay this, you\'re welcome to do so here:\n'+SUMUP+'\n\nI completely understand that things come up unexpectedly, and I do appreciate your understanding. Please don\'t hesitate to get in touch if you\'d like to discuss this.\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
+  openWA(b.phone,'Hi '+titleCase(b.name)+', I hope you\'re well!\n\nAs your recent appointment was cancelled with less than 48 hours notice, a cancellation fee is applicable as per our terms and conditions.'+BANK_MSG+'\n\nI completely understand that things come up unexpectedly, and I do appreciate your understanding. Please don\'t hesitate to get in touch if you\'d like to discuss this.\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
 }
 
 function onReferralInput(val){
