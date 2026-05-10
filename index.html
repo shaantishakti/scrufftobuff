@@ -306,38 +306,6 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
     <table class="earn-table"><thead><tr><th>Date</th><th>Customer</th><th>Dog(s)</th><th>Service(s)</th><th>Amount</th><th>Method</th></tr></thead><tbody id="earnBody"></tbody></table>
     <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;margin:24px 0 12px;color:#e05252;">Expenses</h3>
     <table class="earn-table"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th></th></tr></thead><tbody id="expBody"></tbody></table>
-    <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;margin:24px 0 8px;color:#b45309;">Staff Hours</h3>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
-      <label style="font-size:0.83rem;color:#5a4a3a;font-weight:600;">Hourly rate: £</label>
-      <input type="number" id="staffRateInput" min="0" step="0.01" placeholder="e.g. 12.50" value="" style="width:100px;padding:6px 10px;border:1.5px solid #c2a87a;border-radius:7px;font-size:0.88rem;">
-      <button onclick="saveStaffRate()" style="background:#b45309;color:white;border:none;padding:6px 14px;border-radius:7px;font-size:0.83rem;font-weight:600;cursor:pointer;">Save Rate</button>
-      <span id="staffRateNote" style="font-size:0.78rem;color:#92400e;"></span>
-    </div>
-    <table class="earn-table"><thead><tr><th>Date</th><th>Times</th><th>Hours</th><th>Cost</th><th>Revenue that day</th><th>Covered?</th><th></th></tr></thead><tbody id="staffBody"></tbody></table>
-    <button onclick="openLogHours()" style="margin-top:10px;background:#b45309;color:white;border:none;padding:7px 16px;border-radius:7px;font-size:0.83rem;font-weight:600;cursor:pointer;">+ Log Staff Hours</button>
-  </div>
-</div>
-
-<!-- STAFF HOURS MODAL -->
-<div class="overlay" id="staffOverlay">
-  <div class="modal" style="width:380px;">
-    <h2 id="staffModalTitle">Log Staff Hours</h2>
-    <div class="fg"><label>Date</label><input type="date" id="staff-date"></div>
-    <div class="frow">
-      <div class="fg"><label>Start time</label><input type="time" id="staff-start" oninput="calcStaffHours()"></div>
-      <div class="fg"><label>End time</label><input type="time" id="staff-end" oninput="calcStaffHours()"></div>
-      <div class="fg"><label>Break (mins)</label><input type="number" id="staff-break" min="0" step="5" placeholder="0" value="0" oninput="calcStaffHours()"></div>
-    </div>
-    <div id="staffHoursCalc" style="display:none;background:#f0f6ff;border:1px solid #c2d9f0;border-radius:8px;padding:10px 14px;font-size:0.88rem;color:#1e3a5f;margin-bottom:10px;">
-      ⏱ Hours worked: <strong id="staffHoursResult">—</strong>
-      <span id="staffCostResult" style="margin-left:12px;color:#b45309;font-weight:600;"></span>
-    </div>
-    <div class="fg"><label>Notes (optional)</label><input type="text" id="staff-notes" placeholder="e.g. half day, late start..."></div>
-    <div class="modal-btns">
-      <button class="btn-del" id="btnStaffDel" onclick="deleteStaffHours()" style="display:none">Delete</button>
-      <button class="btn-cancel" onclick="closeLogHours()">Cancel</button>
-      <button class="btn-save" onclick="saveStaffHours()">Save</button>
-    </div>
   </div>
 </div>
 
@@ -507,8 +475,6 @@ let bookings=JSON.parse(localStorage.getItem('stbBookings')||'[]');
 let customers=JSON.parse(localStorage.getItem('stbCustomers')||'[]');
 let blocks=JSON.parse(localStorage.getItem('stbBlocks')||'[]');
 let expenses=JSON.parse(localStorage.getItem('stbExpenses')||'[]');
-let staffHours=JSON.parse(localStorage.getItem('stbStaffHours')||'[]');
-var staffHourlyRate=parseFloat(localStorage.getItem('stbStaffRate')||'0');
 let weekStart=getMonday(new Date());
 let mobileOffset=0;
 let editId=null,editBlockId=null;
@@ -557,7 +523,6 @@ function saveAll(){
   localStorage.setItem('stbCustomers',JSON.stringify(customers));
   localStorage.setItem('stbBlocks',JSON.stringify(blocks));
   localStorage.setItem('stbExpenses',JSON.stringify(expenses));
-  localStorage.setItem('stbStaffHours',JSON.stringify(staffHours));
 }
 
 
@@ -1886,17 +1851,13 @@ function renderEarnings(){
   },0);
   var periodExpenses=expenses.filter(function(e){return e.date>=range.start&&e.date<=range.end;});
   var expTotal=periodExpenses.reduce(function(s,e){return s+(parseFloat(e.amount)||0);},0);
-  var periodStaff=staffHours.filter(function(s){return s.date>=range.start&&s.date<=range.end;});
-  var staffTotal=periodStaff.reduce(function(s,h){return s+(parseFloat(h.hours)||0)*staffHourlyRate;},0);
-  var staffHoursTotal=periodStaff.reduce(function(s,h){return s+(parseFloat(h.hours)||0);},0);
   document.getElementById('earnSummary').innerHTML=
     '<div class="earn-card total"><div class="ec-label">Total Earned</div><div class="ec-val">£'+total.toFixed(2)+'</div></div>'
     +'<div class="earn-card cash-c"><div class="ec-label">Cash</div><div class="ec-val">£'+cash.toFixed(2)+'</div></div>'
     +'<div class="earn-card card-c"><div class="ec-label">Card</div><div class="ec-val">£'+card.toFixed(2)+'</div></div>'
     +'<div class="earn-card monzo-c"><div class="ec-label">Monzo</div><div class="ec-val">£'+monzo.toFixed(2)+'</div></div>'
     +'<div class="earn-card expense-c"><div class="ec-label">Expenses</div><div class="ec-val">£'+expTotal.toFixed(2)+'</div></div>'
-    +(staffHourlyRate>0?'<div class="earn-card" style="border-color:#f59e0b;"><div class="ec-label">Staff Cost</div><div class="ec-val" style="color:#b45309;">£'+staffTotal.toFixed(2)+'<span style="font-size:0.7rem;color:#92400e;display:block;font-weight:400;">'+staffHoursTotal.toFixed(1)+' hrs @ £'+staffHourlyRate.toFixed(2)+'/hr</span></div></div>':'')
-    +'<div class="earn-card profit-c"><div class="ec-label">Net Profit</div><div class="ec-val">£'+(total-expTotal-staffTotal).toFixed(2)+'</div></div>';
+    +'<div class="earn-card profit-c"><div class="ec-label">Net Profit</div><div class="ec-val">£'+(total-expTotal).toFixed(2)+'</div></div>';
   var tbody=document.getElementById('earnBody');
   if(!paid.length){tbody.innerHTML='<tr><td colspan="5" class="earn-empty">No paid bookings in this period.</td></tr>';return;}
   paid.sort(function(a,b){return a.date.localeCompare(b.date);});
@@ -1922,127 +1883,6 @@ function renderEarnings(){
         +'</tr>';
     }).join('');
   }
-  renderStaffTable(range);
-}
-
-// ── STAFF HOURS ────────────────────────────────────────────────────────────
-var editStaffId=null;
-
-function calcStaffHours(){
-  var start=document.getElementById('staff-start').value;
-  var end=document.getElementById('staff-end').value;
-  var brk=parseInt(document.getElementById('staff-break').value)||0;
-  var calc=document.getElementById('staffHoursCalc');
-  if(!start||!end){calc.style.display='none';return;}
-  var sm=timeToMins(start), em=timeToMins(end);
-  if(em<=sm){calc.style.display='none';return;}
-  var worked=((em-sm-brk)/60);
-  if(worked<=0){calc.style.display='none';return;}
-  document.getElementById('staffHoursResult').textContent=worked.toFixed(2)+' hrs';
-  var costEl=document.getElementById('staffCostResult');
-  if(staffHourlyRate>0){
-    costEl.textContent='= £'+(worked*staffHourlyRate).toFixed(2);
-  } else { costEl.textContent=''; }
-  calc.style.display='block';
-}
-
-function saveStaffRate(){
-  var val=parseFloat(document.getElementById('staffRateInput').value);
-  if(!val||val<=0){alert('Please enter a valid hourly rate.');return;}
-  staffHourlyRate=val;
-  localStorage.setItem('stbStaffRate',val.toString());
-  document.getElementById('staffRateNote').textContent='Saved — £'+val.toFixed(2)+'/hr';
-  renderEarnings();
-}
-
-function openLogHours(dateStr){
-  editStaffId=null;
-  document.getElementById('staffModalTitle').textContent='Log Staff Hours';
-  document.getElementById('btnStaffDel').style.display='none';
-  document.getElementById('staff-date').value=dateStr||fmtISO(new Date());
-  document.getElementById('staff-start').value='';
-  document.getElementById('staff-end').value='';
-  document.getElementById('staff-break').value='0';
-  document.getElementById('staff-notes').value='';
-  document.getElementById('staffHoursCalc').style.display='none';
-  document.getElementById('staffOverlay').classList.add('open');
-}
-
-function openEditStaffHours(id){
-  var h=staffHours.find(function(x){return x.id===id;});
-  if(!h)return;
-  editStaffId=id;
-  document.getElementById('staffModalTitle').textContent='Edit Staff Hours';
-  document.getElementById('btnStaffDel').style.display='block';
-  document.getElementById('staff-date').value=h.date;
-  document.getElementById('staff-start').value=h.start||'';
-  document.getElementById('staff-end').value=h.end||'';
-  document.getElementById('staff-break').value=h.break||0;
-  document.getElementById('staff-notes').value=h.notes||'';
-  calcStaffHours();
-  document.getElementById('staffOverlay').classList.add('open');
-}
-
-function closeLogHours(){document.getElementById('staffOverlay').classList.remove('open');}
-
-function saveStaffHours(){
-  var date=document.getElementById('staff-date').value;
-  var start=document.getElementById('staff-start').value;
-  var end=document.getElementById('staff-end').value;
-  var brk=parseInt(document.getElementById('staff-break').value)||0;
-  if(!date||!start||!end){alert('Please enter a date, start time and end time.');return;}
-  var sm=timeToMins(start), em=timeToMins(end);
-  var hours=Math.max(0,(em-sm-brk)/60);
-  if(hours<=0){alert('End time must be after start time.');return;}
-  var entry={id:editStaffId||('sh-'+Date.now()),date:date,start:start,end:end,break:brk,hours:hours,notes:document.getElementById('staff-notes').value.trim()};
-  if(editStaffId){staffHours=staffHours.map(function(h){return h.id===editStaffId?entry:h;});}
-  else{staffHours.push(entry);}
-  localStorage.setItem('stbStaffHours',JSON.stringify(staffHours));
-  closeLogHours();
-  renderEarnings();
-}
-
-function deleteStaffHours(){
-  if(!editStaffId||!confirm('Delete this entry?'))return;
-  staffHours=staffHours.filter(function(h){return h.id!==editStaffId;});
-  localStorage.setItem('stbStaffHours',JSON.stringify(staffHours));
-  closeLogHours();
-  renderEarnings();
-}
-
-function renderStaffTable(range){
-  var tbody=document.getElementById('staffBody');
-  if(!tbody)return;
-  // Show rate input current value
-  var rateInput=document.getElementById('staffRateInput');
-  if(rateInput&&staffHourlyRate>0&&!rateInput.value)rateInput.value=staffHourlyRate.toFixed(2);
-
-  var periodStaff=staffHours.filter(function(h){return h.date>=range.start&&h.date<=range.end;});
-  if(!periodStaff.length){
-    tbody.innerHTML='<tr><td colspan="6" class="earn-empty">No staff hours logged for this period. Click "+ Log Staff Hours" to add.</td></tr>';
-    return;
-  }
-  periodStaff.sort(function(a,b){return a.date.localeCompare(b.date);});
-  tbody.innerHTML=periodStaff.map(function(h){
-    var cost=(parseFloat(h.hours)||0)*staffHourlyRate;
-    // Revenue on same day
-    var dayRevenue=bookings.filter(function(b){return b.date===h.date&&b.paid;}).reduce(function(s,b){
-      return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.services&&d.services.length?d.services.reduce(function(sss,sv){return sss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):parseFloat(b.lastprice)||0);
-    },0);
-    var covered=staffHourlyRate>0?dayRevenue>=cost:null;
-    var coveredStr=staffHourlyRate>0
-      ?'<span style="font-weight:600;color:'+(covered?'#2d6a4f':'#e05252')+'">'+(covered?'✓ Yes':'✗ No — £'+(cost-dayRevenue).toFixed(2)+' short')+'</span>'
-      :'—';
-    return '<tr>'
-      +'<td>'+fmtDD(h.date)+(h.notes?'<br><span style="font-size:0.74rem;color:#94a3b8;">'+h.notes+'</span>':'')+'</td>'
-      +'<td>'+(h.start&&h.end?fmtTime(h.start)+' – '+fmtTime(h.end)+(h.break?'<br><span style="font-size:0.74rem;color:#94a3b8;">'+h.break+'min break</span>':''):'—')+'</td>'
-      +'<td>'+parseFloat(h.hours).toFixed(2)+' hrs</td>'
-      +'<td style="color:#b45309;font-weight:600;">'+( staffHourlyRate>0?'£'+cost.toFixed(2):'Set rate above')+'</td>'
-      +'<td>£'+dayRevenue.toFixed(2)+'</td>'
-      +'<td>'+coveredStr+'</td>'
-      +'<td><button class="btn-wa-sm" style="background:#64748b;" onclick="openEditStaffHours(\''+h.id+'\')">Edit</button></td>'
-      +'</tr>';
-  }).join('');
 }
 
 // ── EXPENSES ───────────────────────────────────────────────────────────────
@@ -2305,7 +2145,6 @@ document.getElementById('blockOverlay').addEventListener('click',function(e){if(
 document.getElementById('payOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('payOverlay'))closePay();});
 document.getElementById('daySummaryOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('daySummaryOverlay'))document.getElementById('daySummaryOverlay').classList.remove('open');});
 document.getElementById('expOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('expOverlay'))closeExpense();});
-document.getElementById('staffOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('staffOverlay'))closeLogHours();});
 document.addEventListener('click',function(e){if(!e.target.closest('#f-name')&&!e.target.closest('#sugBox'))document.getElementById('sugBox').innerHTML='';});
 document.getElementById('p-paid').addEventListener('change',function(){showPayMethod(true);});
 document.getElementById('p-unpaid').addEventListener('change',function(){showPayMethod(false);});
@@ -2701,19 +2540,33 @@ function checkRebookNudge(){
   });
 
   if(!overdue.length)return;
+  var dismissed=JSON.parse(localStorage.getItem('stbDismissedRebook')||'[]');
   var banner=document.getElementById('reminderBanner');
   var list=document.getElementById('reminderList');
   banner.classList.add('show');
-  var html=overdue.map(function(o){
+  var html=overdue.filter(function(o){return dismissed.indexOf(o.name)<0;}).map(function(o){
+    var safeId='rebook-'+o.name.replace(/[^a-zA-Z0-9]/g,'_');
     var weeks=Math.floor((today-new Date(o.lastDate+'T12:00:00'))/(7*864e5));
-    return '<div class="banner-chip rebook-chip">'
+    return '<div class="banner-chip rebook-chip" id="'+safeId+'">'
       +'<span>&#128337;</span>'
       +'<strong>'+o.name+'</strong>'
       +' — last seen '+weeks+' weeks ago'
       +(o.phone?'<button class="btn-wa-sm" style="background:#f59e0b;" onclick="sendRebookNudge(\''+o.name+'\',\''+o.phone+'\')">Rebook</button>':'')
+      +'<button class="btn-wa-sm" style="background:#94a3b8;margin-left:2px;" onclick="dismissRebookChip(\''+o.name.replace(/'/g,"\\'")+'\')" title="Dismiss">&#10005;</button>'
       +'</div>';
   }).join('');
   list.innerHTML=list.innerHTML+html;
+}
+
+function dismissRebookChip(name){
+  var dismissed=JSON.parse(localStorage.getItem('stbDismissedRebook')||'[]');
+  if(dismissed.indexOf(name)<0)dismissed.push(name);
+  localStorage.setItem('stbDismissedRebook',JSON.stringify(dismissed));
+  var safeId='rebook-'+name.replace(/[^a-zA-Z0-9]/g,'_');
+  var chip=document.getElementById(safeId);
+  if(chip)chip.remove();
+  var list=document.getElementById('reminderList');
+  if(list&&!list.children.length)document.getElementById('reminderBanner').classList.remove('show');
 }
 
 function sendRebookNudge(name,phone){
