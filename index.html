@@ -11,7 +11,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--cream:#f0f6ff;--brown:#1e3a5f;--tan:#5b9bd5;--tan-light:#c2d9f0;--unpaid:#e05252;--unpaid-bg:#fdeaea;--paid:#3a9e6e;--paid-bg:#e6f7ef;--blocked:#64748b;--blocked-bg:#cbd5e1;--wa:#25D366;--wa-dark:#128C7E;--cash:#f59e0b;--card:#6366f1;--monzo:#ef4444;}
+:root{--cream:#f0f6ff;--brown:#1e3a5f;--tan:#5b9bd5;--tan-light:#c2d9f0;--unpaid:#e05252;--unpaid-bg:#fdeaea;--paid:#3a9e6e;--paid-bg:#e6f7ef;--blocked:#64748b;--blocked-bg:#cbd5e1;--wa:#25D366;--wa-dark:#128C7E;--cash:#f59e0b;--card:#6366f1;--monzo:#ef4444;--becky:#1e3a5f;--becky-bg:#e8f0fb;--poppy:#db2777;--poppy-bg:#fce7f3;--both:#7c3aed;--both-bg:#ede9fe;}
+.groomer-bar{position:absolute;top:0;left:0;right:0;height:3px;border-radius:6px 6px 0 0;}
+.groomer-bar.becky{background:var(--becky);}
+.groomer-bar.poppy{background:var(--poppy);}
+.groomer-bar.both{background:linear-gradient(90deg,var(--becky) 50%,var(--poppy) 50%);}
+.groomer-badge{font-size:0.6rem;font-weight:700;padding:1px 5px;border-radius:8px;display:inline-block;margin-left:3px;vertical-align:middle;}
+.groomer-badge.becky{background:var(--becky-bg);color:var(--becky);}
+.groomer-badge.poppy{background:var(--poppy-bg);color:var(--poppy);}
+.groomer-badge.both{background:var(--both-bg);color:var(--both);}
+#gr-becky:checked~label[for=gr-becky]{background:var(--becky-bg);border-color:var(--becky);color:var(--becky);}
+#gr-poppy:checked~label[for=gr-poppy]{background:var(--poppy-bg);border-color:var(--poppy);color:var(--poppy);}
+#gr-both:checked~label[for=gr-both]{background:var(--both-bg);border-color:var(--both);color:var(--both);}
+#groomerWarning{display:none;background:#fdeaea;border:1px solid #e8b0b0;border-radius:7px;padding:7px 10px;font-size:0.82rem;color:#8b2020;margin-top:6px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--brown);min-height:100vh;}
 header{background:var(--brown);color:var(--cream);padding:14px 28px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
@@ -373,7 +385,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
       </div>
       <div id="dogFriendlyFlag" style="display:none;margin-top:6px;border-radius:7px;padding:7px 10px;font-size:0.82rem;"></div>
     </div>
-    <div class="fg sug-wrap"><label>Customer Name</label><input type="text" id="f-name" placeholder="Start typing to find a returning customer..." autocomplete="off" oninput="onNameInput(this.value)"><div class="sug-box" id="sugBox"></div></div>
+    <div class="fg sug-wrap"><label>Customer Name</label><input type="text" id="f-name" placeholder="Start typing to find a returning customer..." autocomplete="off" oninput="onNameInput(this.value);checkGroomerWarning()"><div class="sug-box" id="sugBox"></div></div>
     <div class="frow">
       <div class="fg"><label>WhatsApp Number</label><input type="tel" id="f-phone" placeholder="07700 900000"></div>
       <div class="fg"><label>Visit Number</label><input type="number" id="f-visits" min="1" value="1" onchange="checkDiscountFromForm()"></div>
@@ -387,6 +399,15 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
     <div class="frow">
       <div class="fg"><label>Finish Time</label><input type="text" id="f-finish" readonly placeholder="Auto-calculated"></div>
       <div class="fg"><label>Notes (optional)</label><input type="text" id="f-notes" placeholder="Any special requirements..."></div>
+    </div>
+    <div class="fg">
+      <label>Groomer</label>
+      <div class="tog">
+        <input type="radio" name="groomer" id="gr-becky" value="becky" checked onchange="checkGroomerWarning()"><label for="gr-becky">💙 Becky</label>
+        <input type="radio" name="groomer" id="gr-poppy" value="poppy" onchange="checkGroomerWarning()"><label for="gr-poppy">🩷 Poppy</label>
+        <input type="radio" name="groomer" id="gr-both" value="both" onchange="checkGroomerWarning()"><label for="gr-both">💜 Both</label>
+      </div>
+      <div id="groomerWarning"></div>
     </div>
     <div class="fg" id="referralGroup" style="display:none">
       <label>Referred by (optional)</label>
@@ -812,6 +833,7 @@ function onSvcChange(dogIdx,svcIdx){
     var priceEl=document.getElementById('f-price-'+dogIdx+'-'+svcIdx);
     if(priceEl&&!priceEl.value)priceEl.value=SVC_PRICES[v].toFixed(2);
   }
+  checkGroomerWarning();
   calcFinish();
 }
 
@@ -1069,6 +1091,42 @@ function loadDogFriendlyStatus(c,bookingVal){
   }
 }
 
+function checkGroomerWarning(){
+  var groomer=(document.querySelector('input[name="groomer"]:checked')||{value:'becky'}).value;
+  var warn=document.getElementById('groomerWarning');
+  if(!warn)return;
+  if(groomer!=='poppy'){warn.style.display='none';return;}
+  var warnings=[];
+  // Restricted customers
+  var name=(document.getElementById('f-name').value||'').toLowerCase();
+  if(name.indexOf('tia bliss')>=0)warnings.push('Poppy does not groom for Tia Bliss');
+  if(name.indexOf('jenny churchyard')>=0)warnings.push('Poppy does not groom for Jenny Churchyard');
+  // Restricted services
+  var POPPY_NO=['Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning','Emmi-Pet Teeth Cleaning PAYG','Emmi-Pet Teeth Cleaning x4','Emmi-Pet Teeth Cleaning x9','Emmi-Pet Teeth Maintenance','Teeth Descaling','Teeth Cleaning','Descaling'];
+  // Check all service dropdowns
+  for(var i=1;i<=dogCount;i++){
+    var dogName=(document.getElementById('f-dog-'+i)||{}).value||'';
+    if(dogName.toLowerCase().indexOf('rufus')>=0)warnings.push('Poppy does not groom Rufus');
+    var svcs=dogServices[i]||[];
+    svcs.forEach(function(sv){
+      if(POPPY_NO.indexOf(sv.service)>=0)warnings.push('Poppy does not do: '+sv.service);
+    });
+    // Also check live dropdowns
+    for(var s=0;s<10;s++){
+      var sel=document.getElementById('f-service-'+i+'-'+s);
+      if(!sel)break;
+      if(POPPY_NO.indexOf(sel.value)>=0&&warnings.indexOf('Poppy does not do: '+sel.value)<0)
+        warnings.push('Poppy does not do: '+sel.value);
+    }
+  }
+  if(warnings.length){
+    warn.style.display='block';
+    warn.innerHTML='⚠️ '+[...new Set(warnings)].join(' · ');
+  } else {
+    warn.style.display='none';
+  }
+}
+
 function checkDiscount(name,visits,lp){
   var f=document.getElementById('discFlag');
   if(parseInt(visits)===6){
@@ -1304,6 +1362,7 @@ function renderCal(){
         else if(svc==='De-shed Treatment')svcCls='svc-deshed';
         else svcCls=bk.paid?'paid':'unpaid';
         body+='<div class="bk '+svcCls+'" style="top:'+tp+'px;height:'+hp+'px;padding-top:7px;left:'+leftOff+';width:'+colW+';right:'+rightOff+';" data-bkid="'+bk.id+'" onmousedown="startDrag(event,\''+bk.id+'\')" ontouchstart="startDrag(event,\''+bk.id+'\')" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">'
+          +'<div class="groomer-bar '+(bk.groomer||'becky')+'"></div>'
           +'<div class="pay-dot '+(bk.paid?'paid':'unpaid')+'"></div>'
           +(function(){
             var sessionBadge='';
@@ -1319,7 +1378,8 @@ function renderCal(){
               var circles=['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
               sessionBadge='<span style="font-size:1rem;margin-left:4px;">'+(circles[sessionNum-1]||sessionNum)+'</span>'+(totalSessions?' /'+totalSessions:'');
             }
-            return '<div class="bn">'+bk.name+(totalBlocks>1?' — '+bl.dogName:'')+sessionBadge+'</div>';
+            var groomerBadge=bk.groomer&&bk.groomer!=='becky'?'<span class="groomer-badge '+bk.groomer+'">'+(bk.groomer==='poppy'?'P':'B+P')+'</span>':'';
+            return '<div class="bn">'+bk.name+(totalBlocks>1?' — '+bl.dogName:'')+sessionBadge+groomerBadge+'</div>';
           })()
           +'<div class="bd">'+bl.dogName+(bl.breed?' ('+bl.breed+')':'')+'</div>'          +'<div class="bs">'+svc+'</div>'
           +'<div class="bt">'+fmtTime(slotTime)+' - '+fmtTime(finTime)+'</div>'
@@ -1383,6 +1443,8 @@ function clearForm(){
   document.getElementById('p-unpaid').checked=true;
   document.getElementById('payMethodGroup').style.display='none';
   document.getElementById('ct-existing').checked=true;
+  document.getElementById('gr-becky').checked=true;
+  document.getElementById('groomerWarning').style.display='none';
   document.getElementById('df-unknown').checked=true;
   loadDogFriendlyStatus(null,'unknown');
   dogInfo={};dogServices={};
@@ -1423,6 +1485,9 @@ function openEdit(id){
   if(cNs&&cNs.noShow){btnNs.textContent='✓ Undo No Show';btnNs.style.background='#64748b';}
   else{btnNs.textContent='✗ No Show';btnNs.style.background='#e05252';}
   checkNoshowFlag(b.name);
+  var grEl=document.getElementById('gr-'+(b.groomer||'becky'));
+  if(grEl)grEl.checked=true;
+  checkGroomerWarning();
   document.getElementById('f-name').value=b.name;
   var cEdit=getCustomer(b.name);
   loadDogFriendlyStatus(cEdit,b.dogFriendly);
@@ -1591,6 +1656,7 @@ function saveBooking(){
     notes:document.getElementById('f-notes').value.trim(),
     referral:document.getElementById('f-referral').value.trim(),
     dogFriendly:(document.querySelector('input[name="dogfriendly"]:checked')||{value:'unknown'}).value,
+    groomer:(document.querySelector('input[name="groomer"]:checked')||{value:'becky'}).value,
     paid:paid,
     payMethod:paid&&pmEl?pmEl.value:null,
     splitPayment:(paid&&pmEl&&pmEl.value==='split')?{cash:splitCash,card:splitCard,monzo:splitMonzo}:null,
