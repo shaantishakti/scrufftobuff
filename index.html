@@ -12,10 +12,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{--cream:#f0f6ff;--brown:#1e3a5f;--tan:#5b9bd5;--tan-light:#c2d9f0;--unpaid:#e05252;--unpaid-bg:#fdeaea;--paid:#3a9e6e;--paid-bg:#e6f7ef;--blocked:#64748b;--blocked-bg:#cbd5e1;--wa:#25D366;--wa-dark:#128C7E;--cash:#f59e0b;--card:#6366f1;--monzo:#ef4444;--becky:#1e3a5f;--becky-bg:#e8f0fb;--poppy:#db2777;--poppy-bg:#fce7f3;--both:#7c3aed;--both-bg:#ede9fe;}
-.groomer-bar{position:absolute;top:0;left:0;right:0;height:3px;border-radius:6px 6px 0 0;}
-.groomer-bar.becky{background:var(--becky);}
-.groomer-bar.poppy{background:var(--poppy);}
-.groomer-bar.both{background:linear-gradient(90deg,var(--becky) 50%,var(--poppy) 50%);}
 .groomer-badge{font-size:0.6rem;font-weight:700;padding:1px 5px;border-radius:8px;display:inline-block;margin-left:3px;vertical-align:middle;}
 .groomer-badge.becky{background:var(--becky-bg);color:var(--becky);}
 .groomer-badge.poppy{background:var(--poppy-bg);color:var(--poppy);}
@@ -216,18 +212,10 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 .noshow-flag span{font-weight:400;color:#7a2020;display:block;margin-top:2px;font-size:0.78rem;}
 .btn-noshow{background:#e05252;color:white;border:none;border-radius:7px;padding:6px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;margin-left:8px;}
 .btn-noshow:hover{background:#c0392b;}
-.svc-full-groom{background:#a8c8e8!important;border-left:4px solid #7aaad0!important;}
-.svc-hand-stripping{background:#c2610a!important;border-left:4px solid #9a4d08!important;}
-.svc-nails{background:#6b3fa0!important;border-left:4px solid #4e2c78!important;}
-.svc-wash-dry{background:#800020!important;border-left:4px solid #5c0018!important;}
-.svc-trim-tidy{background:#c9a800!important;border-left:4px solid #a08600!important;}
-.svc-puppy{background:#e05a8a!important;border-left:4px solid #c0426f!important;}
-.svc-emmi{background:#3ab8a0!important;border-left:4px solid #2a9080!important;}
-.svc-descaling{background:#3ab8a0!important;border-left:4px solid #2a9080!important;}
-.svc-anal-glands{background:#6b4226!important;border-left:4px solid #4e2f1a!important;}
-.svc-deshed{background:#7ec87e!important;border-left:4px solid #5aaa5a!important;}
-.svc-full-groom .bn,.svc-full-groom .bd,.svc-full-groom .bs,.svc-full-groom .bt,.svc-full-groom .bb{color:#1a3a5c!important;}
-.svc-hand-stripping .bn,.svc-hand-stripping .bd,.svc-hand-stripping .bs,.svc-hand-stripping .bt,.svc-hand-stripping .bb,
+.svc-full-groom,.svc-hand-stripping,.svc-nails,.svc-wash-dry,.svc-trim-tidy,.svc-puppy,.svc-emmi,.svc-descaling,.svc-anal-glands,.svc-deshed,.svc-default{background:#d1f0d1!important;border-left:4px solid #5aaa5a!important;}
+.bk.groomer-poppy-block{background:#e9d5f5!important;border-left:4px solid #b060d0!important;}
+.bk.groomer-both-block{background:linear-gradient(135deg,#d1f0d1 50%,#e9d5f5 50%)!important;border-left:4px solid #7c3aed!important;}
+.svc-full-groom .bn,.svc-full-groom .bd,.svc-full-groom .bs,.svc-full-groom .bt,.svc-full-groom .bb,
 .svc-hand-stripping .bn,.svc-hand-stripping .bd,.svc-hand-stripping .bs,.svc-hand-stripping .bt,.svc-hand-stripping .bb,
 .svc-nails .bn,.svc-nails .bd,.svc-nails .bs,.svc-nails .bt,.svc-nails .bb,
 .svc-wash-dry .bn,.svc-wash-dry .bd,.svc-wash-dry .bs,.svc-wash-dry .bt,.svc-wash-dry .bb,
@@ -235,13 +223,11 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 .svc-puppy .bn,.svc-puppy .bd,.svc-puppy .bs,.svc-puppy .bt,.svc-puppy .bb,
 .svc-emmi .bn,.svc-emmi .bd,.svc-emmi .bs,.svc-emmi .bt,.svc-emmi .bb,
 .svc-anal-glands .bn,.svc-anal-glands .bd,.svc-anal-glands .bs,.svc-anal-glands .bt,.svc-anal-glands .bb,
-.svc-deshed .bn,.svc-deshed .bd,.svc-deshed .bs,.svc-deshed .bt,.svc-deshed .bb{color:#1a3a1a!important;}
-.svc-descaling .bn,.svc-descaling .bd,.svc-descaling .bs,.svc-descaling .bt,.svc-descaling .bb{color:white!important;}
-.svc-trim-tidy .bn,.svc-trim-tidy .bd,.svc-trim-tidy .bs,.svc-trim-tidy .bt,.svc-trim-tidy .bb{color:#333!important;}
-.svc-default{background:#4a7aaa!important;border-left:4px solid #1e3a5f!important;}
-.svc-default .bn,.svc-default .bd,.svc-default .bs,.svc-default .bt,.svc-default .bb{color:white!important;}
-.svc-default{background:#4a7aaa!important;border-left:4px solid #1e3a5f!important;}
-.svc-default .bn,.svc-default .bd,.svc-default .bs,.svc-default .bt,.svc-default .bb{color:white!important;}
+.svc-deshed .bn,.svc-deshed .bd,.svc-deshed .bs,.svc-deshed .bt,.svc-deshed .bb,
+.svc-descaling .bn,.svc-descaling .bd,.svc-descaling .bs,.svc-descaling .bt,.svc-descaling .bb,
+.svc-default .bn,.svc-default .bd,.svc-default .bs,.svc-default .bt,.svc-default .bb{color:#1a3a1a!important;}
+.bk.groomer-poppy-block .bn,.bk.groomer-poppy-block .bd,.bk.groomer-poppy-block .bs,.bk.groomer-poppy-block .bt{color:#4a1060!important;}
+.bk.groomer-both-block .bn,.bk.groomer-both-block .bd,.bk.groomer-both-block .bs,.bk.groomer-both-block .bt{color:#1a3a1a!important;}
 
 .dog-row-label{font-size:0.78rem;font-weight:600;color:var(--tan);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;}
 .dog-count-btns{display:flex;gap:7px;margin-bottom:12px;align-items:center;}
@@ -403,9 +389,9 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
     <div class="fg">
       <label>Groomer</label>
       <div class="tog">
-        <input type="radio" name="groomer" id="gr-becky" value="becky" checked onchange="checkGroomerWarning()"><label for="gr-becky">💙 Becky</label>
-        <input type="radio" name="groomer" id="gr-poppy" value="poppy" onchange="checkGroomerWarning()"><label for="gr-poppy">🩷 Poppy</label>
-        <input type="radio" name="groomer" id="gr-both" value="both" onchange="checkGroomerWarning()"><label for="gr-both">💜 Both</label>
+        <input type="radio" name="groomer" id="gr-becky" value="becky" checked onchange="checkGroomerWarning()"><label for="gr-becky">💚 Becky</label>
+        <input type="radio" name="groomer" id="gr-poppy" value="poppy" onchange="checkGroomerWarning()"><label for="gr-poppy">💜 Poppy</label>
+        <input type="radio" name="groomer" id="gr-both" value="both" onchange="checkGroomerWarning()"><label for="gr-both">💙 Both</label>
       </div>
       <div id="groomerWarning"></div>
     </div>
@@ -1361,8 +1347,8 @@ function renderCal(){
         else if(svc==='Anal Glands')svcCls='svc-anal-glands';
         else if(svc==='De-shed Treatment')svcCls='svc-deshed';
         else svcCls=bk.paid?'paid':'unpaid';
-        body+='<div class="bk '+svcCls+'" style="top:'+tp+'px;height:'+hp+'px;padding-top:7px;left:'+leftOff+';width:'+colW+';right:'+rightOff+';" data-bkid="'+bk.id+'" onmousedown="startDrag(event,\''+bk.id+'\')" ontouchstart="startDrag(event,\''+bk.id+'\')" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">'
-          +'<div class="groomer-bar '+(bk.groomer||'becky')+'"></div>'
+        var groomerCls=bk.groomer==='poppy'?'groomer-poppy-block':bk.groomer==='both'?'groomer-both-block':'';
+        body+='<div class="bk '+svcCls+' '+groomerCls+'" style="top:'+tp+'px;height:'+hp+'px;padding-top:7px;left:'+leftOff+';width:'+colW+';right:'+rightOff+';" data-bkid="'+bk.id+'" onmousedown="startDrag(event,\''+bk.id+'\')" ontouchstart="startDrag(event,\''+bk.id+'\')" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">'
           +'<div class="pay-dot '+(bk.paid?'paid':'unpaid')+'"></div>'
           +(function(){
             var sessionBadge='';
@@ -1378,8 +1364,7 @@ function renderCal(){
               var circles=['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
               sessionBadge='<span style="font-size:1rem;margin-left:4px;">'+(circles[sessionNum-1]||sessionNum)+'</span>'+(totalSessions?' /'+totalSessions:'');
             }
-            var groomerBadge=bk.groomer&&bk.groomer!=='becky'?'<span class="groomer-badge '+bk.groomer+'">'+(bk.groomer==='poppy'?'P':'B+P')+'</span>':'';
-            return '<div class="bn">'+bk.name+(totalBlocks>1?' — '+bl.dogName:'')+sessionBadge+groomerBadge+'</div>';
+            return '<div class="bn">'+bk.name+(totalBlocks>1?' — '+bl.dogName:'')+sessionBadge+'</div>';
           })()
           +'<div class="bd">'+bl.dogName+(bl.breed?' ('+bl.breed+')':'')+'</div>'          +'<div class="bs">'+svc+'</div>'
           +'<div class="bt">'+fmtTime(slotTime)+' - '+fmtTime(finTime)+'</div>'
