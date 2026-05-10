@@ -313,7 +313,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
       <button onclick="saveStaffRate()" style="background:#b45309;color:white;border:none;padding:6px 14px;border-radius:7px;font-size:0.83rem;font-weight:600;cursor:pointer;">Save Rate</button>
       <span id="staffRateNote" style="font-size:0.78rem;color:#92400e;"></span>
     </div>
-    <table class="earn-table"><thead><tr><th>Date</th><th>Hours worked</th><th>Cost</th><th>Revenue that day</th><th>Covered?</th><th></th></tr></thead><tbody id="staffBody"></tbody></table>
+    <table class="earn-table"><thead><tr><th>Date</th><th>Times</th><th>Hours</th><th>Cost</th><th>Revenue that day</th><th>Covered?</th><th></th></tr></thead><tbody id="staffBody"></tbody></table>
     <button onclick="openLogHours()" style="margin-top:10px;background:#b45309;color:white;border:none;padding:7px 16px;border-radius:7px;font-size:0.83rem;font-weight:600;cursor:pointer;">+ Log Staff Hours</button>
   </div>
 </div>
@@ -323,7 +323,15 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
   <div class="modal" style="width:380px;">
     <h2 id="staffModalTitle">Log Staff Hours</h2>
     <div class="fg"><label>Date</label><input type="date" id="staff-date"></div>
-    <div class="fg"><label>Hours worked</label><input type="number" id="staff-hours" min="0" step="0.25" placeholder="e.g. 4.5"></div>
+    <div class="frow">
+      <div class="fg"><label>Start time</label><input type="time" id="staff-start" oninput="calcStaffHours()"></div>
+      <div class="fg"><label>End time</label><input type="time" id="staff-end" oninput="calcStaffHours()"></div>
+      <div class="fg"><label>Break (mins)</label><input type="number" id="staff-break" min="0" step="5" placeholder="0" value="0" oninput="calcStaffHours()"></div>
+    </div>
+    <div id="staffHoursCalc" style="display:none;background:#f0f6ff;border:1px solid #c2d9f0;border-radius:8px;padding:10px 14px;font-size:0.88rem;color:#1e3a5f;margin-bottom:10px;">
+      ⏱ Hours worked: <strong id="staffHoursResult">—</strong>
+      <span id="staffCostResult" style="margin-left:12px;color:#b45309;font-weight:600;"></span>
+    </div>
     <div class="fg"><label>Notes (optional)</label><input type="text" id="staff-notes" placeholder="e.g. half day, late start..."></div>
     <div class="modal-btns">
       <button class="btn-del" id="btnStaffDel" onclick="deleteStaffHours()" style="display:none">Delete</button>
@@ -1920,6 +1928,24 @@ function renderEarnings(){
 // ── STAFF HOURS ────────────────────────────────────────────────────────────
 var editStaffId=null;
 
+function calcStaffHours(){
+  var start=document.getElementById('staff-start').value;
+  var end=document.getElementById('staff-end').value;
+  var brk=parseInt(document.getElementById('staff-break').value)||0;
+  var calc=document.getElementById('staffHoursCalc');
+  if(!start||!end){calc.style.display='none';return;}
+  var sm=timeToMins(start), em=timeToMins(end);
+  if(em<=sm){calc.style.display='none';return;}
+  var worked=((em-sm-brk)/60);
+  if(worked<=0){calc.style.display='none';return;}
+  document.getElementById('staffHoursResult').textContent=worked.toFixed(2)+' hrs';
+  var costEl=document.getElementById('staffCostResult');
+  if(staffHourlyRate>0){
+    costEl.textContent='= £'+(worked*staffHourlyRate).toFixed(2);
+  } else { costEl.textContent=''; }
+  calc.style.display='block';
+}
+
 function saveStaffRate(){
   var val=parseFloat(document.getElementById('staffRateInput').value);
   if(!val||val<=0){alert('Please enter a valid hourly rate.');return;}
@@ -1934,8 +1960,11 @@ function openLogHours(dateStr){
   document.getElementById('staffModalTitle').textContent='Log Staff Hours';
   document.getElementById('btnStaffDel').style.display='none';
   document.getElementById('staff-date').value=dateStr||fmtISO(new Date());
-  document.getElementById('staff-hours').value='';
+  document.getElementById('staff-start').value='';
+  document.getElementById('staff-end').value='';
+  document.getElementById('staff-break').value='0';
   document.getElementById('staff-notes').value='';
+  document.getElementById('staffHoursCalc').style.display='none';
   document.getElementById('staffOverlay').classList.add('open');
 }
 
@@ -1946,8 +1975,11 @@ function openEditStaffHours(id){
   document.getElementById('staffModalTitle').textContent='Edit Staff Hours';
   document.getElementById('btnStaffDel').style.display='block';
   document.getElementById('staff-date').value=h.date;
-  document.getElementById('staff-hours').value=h.hours;
+  document.getElementById('staff-start').value=h.start||'';
+  document.getElementById('staff-end').value=h.end||'';
+  document.getElementById('staff-break').value=h.break||0;
   document.getElementById('staff-notes').value=h.notes||'';
+  calcStaffHours();
   document.getElementById('staffOverlay').classList.add('open');
 }
 
@@ -1955,9 +1987,14 @@ function closeLogHours(){document.getElementById('staffOverlay').classList.remov
 
 function saveStaffHours(){
   var date=document.getElementById('staff-date').value;
-  var hours=parseFloat(document.getElementById('staff-hours').value);
-  if(!date||!hours||hours<=0){alert('Please enter a date and hours worked.');return;}
-  var entry={id:editStaffId||('sh-'+Date.now()),date:date,hours:hours,notes:document.getElementById('staff-notes').value.trim()};
+  var start=document.getElementById('staff-start').value;
+  var end=document.getElementById('staff-end').value;
+  var brk=parseInt(document.getElementById('staff-break').value)||0;
+  if(!date||!start||!end){alert('Please enter a date, start time and end time.');return;}
+  var sm=timeToMins(start), em=timeToMins(end);
+  var hours=Math.max(0,(em-sm-brk)/60);
+  if(hours<=0){alert('End time must be after start time.');return;}
+  var entry={id:editStaffId||('sh-'+Date.now()),date:date,start:start,end:end,break:brk,hours:hours,notes:document.getElementById('staff-notes').value.trim()};
   if(editStaffId){staffHours=staffHours.map(function(h){return h.id===editStaffId?entry:h;});}
   else{staffHours.push(entry);}
   localStorage.setItem('stbStaffHours',JSON.stringify(staffHours));
@@ -1998,7 +2035,8 @@ function renderStaffTable(range){
       :'—';
     return '<tr>'
       +'<td>'+fmtDD(h.date)+(h.notes?'<br><span style="font-size:0.74rem;color:#94a3b8;">'+h.notes+'</span>':'')+'</td>'
-      +'<td>'+parseFloat(h.hours).toFixed(1)+' hrs</td>'
+      +'<td>'+(h.start&&h.end?fmtTime(h.start)+' – '+fmtTime(h.end)+(h.break?'<br><span style="font-size:0.74rem;color:#94a3b8;">'+h.break+'min break</span>':''):'—')+'</td>'
+      +'<td>'+parseFloat(h.hours).toFixed(2)+' hrs</td>'
       +'<td style="color:#b45309;font-weight:600;">'+( staffHourlyRate>0?'£'+cost.toFixed(2):'Set rate above')+'</td>'
       +'<td>£'+dayRevenue.toFixed(2)+'</td>'
       +'<td>'+coveredStr+'</td>'
