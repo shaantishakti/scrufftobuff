@@ -371,7 +371,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
       </div>
       <div id="dogFriendlyFlag" style="display:none;margin-top:6px;border-radius:7px;padding:7px 10px;font-size:0.82rem;"></div>
     </div>
-    <div class="fg sug-wrap"><label>Customer Name</label><input type="text" id="f-name" placeholder="Start typing to find a returning customer..." autocomplete="off" oninput="onNameInput(this.value);checkGroomerWarning()"><div class="sug-box" id="sugBox"></div></div>
+    <div class="fg sug-wrap"><label>Customer Name</label><input type="text" id="f-name" placeholder="Start typing to find a returning customer..." autocomplete="off" oninput="onNameInput(this.value)"><div class="sug-box" id="sugBox"></div></div>
     <div class="frow">
       <div class="fg"><label>WhatsApp Number</label><input type="tel" id="f-phone" placeholder="07700 900000"></div>
       <div class="fg"><label>Visit Number</label><input type="number" id="f-visits" min="1" value="1" onchange="checkDiscountFromForm()"></div>
@@ -385,15 +385,6 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
     <div class="frow">
       <div class="fg"><label>Finish Time</label><input type="text" id="f-finish" readonly placeholder="Auto-calculated"></div>
       <div class="fg"><label>Notes (optional)</label><input type="text" id="f-notes" placeholder="Any special requirements..."></div>
-    </div>
-    <div class="fg">
-      <label>Groomer</label>
-      <div class="tog">
-        <input type="radio" name="groomer" id="gr-becky" value="becky" checked onchange="checkGroomerWarning()"><label for="gr-becky">💚 Becky</label>
-        <input type="radio" name="groomer" id="gr-poppy" value="poppy" onchange="checkGroomerWarning()"><label for="gr-poppy">💜 Poppy</label>
-        <input type="radio" name="groomer" id="gr-both" value="both" onchange="checkGroomerWarning()"><label for="gr-both">💙 Both</label>
-      </div>
-      <div id="groomerWarning"></div>
     </div>
     <div class="fg" id="referralGroup" style="display:none">
       <label>Referred by (optional)</label>
@@ -571,7 +562,7 @@ function upsertCustomer(b){
       // Groom-type services take priority for storing last service/price/duration.
       // If there's no groom in the booking (e.g. nails-only dog), fall back to whatever was done.
       var GROOM_SVCS=['Full Groom','Wash & Dry','Trim & Tidy','Hand Stripping','De-shed Treatment','Puppy Groom','Puppy Intro (Inc. Bath) - £28','Puppy Intro (Exc. Bath) - £15'];
-      var allSvcs=d.services&&d.services.length?d.services:[{service:d.service,duration:d.duration,price:d.price}];
+      var allSvcs=d.services&&d.services.length?d.services:[{service:d.service,duration:d.duration,price:d.price,groomer:d.groomer}];
       var groomSvc=allSvcs.find(function(sv){return GROOM_SVCS.indexOf(sv.service)>=0;});
       var svcToStore=groomSvc||allSvcs[0];
       if(svcToStore){
@@ -582,7 +573,14 @@ function upsertCustomer(b){
           existing.lastPrice=newPrice;
         }
         if(svcToStore.duration)existing.lastDuration=parseInt(svcToStore.duration);
+        if(svcToStore.groomer)existing.lastGroomer=svcToStore.groomer;
       }
+      // Also store groomer per service name for future pre-fill
+      if(!existing.serviceGroomers)existing.serviceGroomers={};
+      allSvcs.forEach(function(sv){
+        if(sv.service&&sv.groomer&&sv.groomer!=='becky')existing.serviceGroomers[sv.service]=sv.groomer;
+        else if(sv.service&&sv.groomer==='becky')existing.serviceGroomers[sv.service]='becky';
+      });
     });
   }
   localStorage.setItem('stbCustomers',JSON.stringify(customers));
@@ -691,7 +689,8 @@ function loadDogsFromCustomer(c,selectedIndices){
     dogServices[idx]=[{
       service:d.lastService||'',
       duration:d.lastDuration||60,
-      price:d.lastPrice||''
+      price:d.lastPrice||'',
+      groomer:d.serviceGroomers&&d.lastService&&d.serviceGroomers[d.lastService]?d.serviceGroomers[d.lastService]:(d.lastGroomer||'becky')
     }];
     dogInfo[idx]={name:d.name||'',breed:d.breed||''};
   });
@@ -787,6 +786,13 @@ function renderServiceRows(dogIdx){
       +'<div class="fg"><label>Duration</label><select id="f-duration-'+dogIdx+'-'+s+'" onchange="calcFinish()"></select></div>'
       +'<div class="fg"><label>Price £</label><input type="number" id="f-price-'+dogIdx+'-'+s+'" min="0" step="0.50" placeholder="0.00" value="'+(svcs[s].price||'')+'" style="width:100%;"></div>'
       +'</div>'
+      +'<div style="margin-top:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
+      +'<span style="font-size:0.75rem;font-weight:600;color:#4a7aaa;">Groomer:</span>'
+      +'<label style="font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:3px;"><input type="radio" name="gr-'+dogIdx+'-'+s+'" value="becky" '+((!svcs[s].groomer||svcs[s].groomer==='becky')?'checked':'')+' onchange="onSvcGroomerChange('+dogIdx+','+s+')"> 💚 Becky</label>'
+      +'<label style="font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:3px;"><input type="radio" name="gr-'+dogIdx+'-'+s+'" value="poppy" '+(svcs[s].groomer==='poppy'?'checked':'')+' onchange="onSvcGroomerChange('+dogIdx+','+s+')"> 💜 Poppy</label>'
+      +'<label style="font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:3px;"><input type="radio" name="gr-'+dogIdx+'-'+s+'" value="both" '+(svcs[s].groomer==='both'?'checked':'')+' onchange="onSvcGroomerChange('+dogIdx+','+s+')"> 💙 Both</label>'
+      +'</div>'
+      +'<div id="grwarn-'+dogIdx+'-'+s+'" style="display:none;margin-top:4px;background:#fdeaea;border:1px solid #e8b0b0;border-radius:6px;padding:5px 8px;font-size:0.78rem;color:#8b2020;"></div>'
       +'</div>';
   }
   cont.innerHTML=html;
@@ -819,7 +825,7 @@ function onSvcChange(dogIdx,svcIdx){
     var priceEl=document.getElementById('f-price-'+dogIdx+'-'+svcIdx);
     if(priceEl&&!priceEl.value)priceEl.value=SVC_PRICES[v].toFixed(2);
   }
-  checkGroomerWarning();
+  checkGroomerWarning(dogIdx,svcIdx);
   calcFinish();
 }
 
@@ -838,6 +844,8 @@ function saveServiceRowsToState(dogIdx){
     if(svcEl) svcs[s].service = svcEl.value;
     if(durEl) svcs[s].duration = parseInt(durEl.value)||60;
     if(priceEl) svcs[s].price = priceEl.value;
+    var grEl=document.querySelector('input[name="gr-'+dogIdx+'-'+s+'"]:checked');
+    if(grEl) svcs[s].groomer=grEl.value;
     if(otherEl) svcs[s].otherText = otherEl.value;
   }
 }
@@ -1077,40 +1085,45 @@ function loadDogFriendlyStatus(c,bookingVal){
   }
 }
 
-function checkGroomerWarning(){
-  var groomer=(document.querySelector('input[name="groomer"]:checked')||{value:'becky'}).value;
-  var warn=document.getElementById('groomerWarning');
+function onSvcGroomerChange(dogIdx,svcIdx){
+  checkGroomerWarning(dogIdx,svcIdx);
+  updateBookingGroomerClass();
+}
+
+function checkGroomerWarning(dogIdx,svcIdx){
+  var warn=document.getElementById('grwarn-'+dogIdx+'-'+svcIdx);
   if(!warn)return;
+  var grEl=document.querySelector('input[name="gr-'+dogIdx+'-'+svcIdx+'"]:checked');
+  var groomer=grEl?grEl.value:'becky';
   if(groomer!=='poppy'){warn.style.display='none';return;}
   var warnings=[];
-  // Restricted customers
+  var POPPY_NO=['Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning','Emmi-Pet Teeth Cleaning PAYG','Emmi-Pet Teeth Cleaning x4','Emmi-Pet Teeth Cleaning x9','Emmi-Pet Teeth Maintenance','Teeth Descaling','Teeth Cleaning','Descaling'];
   var name=(document.getElementById('f-name').value||'').toLowerCase();
   if(name.indexOf('tia bliss')>=0)warnings.push('Poppy does not groom for Tia Bliss');
   if(name.indexOf('jenny churchyard')>=0)warnings.push('Poppy does not groom for Jenny Churchyard');
-  // Restricted services
-  var POPPY_NO=['Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning','Emmi-Pet Teeth Cleaning PAYG','Emmi-Pet Teeth Cleaning x4','Emmi-Pet Teeth Cleaning x9','Emmi-Pet Teeth Maintenance','Teeth Descaling','Teeth Cleaning','Descaling'];
-  // Check all service dropdowns
-  for(var i=1;i<=dogCount;i++){
-    var dogName=(document.getElementById('f-dog-'+i)||{}).value||'';
-    if(dogName.toLowerCase().indexOf('rufus')>=0)warnings.push('Poppy does not groom Rufus');
-    var svcs=dogServices[i]||[];
-    svcs.forEach(function(sv){
-      if(POPPY_NO.indexOf(sv.service)>=0)warnings.push('Poppy does not do: '+sv.service);
-    });
-    // Also check live dropdowns
-    for(var s=0;s<10;s++){
-      var sel=document.getElementById('f-service-'+i+'-'+s);
-      if(!sel)break;
-      if(POPPY_NO.indexOf(sel.value)>=0&&warnings.indexOf('Poppy does not do: '+sel.value)<0)
-        warnings.push('Poppy does not do: '+sel.value);
-    }
-  }
+  var dogName=(document.getElementById('f-dog-'+dogIdx)||{}).value||'';
+  if(dogName.toLowerCase().indexOf('rufus')>=0)warnings.push('Poppy does not groom Rufus');
+  var svcEl=document.getElementById('f-service-'+dogIdx+'-'+svcIdx);
+  if(svcEl&&POPPY_NO.indexOf(svcEl.value)>=0)warnings.push('Poppy does not do: '+svcEl.value);
   if(warnings.length){
     warn.style.display='block';
     warn.innerHTML='⚠️ '+[...new Set(warnings)].join(' · ');
   } else {
     warn.style.display='none';
   }
+}
+
+function updateBookingGroomerClass(){
+  // Derive overall groomer for calendar block from all services
+  // If all becky → becky, all poppy → poppy, mixed → both
+  saveServiceRowsToState(1);
+  var groomers=[];
+  for(var i=1;i<=dogCount;i++){
+    var svcs=dogServices[i]||[];
+    svcs.forEach(function(sv){if(sv.groomer)groomers.push(sv.groomer);});
+  }
+  var unique=[...new Set(groomers)];
+  return unique.length===1?unique[0]:(unique.length>1?'both':'becky');
 }
 
 function checkDiscount(name,visits,lp){
@@ -1428,8 +1441,6 @@ function clearForm(){
   document.getElementById('p-unpaid').checked=true;
   document.getElementById('payMethodGroup').style.display='none';
   document.getElementById('ct-existing').checked=true;
-  document.getElementById('gr-becky').checked=true;
-  document.getElementById('groomerWarning').style.display='none';
   document.getElementById('df-unknown').checked=true;
   loadDogFriendlyStatus(null,'unknown');
   dogInfo={};dogServices={};
@@ -1470,9 +1481,6 @@ function openEdit(id){
   if(cNs&&cNs.noShow){btnNs.textContent='✓ Undo No Show';btnNs.style.background='#64748b';}
   else{btnNs.textContent='✗ No Show';btnNs.style.background='#e05252';}
   checkNoshowFlag(b.name);
-  var grEl=document.getElementById('gr-'+(b.groomer||'becky'));
-  if(grEl)grEl.checked=true;
-  checkGroomerWarning();
   document.getElementById('f-name').value=b.name;
   var cEdit=getCustomer(b.name);
   loadDogFriendlyStatus(cEdit,b.dogFriendly);
@@ -1505,7 +1513,7 @@ function openEdit(id){
     // Pre-populate dogServices so renderDogRows uses the saved data
     b.dogs.forEach(function(d,i){
       var idx=i+1;
-      dogServices[idx]=d.services&&d.services.length?d.services.map(function(sv){return {service:sv.service||'',duration:sv.duration||60,price:sv.price||''};}):[{service:d.service||'',duration:d.duration||60,price:d.price||''}];
+      dogServices[idx]=d.services&&d.services.length?d.services.map(function(sv){return {service:sv.service||'',duration:sv.duration||60,price:sv.price||'',groomer:sv.groomer||'becky'};}):[{service:d.service||'',duration:d.duration||60,price:d.price||'',groomer:d.groomer||'becky'}];
       dogInfo[idx]={name:d.name||'',breed:d.breed||''};
     });
     setDogCount(b.dogs.length,true);
@@ -1641,7 +1649,7 @@ function saveBooking(){
     notes:document.getElementById('f-notes').value.trim(),
     referral:document.getElementById('f-referral').value.trim(),
     dogFriendly:(document.querySelector('input[name="dogfriendly"]:checked')||{value:'unknown'}).value,
-    groomer:(document.querySelector('input[name="groomer"]:checked')||{value:'becky'}).value,
+    groomer:updateBookingGroomerClass(),
     paid:paid,
     payMethod:paid&&pmEl?pmEl.value:null,
     splitPayment:(paid&&pmEl&&pmEl.value==='split')?{cash:splitCash,card:splitCard,monzo:splitMonzo}:null,
