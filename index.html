@@ -1881,7 +1881,7 @@ function sendRebookMsg(){
     +'&dog='+encodeURIComponent(dog)
     +'&breed='+encodeURIComponent((b.dogs&&b.dogs.length?b.dogs[0].breed:b.breed)||'')
     +'&lastdate='+encodeURIComponent(b.date);
-  openWA(b.phone,'Hi '+titleCase(b.name)+'! It was great seeing '+dog+' today 🐾\n\nWhenever you\'re ready to rebook, you can choose your next appointment using the link below — just pick how many weeks ahead suits you and it\'ll find the right day for you!\n\n👇 '+rebookUrl+'\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
+  openWA(b.phone,'Hi '+titleCase(b.name)+'! Would you like to rebook? Did you know you can now do it online — just click the link below and pick your next slot!\n\n\uD83D\uDC47 '+rebookUrl+'\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
 }
 
 function buildDogSummary(b){
@@ -2827,7 +2827,7 @@ function checkRebookNudge(){
 
 function sendRebookNudge(name,phone){
   if(!phone)return;
-  openWA(phone,'Hi '+titleCase(name)+'! 🐾 We haven\'t seen your pup in a while — whenever you\'re ready to book in again, you can choose your next appointment here:\n\nhttps://shaantishakti.github.io/scrufftobuff/book.html\n\nWould love to see you both again soon!\nBecky - Scruff to Buff Dogs');
+  openWA(phone,'Hi '+titleCase(name)+'! Would you like to rebook with Scruff to Buff Dogs? Did you know you can now do it online — just click the link below and pick your next slot!\n\n\uD83D\uDC47 https://shaantishakti.github.io/scrufftobuff/book.html\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
 }
 
 function checkSundayAutoExport(){
