@@ -529,6 +529,8 @@ function fmtISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,
 function titleCase(s){if(!s)return'';return s.toLowerCase().split(' ').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');}
 function fmtDD(ds){var d=new Date(ds+'T12:00:00');return d.getDate()+' '+FMONS[d.getMonth()]+' '+d.getFullYear();}
 function fmtTime(ts){if(!ts)return'';var parts=ts.split(':');var h=parseInt(parts[0]),m=parseInt(parts[1]);return(h%12||12)+':'+(m<10?'0'+m:''+m)+(h>=12?'pm':'am');}
+function timeToMins(ts){if(!ts)return 0;var parts=ts.split(':');return parseInt(parts[0])*60+(parseInt(parts[1])||0);}
+function minsToTime(mins){return(Math.floor(mins/60)<10?'0':'')+Math.floor(mins/60)+':'+(mins%60<10?'0':'')+mins%60;}
 function addMins(ts,mins){if(!ts)return'';var parts=ts.split(':');var h=parseInt(parts[0]),m=parseInt(parts[1]);var t=h*60+m+mins;return(Math.floor(t/60)%24<10?'0':'')+Math.floor(t/60)%24+':'+(t%60<10?'0':'')+t%60;}
 function fmtPhone(p){if(!p)return'';var c=p.replace(/\s+/g,'').replace(/^\+/,'');if(c.charAt(0)==='0')c='44'+c.slice(1);return c;}
 function openWA(phone,msg){window.open('https://wa.me/'+fmtPhone(phone)+'?text='+encodeURIComponent(msg),'_blank');}
@@ -2810,19 +2812,33 @@ function checkRebookNudge(){
   });
 
   if(!overdue.length)return;
+  var dismissed=JSON.parse(localStorage.getItem('stbDismissedRebook')||'[]');
   var banner=document.getElementById('reminderBanner');
   var list=document.getElementById('reminderList');
   banner.classList.add('show');
-  var html=overdue.map(function(o){
+  var html=overdue.filter(function(o){return dismissed.indexOf(o.name)<0;}).map(function(o){
+    var safeId='rebook-'+o.name.replace(/[^a-zA-Z0-9]/g,'_');
     var weeks=Math.floor((today-new Date(o.lastDate+'T12:00:00'))/(7*864e5));
-    return '<div class="banner-chip rebook-chip">'
+    return '<div class="banner-chip rebook-chip" id="'+safeId+'">'
       +'<span>&#128337;</span>'
       +'<strong>'+o.name+'</strong>'
       +' — last seen '+weeks+' weeks ago'
       +(o.phone?'<button class="btn-wa-sm" style="background:#f59e0b;" onclick="sendRebookNudge(\''+o.name+'\',\''+o.phone+'\')">Rebook</button>':'')
+      +'<button class="btn-wa-sm" style="background:#94a3b8;margin-left:2px;" onclick="dismissRebookChip(\''+o.name.replace(/'/g,"\\'")+'\')" title="Dismiss">&#10005;</button>'
       +'</div>';
   }).join('');
   list.innerHTML=list.innerHTML+html;
+}
+
+function dismissRebookChip(name){
+  var dismissed=JSON.parse(localStorage.getItem('stbDismissedRebook')||'[]');
+  if(dismissed.indexOf(name)<0)dismissed.push(name);
+  localStorage.setItem('stbDismissedRebook',JSON.stringify(dismissed));
+  var safeId='rebook-'+name.replace(/[^a-zA-Z0-9]/g,'_');
+  var chip=document.getElementById(safeId);
+  if(chip)chip.remove();
+  var list=document.getElementById('reminderList');
+  if(list&&!list.children.length)document.getElementById('reminderBanner').classList.remove('show');
 }
 
 function sendRebookNudge(name,phone){
