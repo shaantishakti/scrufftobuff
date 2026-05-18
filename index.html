@@ -1790,13 +1790,57 @@ function renderWaButtons(){
   var isStrip=false;
   if(b&&b.dogs){b.dogs.forEach(function(d){var svcs=d.services&&d.services.length?d.services:[{service:d.service}];svcs.forEach(function(sv){if((sv.service||'').indexOf('Hand Strip')>-1)isStrip=true;});});}
   var stripBtn=isStrip?'<button class="btn-wa" style="background:#6b4226;" onclick="sendHandStripPriceMsg()"><span><span class="wa-title">Send Hand Stripping Price Notice</span><span class="wa-sub">Let client know current rate is £65/hr</span></span></button>':'';
+  var rebookNowBtn='<button class="btn-wa" style="background:#2d6a4f;" onclick="rebookNow()"><span><span class="wa-title">📅 Rebook Next Appointment</span><span class="wa-sub">Pre-fill a new booking from this one</span></span></button>';
   var rebookBtn='<button class="btn-wa" style="background:#0ea5e9;" onclick="sendRebookMsg()"><span><span class="wa-title">Send Rebook Link</span><span class="wa-sub">Let client choose 6–10 weeks ahead on same day</span></span></button>';
   var reviewBtn='<button class="btn-wa" style="background:#34a853;" onclick="sendGoogleReviewMsg()"><span><span class="wa-title">Request Google Review ⭐</span><span class="wa-sub">Send link to your Google review page</span></span></button>';
   var cancelFeeBtn='<button class="btn-wa" style="background:#e05252;" onclick="sendCancelFeeMsg()"><span><span class="wa-title">Send Cancellation Fee Notice</span><span class="wa-sub">Politely request late cancellation fee</span></span></button>';
-  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
-  else{cont.innerHTML='<button class="btn-wa" onclick="sendConfirmMsg(null)"><span><span class="wa-title">Send Confirmation</span><span class="wa-sub">Booking confirmed with appointment details</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
+  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookNowBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
+  else{cont.innerHTML='<button class="btn-wa" onclick="sendConfirmMsg(null)"><span><span class="wa-title">Send Confirmation</span><span class="wa-sub">Booking confirmed with appointment details</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookNowBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
 }
 function getCurrent(){return editId?bookings.find(function(b){return b.id===editId;}):null;}
+
+function rebookNow(){
+  var b=getCurrent();if(!b)return;
+  // Close current booking
+  closeMain();
+  // Open a fresh booking pre-filled with the same details but no date/time
+  setTimeout(function(){
+    openAdd();
+    setTimeout(function(){
+      // Fill customer details
+      document.getElementById('f-name').value=b.name;
+      document.getElementById('f-phone').value=b.phone||'';
+      document.getElementById('f-visits').value=(parseInt(b.visits)||1)+1;
+      document.getElementById('f-notes').value=b.notes||'';
+      // Copy customer type
+      var ctEl=document.getElementById('ct-'+(b.ct||'existing'));
+      if(ctEl)ctEl.checked=true;
+      // Copy dog info and services
+      dogInfo={};dogServices={};
+      if(b.dogs&&b.dogs.length){
+        b.dogs.forEach(function(d,i){
+          var idx=i+1;
+          dogInfo[idx]={name:d.name||'',breed:d.breed||'',notes:d.notes||'',dob:d.dob||''};
+          dogServices[idx]=d.services&&d.services.length
+            ?d.services.map(function(sv){return {service:sv.service||'',duration:sv.duration||60,price:sv.price||'',groomer:sv.groomer||'becky'};})
+            :[{service:d.service||'',duration:d.duration||60,price:d.price||'',groomer:d.groomer||'becky'}];
+        });
+        setDogCount(b.dogs.length,true);
+      }
+      // Copy groomer at booking level if set
+      var c=getCustomer(b.name);
+      if(c){
+        checkDiscount(c.name,document.getElementById('f-visits').value,c.dogs&&c.dogs[0]?c.dogs[0].lastPrice:null);
+        loadDogFriendlyStatus(c);
+        showAvgGroomTime(c.name);
+      }
+      // Leave date/time blank so they pick the new slot
+      document.getElementById('f-date').value='';
+      document.getElementById('f-time').value='';
+      document.getElementById('f-finish').value='';
+    },200);
+  },300);
+}
 
 function sendHandStripPriceMsg(){
   var b=getCurrent();if(!b||!b.phone)return;
