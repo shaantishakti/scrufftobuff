@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--cream:#f0f6ff;--brown:#1e3a5f;--tan:#5b9bd5;--tan-light:#c2d9f0;--unpaid:#e05252;--unpaid-bg:#fdeaea;--paid:#3a9e6e;--paid-bg:#e6f7ef;--blocked:#64748b;--blocked-bg:#cbd5e1;--wa:#25D366;--wa-dark:#128C7E;--cash:#f59e0b;--card:#6366f1;--monzo:#ef4444;}
+:root{--cream:#f0f6ff;--brown:#1e3a5f;--tan:#5b9bd5;--tan-light:#c2d9f0;--unpaid:#e05252;--unpaid-bg:#fdeaea;--paid:#3a9e6e;--paid-bg:#e6f7ef;--blocked:#64748b;--blocked-bg:#cbd5e1;--wa:#25D366;--wa-dark:#128C7E;--cash:#f59e0b;--card:#6366f1;--monzo:#ef4444;--becky:#2d6a4f;--becky-bg:#d1f0d1;--poppy:#7c3aed;--poppy-bg:#e9d5f5;--both:#1e3a5f;--both-bg:#dbeafe;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--brown);min-height:100vh;}
 header{background:var(--brown);color:var(--cream);padding:14px 28px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
@@ -204,32 +204,13 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 .noshow-flag span{font-weight:400;color:#7a2020;display:block;margin-top:2px;font-size:0.78rem;}
 .btn-noshow{background:#e05252;color:white;border:none;border-radius:7px;padding:6px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;margin-left:8px;}
 .btn-noshow:hover{background:#c0392b;}
-.svc-full-groom{background:#a8c8e8!important;border-left:4px solid #7aaad0!important;}
-.svc-hand-stripping{background:#c2610a!important;border-left:4px solid #9a4d08!important;}
-.svc-nails{background:#6b3fa0!important;border-left:4px solid #4e2c78!important;}
-.svc-wash-dry{background:#800020!important;border-left:4px solid #5c0018!important;}
-.svc-trim-tidy{background:#c9a800!important;border-left:4px solid #a08600!important;}
-.svc-puppy{background:#e05a8a!important;border-left:4px solid #c0426f!important;}
-.svc-emmi{background:#3ab8a0!important;border-left:4px solid #2a9080!important;}
-.svc-descaling{background:#3ab8a0!important;border-left:4px solid #2a9080!important;}
-.svc-anal-glands{background:#6b4226!important;border-left:4px solid #4e2f1a!important;}
-.svc-deshed{background:#7ec87e!important;border-left:4px solid #5aaa5a!important;}
-.svc-full-groom .bn,.svc-full-groom .bd,.svc-full-groom .bs,.svc-full-groom .bt,.svc-full-groom .bb{color:#1a3a5c!important;}
-.svc-hand-stripping .bn,.svc-hand-stripping .bd,.svc-hand-stripping .bs,.svc-hand-stripping .bt,.svc-hand-stripping .bb,
-.svc-hand-stripping .bn,.svc-hand-stripping .bd,.svc-hand-stripping .bs,.svc-hand-stripping .bt,.svc-hand-stripping .bb,
-.svc-nails .bn,.svc-nails .bd,.svc-nails .bs,.svc-nails .bt,.svc-nails .bb,
-.svc-wash-dry .bn,.svc-wash-dry .bd,.svc-wash-dry .bs,.svc-wash-dry .bt,.svc-wash-dry .bb,
-.svc-trim-tidy .bn,.svc-trim-tidy .bd,.svc-trim-tidy .bs,.svc-trim-tidy .bt,.svc-trim-tidy .bb,
-.svc-puppy .bn,.svc-puppy .bd,.svc-puppy .bs,.svc-puppy .bt,.svc-puppy .bb,
-.svc-emmi .bn,.svc-emmi .bd,.svc-emmi .bs,.svc-emmi .bt,.svc-emmi .bb,
-.svc-anal-glands .bn,.svc-anal-glands .bd,.svc-anal-glands .bs,.svc-anal-glands .bt,.svc-anal-glands .bb,
-.svc-deshed .bn,.svc-deshed .bd,.svc-deshed .bs,.svc-deshed .bt,.svc-deshed .bb{color:#1a3a1a!important;}
-.svc-descaling .bn,.svc-descaling .bd,.svc-descaling .bs,.svc-descaling .bt,.svc-descaling .bb{color:white!important;}
-.svc-trim-tidy .bn,.svc-trim-tidy .bd,.svc-trim-tidy .bs,.svc-trim-tidy .bt,.svc-trim-tidy .bb{color:#333!important;}
-.svc-default{background:#4a7aaa!important;border-left:4px solid #1e3a5f!important;}
-.svc-default .bn,.svc-default .bd,.svc-default .bs,.svc-default .bt,.svc-default .bb{color:white!important;}
-.svc-default{background:#4a7aaa!important;border-left:4px solid #1e3a5f!important;}
-.svc-default .bn,.svc-default .bd,.svc-default .bs,.svc-default .bt,.svc-default .bb{color:white!important;}
+.svc-full-groom,.svc-hand-stripping,.svc-nails,.svc-wash-dry,.svc-trim-tidy,.svc-puppy,.svc-emmi,.svc-descaling,.svc-anal-glands,.svc-deshed,.svc-default,.bk.paid,.bk.unpaid{background:var(--becky-bg)!important;border-left:4px solid var(--becky)!important;}
+.bk.groomer-poppy{background:var(--poppy-bg)!important;border-left:4px solid var(--poppy)!important;}
+.bk.groomer-both{background:linear-gradient(135deg,var(--becky-bg) 50%,var(--poppy-bg) 50%)!important;border-left:4px solid var(--both)!important;}
+.svc-full-groom .bn,.svc-hand-stripping .bn,.svc-nails .bn,.svc-wash-dry .bn,.svc-trim-tidy .bn,.svc-puppy .bn,.svc-emmi .bn,.svc-anal-glands .bn,.svc-deshed .bn,.svc-descaling .bn,.svc-default .bn,.bk.paid .bn,.bk.unpaid .bn{color:#1a3a1a!important;}
+.bk.groomer-poppy .bn,.bk.groomer-poppy .bd,.bk.groomer-poppy .bs{color:#3b0764!important;}
+.groomer-badge{font-size:0.6rem;font-weight:700;padding:1px 5px;border-radius:8px;display:inline-block;margin-left:3px;}
+#groomerWarning{display:none;background:#fdeaea;border:1px solid #e8b0b0;border-radius:7px;padding:7px 10px;font-size:0.82rem;color:#8b2020;margin-top:6px;}
 
 .dog-row-label{font-size:0.78rem;font-weight:600;color:var(--tan);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;}
 .dog-count-btns{display:flex;gap:7px;margin-bottom:12px;align-items:center;}
@@ -316,6 +297,38 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
     <table class="earn-table"><thead><tr><th>Date</th><th>Customer</th><th>Dog(s)</th><th>Service(s)</th><th>Amount</th><th>Method</th></tr></thead><tbody id="earnBody"></tbody></table>
     <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;margin:24px 0 12px;color:#e05252;">Expenses</h3>
     <table class="earn-table"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th></th></tr></thead><tbody id="expBody"></tbody></table>
+    <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;margin:24px 0 8px;color:#b45309;">Staff Hours — Poppy</h3>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+      <label style="font-size:0.83rem;color:#5a4a3a;font-weight:600;">Hourly rate: £</label>
+      <input type="number" id="staffRateInput" min="0" step="0.01" placeholder="e.g. 12.50" style="width:100px;padding:6px 10px;border:1.5px solid #c2a87a;border-radius:7px;font-size:0.88rem;">
+      <button onclick="saveStaffRate()" style="background:#b45309;color:white;border:none;padding:6px 14px;border-radius:7px;font-size:0.83rem;font-weight:600;cursor:pointer;">Save Rate</button>
+      <span id="staffRateNote" style="font-size:0.78rem;color:#92400e;"></span>
+    </div>
+    <table class="earn-table"><thead><tr><th>Date</th><th>Times</th><th>Hours</th><th>Cost</th><th>Revenue that day</th><th>Covered?</th><th></th></tr></thead><tbody id="staffBody"></tbody></table>
+    <button onclick="openLogHours()" style="margin-top:10px;background:#b45309;color:white;border:none;padding:7px 16px;border-radius:7px;font-size:0.83rem;font-weight:600;cursor:pointer;">+ Log Staff Hours</button>
+  </div>
+</div>
+
+<!-- STAFF HOURS MODAL -->
+<div class="overlay" id="staffOverlay">
+  <div class="modal" style="width:400px;">
+    <h2 id="staffModalTitle">Log Staff Hours</h2>
+    <div class="fg"><label>Date</label><input type="date" id="staff-date"></div>
+    <div class="frow">
+      <div class="fg"><label>Start time</label><input type="time" id="staff-start" oninput="calcStaffHours()"></div>
+      <div class="fg"><label>End time</label><input type="time" id="staff-end" oninput="calcStaffHours()"></div>
+      <div class="fg"><label>Break (mins)</label><input type="number" id="staff-break" min="0" step="5" placeholder="0" value="0" oninput="calcStaffHours()"></div>
+    </div>
+    <div id="staffHoursCalc" style="display:none;background:#f0f6ff;border:1px solid #c2d9f0;border-radius:8px;padding:10px 14px;font-size:0.88rem;color:#1e3a5f;margin-bottom:10px;">
+      ⏱ Hours worked: <strong id="staffHoursResult">—</strong>
+      <span id="staffCostResult" style="margin-left:12px;color:#b45309;font-weight:600;"></span>
+    </div>
+    <div class="fg"><label>Notes (optional)</label><input type="text" id="staff-notes" placeholder="e.g. half day, late start..."></div>
+    <div class="modal-btns">
+      <button class="btn-del" id="btnStaffDel" onclick="deleteStaffHours()" style="display:none">Delete</button>
+      <button class="btn-cancel" onclick="closeLogHours()">Cancel</button>
+      <button class="btn-save" onclick="saveStaffHours()">Save</button>
+    </div>
   </div>
 </div>
 
@@ -382,6 +395,25 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
     </div>
     <div class="noshow-flag" id="noshowFlag">⚠️ Previous No Show — reminders will be sent automatically!<span id="noshowDetail"></span></div>
     <div class="disc-flag" id="discFlag" style="display:none"><strong>6th Visit Loyalty Discount!</strong><br>This is <span id="discName"></span>'s 6th visit &#8212; remember to apply 10% discount.<br>Last price: <strong id="discLast"></strong> &rarr; Discounted: <strong id="discNew"></strong></div>
+    <div class="disc-flag" id="referralFlag" style="display:none;background:#fffbeb;border-color:#f59e0b;color:#92400e;"></div>
+    <div class="fg">
+      <label>Groomer</label>
+      <div class="tog">
+        <input type="radio" name="groomer" id="gr-becky" value="becky" checked onchange="checkGroomerWarning()"><label for="gr-becky">💚 Becky</label>
+        <input type="radio" name="groomer" id="gr-poppy" value="poppy" onchange="checkGroomerWarning()"><label for="gr-poppy">💜 Poppy</label>
+        <input type="radio" name="groomer" id="gr-both" value="both" onchange="checkGroomerWarning()"><label for="gr-both">💙 Both</label>
+      </div>
+      <div id="groomerWarning"></div>
+    </div>
+    <div class="fg">
+      <label>Happy around other dogs?</label>
+      <div class="tog">
+        <input type="radio" name="dogfriendly" id="df-yes" value="yes" onchange="loadDogFriendlyStatus(null,'yes')"><label for="df-yes">✅ Yes</label>
+        <input type="radio" name="dogfriendly" id="df-no" value="no" onchange="loadDogFriendlyStatus(null,'no')"><label for="df-no">❌ No</label>
+        <input type="radio" name="dogfriendly" id="df-unknown" value="unknown" checked onchange="loadDogFriendlyStatus(null,'unknown')"><label for="df-unknown">Not answered</label>
+      </div>
+      <div id="dogFriendlyFlag" style="display:none;margin-top:6px;border-radius:7px;padding:7px 10px;font-size:0.82rem;"></div>
+    </div>
     <div class="frow">
       <div class="fg"><label>Date</label><input type="date" id="f-date"></div>
       <div class="fg"><label>Start Time</label><select id="f-time" onchange="calcFinish()"></select><div class="hint" id="timeHint" style="display:none"></div></div>
@@ -461,6 +493,10 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 </div>
 <script>
 const SUMUP='https://pay.sumup.com/b2c/Q88WCHEE';
+const BANK_NAME='Scruff to Buff Dogs';
+const BANK_SORT='04-00-04';
+const BANK_ACC='20044824';
+const BANK_MSG='\n\n\uD83C\uDFE6 Bank transfer (preferred, no fees):\nAccount name: '+BANK_NAME+'\nSort code: '+BANK_SORT+'\nAccount number: '+BANK_ACC+'\nReference: your name\n\n\uD83D\uDCB3 Card payment: '+SUMUP;
 const SHEET_URL='https://script.google.com/macros/s/AKfycbwG00lLXzSbhkxVaigOD0arI9A9rns4f-i7GoUeKBXzUcRuxoYbXg7FP3cxhrIfVrB3/exec';
 const BIZ='Scruff to Buff Dogs';
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -486,6 +522,8 @@ let bookings=JSON.parse(localStorage.getItem('stbBookings')||'[]');
 let customers=JSON.parse(localStorage.getItem('stbCustomers')||'[]');
 let blocks=JSON.parse(localStorage.getItem('stbBlocks')||'[]');
 let expenses=JSON.parse(localStorage.getItem('stbExpenses')||'[]');
+let staffHours=JSON.parse(localStorage.getItem('stbStaffHours')||'[]');
+var staffHourlyRate=parseFloat(localStorage.getItem('stbStaffRate')||'0');
 let weekStart=getMonday(new Date());
 let mobileOffset=0;
 let editId=null,editBlockId=null;
@@ -498,6 +536,8 @@ function fmtISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,
 function titleCase(s){if(!s)return'';return s.toLowerCase().split(' ').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');}
 function fmtDD(ds){var d=new Date(ds+'T12:00:00');return d.getDate()+' '+FMONS[d.getMonth()]+' '+d.getFullYear();}
 function fmtTime(ts){if(!ts)return'';var parts=ts.split(':');var h=parseInt(parts[0]),m=parseInt(parts[1]);return(h%12||12)+':'+(m<10?'0'+m:''+m)+(h>=12?'pm':'am');}
+function timeToMins(ts){if(!ts)return 0;var parts=ts.split(':');return parseInt(parts[0])*60+(parseInt(parts[1])||0);}
+function minsToTime(mins){return(Math.floor(mins/60)<10?'0':'')+Math.floor(mins/60)+':'+(mins%60<10?'0':'')+mins%60;}
 function addMins(ts,mins){if(!ts)return'';var parts=ts.split(':');var h=parseInt(parts[0]),m=parseInt(parts[1]);var t=h*60+m+mins;return(Math.floor(t/60)%24<10?'0':'')+Math.floor(t/60)%24+':'+(t%60<10?'0':'')+t%60;}
 function fmtPhone(p){if(!p)return'';var c=p.replace(/\s+/g,'').replace(/^\+/,'');if(c.charAt(0)==='0')c='44'+c.slice(1);return c;}
 function openWA(phone,msg){window.open('https://wa.me/'+fmtPhone(phone)+'?text='+encodeURIComponent(msg),'_blank');}
@@ -548,10 +588,17 @@ function upsertCustomer(b){
   if(!c){c={name:name,phone:'',dogs:[],visits:0,lastTime:null};customers.push(c);}
   if(b.phone)c.phone=b.phone;
   c.visits=parseInt(b.visits)||c.visits;
-  // Store last appointment time
   if(b.time)c.lastTime=b.time;
-  // Store referral (only set once — first time)
+  if(b.dogFriendly&&b.dogFriendly!=='unknown')c.dogFriendly=b.dogFriendly;
   if(b.referral&&!c.referredBy)c.referredBy=b.referral;
+  if(b.referral&&parseInt(b.visits)===1){
+    var referrer=getCustomer(titleCase(b.referral));
+    if(referrer&&!referrer.pendingReferralDiscount){
+      referrer.pendingReferralDiscount=true;
+      referrer.referralDiscountEarnedFrom=titleCase(b.name);
+      referrer.referralDiscountEarnedDate=fmtISO(new Date());
+    }
+  }
   // Upsert each dog
   if(!c.dogs)c.dogs=[];
   if(b.dogs&&b.dogs.length){
@@ -628,6 +675,9 @@ function fillCustomer(name){
     // Single dog — pre-populate directly
     loadDogsFromCustomer(c,[0]);
     checkDiscount(c.name,next,c.dogs&&c.dogs[0]?c.dogs[0].lastPrice:null);
+    loadDogFriendlyStatus(c);
+    showAvgGroomTime(c.name);
+    checkReferralFlag(c);
   showAvgGroomTime(c.name);
   }
 }
@@ -671,6 +721,9 @@ function confirmDogPicker(allIndices,custName){
   var nextVisit=window._dogPickerNextVisit;
   loadDogsFromCustomer(c,selected);
   checkDiscount(c.name,nextVisit,c.dogs&&c.dogs[selected[0]]?c.dogs[selected[0]].lastPrice:null);
+  loadDogFriendlyStatus(c);
+  showAvgGroomTime(c.name);
+  checkReferralFlag(c);
 }
 
 function loadDogsFromCustomer(c,selectedIndices){
@@ -1077,6 +1130,309 @@ function showAvgGroomTime(customerName){
   box.style.display='block';
 }
 
+// ── GROOMER ────────────────────────────────────────────────────────────────
+function checkGroomerWarning(){
+  var groomer=(document.querySelector('input[name="groomer"]:checked')||{value:'becky'}).value;
+  var warn=document.getElementById('groomerWarning');
+  if(!warn)return;
+  if(groomer!=='poppy'){warn.style.display='none';return;}
+  var warnings=[];
+  var POPPY_NO=['Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning','Emmi-Pet Teeth Cleaning PAYG','Emmi-Pet Teeth Cleaning x4','Emmi-Pet Teeth Cleaning x9','Emmi-Pet Teeth Maintenance','Teeth Descaling','Teeth Cleaning','Descaling'];
+  var name=(document.getElementById('f-name').value||'').toLowerCase();
+  if(name.indexOf('tia bliss')>=0)warnings.push('Poppy does not groom for Tia Bliss');
+  if(name.indexOf('jenny churchyard')>=0)warnings.push('Poppy does not groom for Jenny Churchyard');
+  for(var i=1;i<=dogCount;i++){
+    var dogName=(document.getElementById('f-dog-'+i)||{}).value||'';
+    if(dogName.toLowerCase().indexOf('rufus')>=0)warnings.push('Poppy does not groom Rufus');
+    for(var s=0;s<10;s++){
+      var sel=document.getElementById('f-service-'+i+'-'+s);
+      if(!sel)break;
+      if(POPPY_NO.indexOf(sel.value)>=0&&warnings.indexOf('Poppy does not do: '+sel.value)<0)
+        warnings.push('Poppy does not do: '+sel.value);
+    }
+  }
+  if(warnings.length){warn.style.display='block';warn.innerHTML='⚠️ '+[...new Set(warnings)].join(' · ');}
+  else warn.style.display='none';
+}
+
+// ── DOG FRIENDLY ───────────────────────────────────────────────────────────
+function loadDogFriendlyStatus(c,bookingVal){
+  var val=(c&&c.dogFriendly)||bookingVal||'unknown';
+  var el=document.getElementById('df-'+val);
+  if(el)el.checked=true;
+  else{var u=document.getElementById('df-unknown');if(u)u.checked=true;}
+  var flag=document.getElementById('dogFriendlyFlag');
+  if(!flag)return;
+  if(val==='yes'){
+    flag.style.display='block';flag.style.background='#e8f5ee';flag.style.border='1px solid #a8d5bc';flag.style.color='#2d6a4f';
+    flag.innerHTML='✅ Happy around other dogs';
+  } else if(val==='no'){
+    flag.style.display='block';flag.style.background='#fdeaea';flag.style.border='1px solid #e8b0b0';flag.style.color='#8b2020';
+    flag.innerHTML='❌ Not okay around other dogs — do not book alongside others';
+  } else {
+    flag.style.display='block';flag.style.background='#fff8e8';flag.style.border='1px solid #f0c060';flag.style.color='#7a4f00';
+    flag.innerHTML='⚠️ Dog compatibility not yet confirmed — please ask the owner';
+  }
+}
+
+// ── AVERAGE GROOM TIME ─────────────────────────────────────────────────────
+function showAvgGroomTime(customerName){
+  var box=document.getElementById('avgGroomBox');
+  var txt=document.getElementById('avgGroomText');
+  if(!box||!txt)return;
+  if(!customerName){box.style.display='none';return;}
+  var GROOM_SVCS=['Full Groom','Wash & Dry','Trim & Tidy','Hand Stripping','De-shed Treatment'];
+  var past=bookings.filter(function(b){return b.name&&b.name.toLowerCase()===customerName.toLowerCase()&&b.paid;});
+  if(!past.length){box.style.display='none';return;}
+  var durations=[];
+  past.forEach(function(b){
+    if(b.dogs&&b.dogs.length){
+      b.dogs.forEach(function(d){
+        var svcs=d.services&&d.services.length?d.services:[{service:d.service,duration:d.duration}];
+        svcs.forEach(function(sv){if(sv.duration&&GROOM_SVCS.indexOf(sv.service)>=0)durations.push(parseInt(sv.duration));});
+      });
+    }
+  });
+  if(!durations.length){box.style.display='none';return;}
+  var avg=Math.round(durations.reduce(function(s,d){return s+d;},0)/durations.length);
+  var h=Math.floor(avg/60),m=avg%60;
+  var label=h>0&&m>0?h+'hr '+m+'min':h>0?h+(h===1?' hour':' hours'):m+' mins';
+  txt.textContent='Average groom time for '+titleCase(customerName)+': '+label+' (based on '+durations.length+' groom'+(durations.length!==1?'s':'')+')';
+  box.style.display='block';
+}
+
+// ── REFERRAL FLAG IN BOOKING BOX ───────────────────────────────────────────
+function checkReferralFlag(c){
+  var f=document.getElementById('referralFlag');
+  if(!f)return;
+  if(c&&c.pendingReferralDiscount){
+    var lp=c.dogs&&c.dogs.length&&c.dogs[0].lastPrice?c.dogs[0].lastPrice:null;
+    var discStr=lp?'£'+(parseFloat(lp)*0.9).toFixed(2)+' (was £'+parseFloat(lp).toFixed(2)+')':'10% off';
+    f.style.display='block';
+    f.innerHTML='🎁 <strong>Referral discount earned!</strong> '+(c.referralDiscountEarnedFrom?'Referred by them: <strong>'+c.referralDiscountEarnedFrom+'</strong>. ':'')+' Remember to apply 10% off this booking'+(lp?' — suggested price: <strong>'+discStr+'</strong>':'')+'.<br><span style="font-size:0.78rem;font-weight:400;">Once applied, mark it done in the banner so it clears.</span>';
+  } else {
+    f.style.display='none';
+  }
+}
+
+// ── STAFF HOURS ────────────────────────────────────────────────────────────
+var editStaffId=null;
+function saveStaffRate(){
+  var val=parseFloat(document.getElementById('staffRateInput').value);
+  if(!val||val<=0){alert('Please enter a valid hourly rate.');return;}
+  staffHourlyRate=val;
+  localStorage.setItem('stbStaffRate',val.toString());
+  document.getElementById('staffRateNote').textContent='Saved — £'+val.toFixed(2)+'/hr';
+  renderEarnings();
+}
+function calcStaffHours(){
+  var start=document.getElementById('staff-start').value;
+  var end=document.getElementById('staff-end').value;
+  var brk=parseInt(document.getElementById('staff-break').value)||0;
+  var calc=document.getElementById('staffHoursCalc');
+  if(!start||!end){calc.style.display='none';return;}
+  var sm=timeToMins(start),em=timeToMins(end);
+  if(em<=sm){calc.style.display='none';return;}
+  var worked=(em-sm-brk)/60;
+  if(worked<=0){calc.style.display='none';return;}
+  document.getElementById('staffHoursResult').textContent=worked.toFixed(2)+' hrs';
+  var costEl=document.getElementById('staffCostResult');
+  costEl.textContent=staffHourlyRate>0?'= £'+(worked*staffHourlyRate).toFixed(2):'';
+  calc.style.display='block';
+}
+function openLogHours(dateStr){
+  editStaffId=null;
+  document.getElementById('staffModalTitle').textContent='Log Staff Hours';
+  document.getElementById('btnStaffDel').style.display='none';
+  document.getElementById('staff-date').value=dateStr||fmtISO(new Date());
+  document.getElementById('staff-start').value='';
+  document.getElementById('staff-end').value='';
+  document.getElementById('staff-break').value='0';
+  document.getElementById('staff-notes').value='';
+  document.getElementById('staffHoursCalc').style.display='none';
+  document.getElementById('staffOverlay').classList.add('open');
+}
+function openEditStaffHours(id){
+  var h=staffHours.find(function(x){return x.id===id;});
+  if(!h)return;
+  editStaffId=id;
+  document.getElementById('staffModalTitle').textContent='Edit Staff Hours';
+  document.getElementById('btnStaffDel').style.display='block';
+  document.getElementById('staff-date').value=h.date;
+  document.getElementById('staff-start').value=h.start||'';
+  document.getElementById('staff-end').value=h.end||'';
+  document.getElementById('staff-break').value=h.break||0;
+  document.getElementById('staff-notes').value=h.notes||'';
+  calcStaffHours();
+  document.getElementById('staffOverlay').classList.add('open');
+}
+function closeLogHours(){document.getElementById('staffOverlay').classList.remove('open');}
+function saveStaffHours(){
+  var date=document.getElementById('staff-date').value;
+  var start=document.getElementById('staff-start').value;
+  var end=document.getElementById('staff-end').value;
+  var brk=parseInt(document.getElementById('staff-break').value)||0;
+  if(!date||!start||!end){alert('Please enter a date, start time and end time.');return;}
+  var sm=timeToMins(start),em=timeToMins(end);
+  var hours=Math.max(0,(em-sm-brk)/60);
+  if(hours<=0){alert('End time must be after start time.');return;}
+  var entry={id:editStaffId||('sh-'+Date.now()),date:date,start:start,end:end,break:brk,hours:hours,notes:document.getElementById('staff-notes').value.trim()};
+  if(editStaffId){staffHours=staffHours.map(function(h){return h.id===editStaffId?entry:h;});}
+  else{staffHours.push(entry);}
+  localStorage.setItem('stbStaffHours',JSON.stringify(staffHours));
+  closeLogHours();
+  renderEarnings();
+}
+function deleteStaffHours(){
+  if(!editStaffId||!confirm('Delete this entry?'))return;
+  staffHours=staffHours.filter(function(h){return h.id!==editStaffId;});
+  localStorage.setItem('stbStaffHours',JSON.stringify(staffHours));
+  closeLogHours();
+  renderEarnings();
+}
+function renderStaffTable(range){
+  var tbody=document.getElementById('staffBody');
+  if(!tbody)return;
+  var rateInput=document.getElementById('staffRateInput');
+  if(rateInput&&staffHourlyRate>0&&!rateInput.value)rateInput.value=staffHourlyRate.toFixed(2);
+  var periodStaff=staffHours.filter(function(h){return h.date>=range.start&&h.date<=range.end;});
+  if(!periodStaff.length){tbody.innerHTML='<tr><td colspan="7" class="earn-empty">No hours logged. Click "+ Log Staff Hours" to add.</td></tr>';return;}
+  periodStaff.sort(function(a,b){return a.date.localeCompare(b.date);});
+  tbody.innerHTML=periodStaff.map(function(h){
+    var cost=(parseFloat(h.hours)||0)*staffHourlyRate;
+    var dayRevenue=bookings.filter(function(b){return b.date===h.date&&b.paid;}).reduce(function(s,b){
+      return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.services&&d.services.length?d.services.reduce(function(sss,sv){return sss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):parseFloat(b.lastprice)||0);
+    },0);
+    var covered=staffHourlyRate>0?dayRevenue>=cost:null;
+    var coveredStr=staffHourlyRate>0?'<span style="font-weight:600;color:'+(covered?'#2d6a4f':'#e05252')+'">'+(covered?'✓ Yes':'✗ No — £'+(cost-dayRevenue).toFixed(2)+' short')+'</span>':'—';
+    return '<tr>'
+      +'<td>'+fmtDD(h.date)+(h.notes?'<br><span style="font-size:0.74rem;color:#94a3b8;">'+h.notes+'</span>':'')+'</td>'
+      +'<td>'+(h.start&&h.end?fmtTime(h.start)+' – '+fmtTime(h.end)+(h.break?'<br><span style="font-size:0.74rem;color:#94a3b8;">'+h.break+'min break</span>':''):'—')+'</td>'
+      +'<td>'+parseFloat(h.hours).toFixed(2)+' hrs</td>'
+      +'<td style="color:#b45309;font-weight:600;">'+(staffHourlyRate>0?'£'+cost.toFixed(2):'Set rate above')+'</td>'
+      +'<td>£'+dayRevenue.toFixed(2)+'</td>'
+      +'<td>'+coveredStr+'</td>'
+      +'<td><button class="btn-wa-sm" style="background:#64748b;" onclick="openEditStaffHours(\''+h.id+'\')">Edit</button></td>'
+      +'</tr>';
+  }).join('');
+}
+
+// ── POPPY LATE START ───────────────────────────────────────────────────────
+function checkPoppyLateStart(){
+  var SOLO_SVCS=['Nail Clip','Nail Clip - £13','Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning','Emmi-Pet Teeth Cleaning PAYG','Emmi-Pet Teeth Cleaning x4','Emmi-Pet Teeth Cleaning x9','Emmi-Pet Teeth Maintenance','Anal Glands','Descaling','Teeth Cleaning'];
+  var today=new Date();today.setHours(0,0,0,0);
+  var todayStr=fmtISO(today);
+  var todayBookings=bookings.filter(function(b){return b.date===todayStr&&b.time;});
+  if(!todayBookings.length)return;
+  todayBookings.sort(function(a,b){return a.time.localeCompare(b.time);});
+  var soloCount=0;
+  for(var i=0;i<todayBookings.length;i++){
+    var b=todayBookings[i];
+    var allSolo=(b.dogs&&b.dogs.length?b.dogs:[{services:[{service:b.service||''}]}]).every(function(d){
+      var svcs=d.services&&d.services.length?d.services:[{service:d.service||''}];
+      return svcs.every(function(sv){return SOLO_SVCS.indexOf(sv.service)>=0;});
+    });
+    if(allSolo)soloCount++;else break;
+  }
+  if(!soloCount)return;
+  var firstGroomTime=todayBookings[soloCount]?todayBookings[soloCount].time:null;
+  var msg=soloCount===todayBookings.length
+    ?'All appointments today are solo — Poppy doesn\'t need to come in today!'
+    :'First '+soloCount+' appointment'+(soloCount>1?'s are':' is')+' solo — Poppy\'s start: <strong>'+(firstGroomTime?fmtTime(firstGroomTime):' later')+'</strong>';
+  document.getElementById('reminderBanner').classList.add('show');
+  document.getElementById('rl-poppy').innerHTML='<div class="banner-chip" style="background:#f0fdf4;border-color:#3a9e6e;"><span>🐩</span> '+msg+'</div>';
+}
+
+// ── UNPAID BOOKINGS ────────────────────────────────────────────────────────
+function checkUnpaidBookings(){
+  var today=new Date();today.setHours(0,0,0,0);
+  var todayStr=fmtISO(today);
+  var unpaid=bookings.filter(function(b){return b.date<todayStr&&!b.paid&&!b.noShow&&b.name;});
+  if(!unpaid.length)return;
+  document.getElementById('reminderBanner').classList.add('show');
+  document.getElementById('rl-unpaid').innerHTML=unpaid.map(function(b){
+    var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
+    return '<div class="banner-chip" style="background:#fdeaea;border-color:#e05252;">'
+      +'<span>💳</span><strong>'+b.name+'</strong>'+(dogNames?' ('+dogNames+')':'')+' — unpaid from '+fmtDD(b.date)
+      +(b.phone?'<button class="btn-wa-sm" style="background:#e05252;" onclick="sendPayChaseFromId(\''+b.id+'\')">Chase</button>':'')
+      +'</div>';
+  }).join('');
+}
+
+function sendPayChaseFromId(id){
+  var b=bookings.find(function(x){return x.id===id;});
+  if(!b||!b.phone)return;
+  var total=b.dogs&&b.dogs.length?b.dogs.reduce(function(s,d){return s+(d.price||0);},0):parseFloat(b.lastprice)||0;
+  var apptNote=total>0?' (£'+total.toFixed(2)+')':'';
+  openWA(b.phone,'Hi '+titleCase(b.name)+'! Just going through payments and cannot seem to see one from you for your recent appointment'+apptNote+'.'+BANK_MSG+'\n\nThank you!\nBecky - Scruff to Buff Dogs');
+}
+
+// ── BIRTHDAY REMINDERS ─────────────────────────────────────────────────────
+function checkBirthdayReminders(){
+  var today=new Date();today.setHours(0,0,0,0);
+  var mm=String(today.getMonth()+1).padStart(2,'0');
+  var dd=String(today.getDate()).padStart(2,'0');
+  var todayMMDD=mm+'-'+dd;
+  var birthdays=[];
+  customers.forEach(function(c){
+    if(!c.dogs)return;
+    c.dogs.forEach(function(d){
+      if(!d.dob)return;
+      var parts=d.dob.split('-');
+      if(parts.length<3)return;
+      var dogMMDD=parts[1]+'-'+parts[2];
+      if(dogMMDD===todayMMDD){
+        var age=today.getFullYear()-parseInt(parts[0]);
+        birthdays.push({owner:c.name,dog:d.name,age:age,phone:c.phone||''});
+      }
+    });
+  });
+  if(!birthdays.length)return;
+  document.getElementById('reminderBanner').classList.add('show');
+  document.getElementById('rl-birthday').innerHTML=birthdays.map(function(b){
+    return '<div class="banner-chip" style="background:#fff8e8;border-color:#f59e0b;">'
+      +'<span>🎂</span><strong>'+b.dog+'</strong> is '+b.age+' today! ('+b.owner+'\'s dog)'
+      +(b.phone?'<button class="btn-wa-sm" style="background:#f59e0b;" data-owner="'+b.owner.replace(/"/g,'&quot;')+'" data-dog="'+b.dog.replace(/"/g,'&quot;')+'" data-phone="'+b.phone+'" onclick="sendBirthdayMsg(this.dataset.owner,this.dataset.dog,this.dataset.phone)">Send 🎂</button>':'')
+      +'</div>';
+  }).join('');
+}
+
+function sendBirthdayMsg(owner,dog,phone){
+  openWA(phone,'Happy Birthday to the gorgeous '+dog+'! 🎂🐾 Hope they have a wonderful day — give them an extra treat from us! 🐶💕\nBecky - Scruff to Buff Dogs');
+}
+
+// ── REFERRAL DISCOUNTS BANNER ──────────────────────────────────────────────
+function checkReferralDiscounts(){
+  var pending=customers.filter(function(c){return c.pendingReferralDiscount;});
+  if(!pending.length)return;
+  document.getElementById('reminderBanner').classList.add('show');
+  document.getElementById('rl-referral').innerHTML=pending.map(function(c){
+    var lp=c.dogs&&c.dogs.length&&c.dogs[0].lastPrice?c.dogs[0].lastPrice:null;
+    var discStr=lp?'10% off = <strong>£'+(parseFloat(lp)*0.9).toFixed(2)+'</strong> (last price was £'+parseFloat(lp).toFixed(2)+')':'10% off next groom';
+    return '<div class="banner-chip" style="border-color:#f59e0b;background:#fffbeb;" id="refdisc-'+c.name.replace(/\s/g,'_')+'">'
+      +'<span>🎁</span><strong>'+c.name+'</strong> earned a referral discount — referred: <strong>'+c.referralDiscountEarnedFrom+'</strong> · '+discStr
+      +'<button class="btn-wa-sm" style="background:#f59e0b;" onclick="applyReferralDiscount(\''+c.name.replace(/'/g,"\\'")+'\')">✓ Applied</button>'
+      +'</div>';
+  }).join('');
+}
+
+function applyReferralDiscount(name){
+  var c=getCustomer(name);if(!c)return;
+  c.pendingReferralDiscount=false;
+  c.referralDiscountAppliedDate=fmtISO(new Date());
+  localStorage.setItem('stbCustomers',JSON.stringify(customers));
+  var chip=document.getElementById('refdisc-'+name.replace(/\s/g,'_'));
+  if(chip)chip.remove();
+  checkBannerVisibility();
+}
+
+function checkBannerVisibility(){
+  var zones=['rl-reminders','rl-requests','rl-rebook','rl-price','rl-unpaid','rl-birthday','rl-referral','rl-poppy'];
+  var hasContent=zones.some(function(z){var el=document.getElementById(z);return el&&el.children.length>0;});
+  var banner=document.getElementById('reminderBanner');
+  if(hasContent)banner.classList.add('show');else banner.classList.remove('show');
+}
+
 function checkDiscount(name,visits,lp){
   var f=document.getElementById('discFlag');
   if(parseInt(visits)===6){
@@ -1339,7 +1695,8 @@ function renderCal(){
         else if(svc==='Anal Glands')svcCls='svc-anal-glands';
         else if(svc==='De-shed Treatment')svcCls='svc-deshed';
         else svcCls=bk.paid?'paid':'unpaid';
-        body+='<div class="bk '+svcCls+'" style="top:'+tp+'px;height:'+hp+'px;padding-top:7px;left:'+leftOff+';width:'+colW+';right:'+rightOff+';" data-bkid="'+bk.id+'" onmousedown="startDrag(event,\''+bk.id+'\')" ontouchstart="startDrag(event,\''+bk.id+'\')" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">'
+        var groomerCls=bk.groomer==='poppy'?'groomer-poppy':bk.groomer==='both'?'groomer-both':'';
+        body+='<div class="bk '+svcCls+' '+groomerCls+'" style="top:'+tp+'px;height:'+hp+'px;padding-top:7px;left:'+leftOff+';width:'+colW+';right:'+rightOff+';" data-bkid="'+bk.id+'" onmousedown="startDrag(event,\''+bk.id+'\')" ontouchstart="startDrag(event,\''+bk.id+'\')" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">'
           +'<div class="pay-dot '+(bk.paid?'paid':'unpaid')+'"></div>'
           +(function(){
             var sessionBadge='';
@@ -1420,6 +1777,11 @@ function clearForm(){
   document.getElementById('p-unpaid').checked=true;
   document.getElementById('payMethodGroup').style.display='none';
   document.getElementById('ct-existing').checked=true;
+  var grDef=document.getElementById('gr-becky');if(grDef)grDef.checked=true;
+  var dfDef=document.getElementById('df-unknown');if(dfDef)dfDef.checked=true;
+  var gw=document.getElementById('groomerWarning');if(gw)gw.style.display='none';
+  var dff=document.getElementById('dogFriendlyFlag');if(dff)dff.style.display='none';
+  var agb=document.getElementById('avgGroomBox');if(agb)agb.style.display='none';
   dogInfo={};dogServices={};
   setDogCount(1,true);
   buildTimeDropdown();
@@ -1460,6 +1822,10 @@ function openEdit(id){
   checkNoshowFlag(b.name);
   document.getElementById('f-name').value=b.name;
   showAvgGroomTime(b.name);
+  var grEl=document.getElementById('gr-'+(b.groomer||'becky'));
+  if(grEl)grEl.checked=true;
+  var c2=getCustomer(b.name);
+  loadDogFriendlyStatus(c2,b.dogFriendly);
   document.getElementById('f-phone').value=b.phone||'';
   document.getElementById('f-date').value=b.date;
   document.getElementById('f-visits').value=b.visits||1;
@@ -1624,6 +1990,8 @@ function saveBooking(){
     finishTime:finRaw,
     notes:document.getElementById('f-notes').value.trim(),
     referral:document.getElementById('f-referral').value.trim(),
+    groomer:(document.querySelector('input[name="groomer"]:checked')||{value:'becky'}).value,
+    dogFriendly:(document.querySelector('input[name="dogfriendly"]:checked')||{value:'unknown'}).value,
     paid:paid,
     payMethod:paid&&pmEl?pmEl.value:null,
     splitPayment:(paid&&pmEl&&pmEl.value==='split')?{cash:splitCash,card:splitCard,monzo:splitMonzo}:null,
@@ -1916,7 +2284,7 @@ function sendReminderMsg(id){
 }
 function sendPaymentChase(){
   var b=getCurrent();if(!b||!b.phone)return;
-  openWA(b.phone,'Hi '+titleCase(b.name)+',\n\nJust going through payments, and can\'t seem to see one from you, please could you check from your end?\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
+  openWA(b.phone,'Hi '+titleCase(b.name)+',\n\nJust going through payments, and can\'t seem to see one from you, please could you check from your end?'+BANK_MSG+'\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
 }
 function sendReminderPayMsgId(id){
   var b=id?bookings.find(function(x){return x.id===id;}):getCurrent();
@@ -1947,7 +2315,7 @@ function sendPayment(){
   var price=parseFloat(document.getElementById('f-price-pay').value);
   if(!price||price<=0){alert('Please enter the final price.');return;}
   var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
-  openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\n'+dogNames+' was an absolute star today - thank you so much for bringing them in!\n\nTotal for today\'s groom: *£'+price.toFixed(2)+'*\n\nYou are welcome to pay by card when you collect, or if you would prefer to pay in advance:\n'+SUMUP+'\n\nThanks again - it was lovely to see you both!');
+  openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\n'+dogNames+' was an absolute star today - thank you so much for bringing them in!\n\nTotal for today\'s groom: *£'+price.toFixed(2)+'*'+BANK_MSG+'\n\nThanks again - it was lovely to see you both!');
   closePay();
 }
 
@@ -2016,6 +2384,7 @@ function renderEarnings(){
         +'</tr>';
     }).join('');
   }
+  renderStaffTable(range);
 }
 
 // ── EXPENSES ───────────────────────────────────────────────────────────────
@@ -2278,6 +2647,7 @@ document.getElementById('blockOverlay').addEventListener('click',function(e){if(
 document.getElementById('payOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('payOverlay'))closePay();});
 document.getElementById('daySummaryOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('daySummaryOverlay'))document.getElementById('daySummaryOverlay').classList.remove('open');});
 document.getElementById('expOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('expOverlay'))closeExpense();});
+document.getElementById('staffOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('staffOverlay'))closeLogHours();});
 document.addEventListener('click',function(e){if(!e.target.closest('#f-name')&&!e.target.closest('#sugBox'))document.getElementById('sugBox').innerHTML='';});
 document.getElementById('p-paid').addEventListener('change',function(){showPayMethod(true);});
 document.getElementById('p-unpaid').addEventListener('change',function(){showPayMethod(false);});
@@ -2286,6 +2656,10 @@ populateMonthPicker();
 setTimeout(checkSheetRequests,1000);
 setTimeout(checkSundayAutoExport,2000);
 setTimeout(checkFridayScheduleReminder,2500);
+setTimeout(checkPoppyLateStart,1500);
+setTimeout(checkBirthdayReminders,1800);
+setTimeout(checkUnpaidBookings,2200);
+setTimeout(checkReferralDiscounts,2700);
 setTimeout(checkRebookNudge,3000);
 setTimeout(checkPriceNudge,3500);
 
@@ -2578,7 +2952,7 @@ function sendGoogleReviewMsg(){
 
 function sendCancelFeeMsg(){
   var b=getCurrent();if(!b||!b.phone)return;
-  openWA(b.phone,'Hi '+titleCase(b.name)+', I hope you\'re well!\n\nAs your recent appointment was cancelled with less than 48 hours notice, a cancellation fee is applicable as per our terms and conditions.\n\nIf you\'d like to pay this, you\'re welcome to do so here:\n'+SUMUP+'\n\nI completely understand that things come up unexpectedly, and I do appreciate your understanding. Please don\'t hesitate to get in touch if you\'d like to discuss this.\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
+  openWA(b.phone,'Hi '+titleCase(b.name)+', I hope you\'re well!\n\nAs your recent appointment was cancelled with less than 48 hours notice, a cancellation fee is applicable as per our terms and conditions.'+BANK_MSG+'\n\nI completely understand that things come up unexpectedly, and I do appreciate your understanding. Please don\'t hesitate to get in touch if you\'d like to discuss this.\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
 }
 
 function onReferralInput(val){
