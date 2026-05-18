@@ -255,7 +255,16 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 <div class="page active" id="calPage">
   <div class="banner" id="reminderBanner">
     <h3>Reminders due &#8212; appointments in 4 days:</h3>
-    <div class="banner-list" id="reminderList"></div>
+    <div class="banner-list" id="reminderList">
+      <div id="rl-reminders"></div>
+      <div id="rl-requests"></div>
+      <div id="rl-rebook"></div>
+      <div id="rl-price"></div>
+      <div id="rl-unpaid"></div>
+      <div id="rl-birthday"></div>
+      <div id="rl-referral"></div>
+      <div id="rl-poppy"></div>
+    </div>
   </div>
   <div class="toolbar">
     <div class="week-nav">
@@ -1172,10 +1181,10 @@ function checkReminders(){
     return customerIsNoShow||daysBooked>=3;
   });
   var banner=document.getElementById('reminderBanner');
-  if(!due.length){banner.classList.remove('show');return;}
+  if(!due.length){document.getElementById('rl-reminders').innerHTML='';checkBannerVisibility();return;}
   banner.classList.add('show');
   document.getElementById('reminderBanner').querySelector('h3').textContent='Upcoming appointments — send reminders or dismiss:';
-  document.getElementById('reminderList').innerHTML=due.map(function(b){
+  document.getElementById('rl-reminders').innerHTML=due.map(function(b){
     var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
     var today2=new Date();today2.setHours(0,0,0,0);
     var apptDate=new Date(b.date+'T12:00:00');
@@ -2117,7 +2126,7 @@ function checkPrefill(){
   banner.style.background='#fff8e0';
   banner.style.borderBottomColor='#f59e0b';
   banner.classList.add('show');
-  document.getElementById('reminderList').innerHTML=
+  document.getElementById('rl-requests').innerHTML=
     '<div class="banner-chip" style="border-color:#f59e0b;flex-direction:column;align-items:flex-start;gap:4px;min-width:240px;">'
     +'<div style="font-weight:600;color:#92400e;">&#128276; New Booking Request</div>'
     +'<div><strong>'+name+'</strong> &mdash; '+dog+(breed?' ('+breed+')':'')+'</div>'
@@ -2163,12 +2172,12 @@ function waReplyPrefill(){
   window.open('https://wa.me/'+c,'_blank');
 }
 function dismissPrefill(){
-  var banner=document.getElementById('reminderBanner');
-  banner.classList.remove('show');
+  document.getElementById('rl-requests').innerHTML='';
   banner.style.background='';
   banner.style.borderBottomColor='';
   window._prefill=null;
   localStorage.removeItem('pendingRequest');
+  checkBannerVisibility();
 }
 
 // ── RESTORE PENDING REQUEST ────────────────────────────────────────────────
@@ -2666,7 +2675,6 @@ function checkRebookNudge(){
   if(!overdue.length)return;
   var dismissed=JSON.parse(localStorage.getItem('stbDismissedRebook')||'[]');
   var banner=document.getElementById('reminderBanner');
-  var list=document.getElementById('reminderList');
   banner.classList.add('show');
   var html=overdue.filter(function(o){return dismissed.indexOf(o.name)<0;}).map(function(o){
     var safeId='rebook-'+o.name.replace(/[^a-zA-Z0-9]/g,'_');
@@ -2679,7 +2687,7 @@ function checkRebookNudge(){
       +'<button class="btn-wa-sm" style="background:#94a3b8;margin-left:4px;" onclick="dismissRebookChip(\''+o.name.replace(/'/g,"\\'")+'\')" title="Dismiss">&#10005;</button>'
       +'</div>';
   }).join('');
-  list.innerHTML=list.innerHTML+html;
+  document.getElementById('rl-rebook').innerHTML=html;
 }
 
 function dismissRebookChip(name){
@@ -2689,8 +2697,14 @@ function dismissRebookChip(name){
   var safeId='rebook-'+name.replace(/[^a-zA-Z0-9]/g,'_');
   var chip=document.getElementById(safeId);
   if(chip)chip.remove();
-  var list=document.getElementById('reminderList');
-  if(list&&!list.children.length)document.getElementById('reminderBanner').classList.remove('show');
+  checkBannerVisibility();
+}
+
+function checkBannerVisibility(){
+  var banner=document.getElementById('reminderBanner');
+  var zones=['rl-reminders','rl-requests','rl-rebook','rl-price','rl-unpaid','rl-birthday','rl-referral','rl-poppy'];
+  var hasContent=zones.some(function(z){var el=document.getElementById(z);return el&&el.children.length>0;});
+  if(hasContent)banner.classList.add('show');else banner.classList.remove('show');
 }
 
 function sendRebookNudge(name,phone){
