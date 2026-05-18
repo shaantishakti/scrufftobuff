@@ -1621,7 +1621,18 @@ function saveBooking(){
     visits:parseInt(document.getElementById('f-visits').value)||1,
     ct:ct
   };
-  if(editId){bookings=bookings.map(function(b){return b.id===editId?booking:b;});}
+  if(editId){
+    var oldBk=bookings.find(function(b){return b.id===editId;});
+    var dateChanged=oldBk&&(oldBk.date!==booking.date||oldBk.time!==booking.time);
+    bookings=bookings.map(function(b){return b.id===editId?booking:b;});
+    if(dateChanged&&booking.phone){
+      setTimeout(function(){
+        if(confirm('Date or time has changed!\n\nSend '+booking.name+' a WhatsApp message with the updated details?')){
+          sendRescheduleMsg(booking.id);
+        }
+      },200);
+    }
+  }
   else{
     bookings.push(booking);
     if(booking.phone){
@@ -1797,6 +1808,13 @@ function renderWaButtons(){
   if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookNowBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
   else{cont.innerHTML='<button class="btn-wa" onclick="sendConfirmMsg(null)"><span><span class="wa-title">Send Confirmation</span><span class="wa-sub">Booking confirmed with appointment details</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookNowBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
 }
+function sendRescheduleMsg(id){
+  var b=id?bookings.find(function(x){return x.id===id;}):getCurrent();
+  if(!b||!b.phone)return;
+  var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
+  openWA(b.phone,'Hi '+titleCase(b.name)+'! Just a quick note to let you know that '+dogNames+'\'s appointment has been rescheduled.\n\nYour new date and time is:\n📅 '+fmtDD(b.date)+'\n🕐 '+fmtTime(b.time)+'\n\nPlease let me know if this doesn\'t work for you!\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
+}
+
 function getCurrent(){return editId?bookings.find(function(b){return b.id===editId;}):null;}
 
 function rebookNow(){
