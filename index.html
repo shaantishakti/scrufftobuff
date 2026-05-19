@@ -3057,11 +3057,40 @@ function checkRebookNudge(){
       +'<span>&#128337;</span>'
       +'<strong>'+o.name+'</strong>'
       +' — last seen '+weeks+' weeks ago'
-      +(o.phone?'<button class="btn-wa-sm" style="background:#f59e0b;" onclick="sendRebookNudge(\''+o.name+'\',\''+o.phone+'\')">Rebook</button>':'')
+      +(o.phone
+        ?'<button class="btn-wa-sm" style="background:#f59e0b;" onclick="sendRebookNudge(\''+o.name+'\',\''+o.phone+'\')">WhatsApp</button>'
+        :'')
+      +'<button class="btn-wa-sm" style="background:#2d6a4f;" onclick="openRebookFor(\''+o.name.replace(/'/g,"\\'")+'\')">Rebook</button>'
       +'<button class="btn-wa-sm" style="background:#94a3b8;margin-left:4px;" onclick="dismissRebookChip(\''+o.name.replace(/'/g,"\\'")+'\')" title="Dismiss">&#10005;</button>'
       +'</div>';
   }).join('');
   document.getElementById('rl-rebook').innerHTML=html;
+}
+
+function openRebookFor(name){
+  var c=getCustomer(name);
+  openAdd();
+  setTimeout(function(){
+    document.getElementById('f-name').value=name;
+    if(c){
+      document.getElementById('f-phone').value=c.phone||'';
+      var next=(c.visits||0)+1;
+      document.getElementById('f-visits').value=next;
+      loadDogFriendlyStatus(c);
+      showAvgGroomTime(name);
+      checkDiscount(name,next,c.dogs&&c.dogs[0]?c.dogs[0].lastPrice:null);
+      // Pre-fill dog info from customer record
+      if(c.dogs&&c.dogs.length){
+        dogInfo={};dogServices={};
+        c.dogs.forEach(function(d,i){
+          var idx=i+1;
+          dogInfo[idx]={name:d.name||'',breed:d.breed||'',notes:d.notes||'',dob:d.dob||''};
+          dogServices[idx]=[{service:d.lastService||'',duration:d.lastDuration||60,price:d.lastPrice||'',groomer:d.lastGroomer||'becky'}];
+        });
+        setDogCount(c.dogs.length,true);
+      }
+    }
+  },200);
 }
 
 function dismissRebookChip(name){
