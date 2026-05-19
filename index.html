@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--cream:#f0f6ff;--brown:#1e3a5f;--tan:#5b9bd5;--tan-light:#c2d9f0;--unpaid:#e05252;--unpaid-bg:#fdeaea;--paid:#3a9e6e;--paid-bg:#e6f7ef;--blocked:#64748b;--blocked-bg:#cbd5e1;--wa:#25D366;--wa-dark:#128C7E;--cash:#f59e0b;--card:#6366f1;--monzo:#ef4444;--becky:#2d6a4f;--becky-bg:#d1f0d1;--poppy:#7c3aed;--poppy-bg:#e9d5f5;--both:#1e3a5f;--both-bg:#dbeafe;}
+:root{--cream:#f0f6ff;--brown:#1e3a5f;--tan:#5b9bd5;--tan-light:#c2d9f0;--unpaid:#e05252;--unpaid-bg:#fdeaea;--paid:#3a9e6e;--paid-bg:#e6f7ef;--blocked:#64748b;--blocked-bg:#cbd5e1;--wa:#25D366;--wa-dark:#128C7E;--cash:#f59e0b;--card:#6366f1;--monzo:#ef4444;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--brown);min-height:100vh;}
 header{background:var(--brown);color:var(--cream);padding:14px 28px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
@@ -204,13 +204,32 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 .noshow-flag span{font-weight:400;color:#7a2020;display:block;margin-top:2px;font-size:0.78rem;}
 .btn-noshow{background:#e05252;color:white;border:none;border-radius:7px;padding:6px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;margin-left:8px;}
 .btn-noshow:hover{background:#c0392b;}
-.svc-full-groom,.svc-hand-stripping,.svc-nails,.svc-wash-dry,.svc-trim-tidy,.svc-puppy,.svc-emmi,.svc-descaling,.svc-anal-glands,.svc-deshed,.svc-default,.bk.paid,.bk.unpaid{background:var(--becky-bg)!important;border-left:4px solid var(--becky)!important;}
-.bk.groomer-poppy{background:var(--poppy-bg)!important;border-left:4px solid var(--poppy)!important;}
-.bk.groomer-both{background:linear-gradient(135deg,var(--becky-bg) 50%,var(--poppy-bg) 50%)!important;border-left:4px solid var(--both)!important;}
-.svc-full-groom .bn,.svc-hand-stripping .bn,.svc-nails .bn,.svc-wash-dry .bn,.svc-trim-tidy .bn,.svc-puppy .bn,.svc-emmi .bn,.svc-anal-glands .bn,.svc-deshed .bn,.svc-descaling .bn,.svc-default .bn,.bk.paid .bn,.bk.unpaid .bn{color:#1a3a1a!important;}
-.bk.groomer-poppy .bn,.bk.groomer-poppy .bd,.bk.groomer-poppy .bs{color:#3b0764!important;}
-.groomer-badge{font-size:0.6rem;font-weight:700;padding:1px 5px;border-radius:8px;display:inline-block;margin-left:3px;}
-#groomerWarning{display:none;background:#fdeaea;border:1px solid #e8b0b0;border-radius:7px;padding:7px 10px;font-size:0.82rem;color:#8b2020;margin-top:6px;}
+.svc-full-groom{background:#a8c8e8!important;border-left:4px solid #7aaad0!important;}
+.svc-hand-stripping{background:#c2610a!important;border-left:4px solid #9a4d08!important;}
+.svc-nails{background:#6b3fa0!important;border-left:4px solid #4e2c78!important;}
+.svc-wash-dry{background:#800020!important;border-left:4px solid #5c0018!important;}
+.svc-trim-tidy{background:#c9a800!important;border-left:4px solid #a08600!important;}
+.svc-puppy{background:#e05a8a!important;border-left:4px solid #c0426f!important;}
+.svc-emmi{background:#3ab8a0!important;border-left:4px solid #2a9080!important;}
+.svc-descaling{background:#3ab8a0!important;border-left:4px solid #2a9080!important;}
+.svc-anal-glands{background:#6b4226!important;border-left:4px solid #4e2f1a!important;}
+.svc-deshed{background:#7ec87e!important;border-left:4px solid #5aaa5a!important;}
+.svc-full-groom .bn,.svc-full-groom .bd,.svc-full-groom .bs,.svc-full-groom .bt,.svc-full-groom .bb{color:#1a3a5c!important;}
+.svc-hand-stripping .bn,.svc-hand-stripping .bd,.svc-hand-stripping .bs,.svc-hand-stripping .bt,.svc-hand-stripping .bb,
+.svc-hand-stripping .bn,.svc-hand-stripping .bd,.svc-hand-stripping .bs,.svc-hand-stripping .bt,.svc-hand-stripping .bb,
+.svc-nails .bn,.svc-nails .bd,.svc-nails .bs,.svc-nails .bt,.svc-nails .bb,
+.svc-wash-dry .bn,.svc-wash-dry .bd,.svc-wash-dry .bs,.svc-wash-dry .bt,.svc-wash-dry .bb,
+.svc-trim-tidy .bn,.svc-trim-tidy .bd,.svc-trim-tidy .bs,.svc-trim-tidy .bt,.svc-trim-tidy .bb,
+.svc-puppy .bn,.svc-puppy .bd,.svc-puppy .bs,.svc-puppy .bt,.svc-puppy .bb,
+.svc-emmi .bn,.svc-emmi .bd,.svc-emmi .bs,.svc-emmi .bt,.svc-emmi .bb,
+.svc-anal-glands .bn,.svc-anal-glands .bd,.svc-anal-glands .bs,.svc-anal-glands .bt,.svc-anal-glands .bb,
+.svc-deshed .bn,.svc-deshed .bd,.svc-deshed .bs,.svc-deshed .bt,.svc-deshed .bb{color:#1a3a1a!important;}
+.svc-descaling .bn,.svc-descaling .bd,.svc-descaling .bs,.svc-descaling .bt,.svc-descaling .bb{color:white!important;}
+.svc-trim-tidy .bn,.svc-trim-tidy .bd,.svc-trim-tidy .bs,.svc-trim-tidy .bt,.svc-trim-tidy .bb{color:#333!important;}
+.svc-default{background:#4a7aaa!important;border-left:4px solid #1e3a5f!important;}
+.svc-default .bn,.svc-default .bd,.svc-default .bs,.svc-default .bt,.svc-default .bb{color:white!important;}
+.svc-default{background:#4a7aaa!important;border-left:4px solid #1e3a5f!important;}
+.svc-default .bn,.svc-default .bd,.svc-default .bs,.svc-default .bt,.svc-default .bb{color:white!important;}
 
 .dog-row-label{font-size:0.78rem;font-weight:600;color:var(--tan);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;}
 .dog-count-btns{display:flex;gap:7px;margin-bottom:12px;align-items:center;}
@@ -236,24 +255,14 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 <div class="page active" id="calPage">
   <div class="banner" id="reminderBanner">
     <h3>Reminders due &#8212; appointments in 4 days:</h3>
-    <div class="banner-list" id="reminderList">
-      <div id="rl-reminders"></div>
-      <div id="rl-requests"></div>
-      <div id="rl-rebook"></div>
-      <div id="rl-price"></div>
-      <div id="rl-unpaid"></div>
-      <div id="rl-birthday"></div>
-      <div id="rl-referral"></div>
-      <div id="rl-poppy"></div>
-    </div>
+    <div class="banner-list" id="reminderList"></div>
   </div>
   <div class="toolbar">
     <div class="week-nav">
       <button onclick="changeWeek(-1)">&#8249;</button>
       <span class="week-label" id="weekLabel"></span>
       <button onclick="changeWeek(1)">&#8250;</button>
-      <select id="monthPicker" onchange="goToMonth(this.value)" style="padding:5px 8px;border:1.5px solid var(--tan-light);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--brown);background:white;cursor:pointer;"></select>
-      <button onclick="goToToday()" style="background:#6366f1;color:white;border:none;border-radius:7px;padding:6px 20px;font-size:0.88rem;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;min-width:80px;">Today</button>
+      <button onclick="goToToday()" style="background:#6366f1;color:white;border:none;border-radius:7px;padding:6px 20px 6px 20px;font-size:0.88rem;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;min-width:80px;">Today</button>
     </div>
     <div class="toolbar-right">
       <div class="time-step-toggle">
@@ -279,13 +288,6 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
     </div>
   </div>
   <div class="cal-wrap"><div class="cal-outer" id="calOuter"></div></div>
-  <!-- BOOKING SEARCH -->
-  <div id="bookingSearchWrap" style="padding:8px 16px 0;position:relative;max-width:400px;">
-    <input type="text" id="bookingSearch" placeholder="🔍 Search future bookings..." autocomplete="off"
-      oninput="searchBookings(this.value)"
-      style="width:100%;padding:8px 14px;border:1.5px solid var(--tan-light);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--brown);background:white;outline:none;">
-    <div id="bookingSearchResults" style="display:none;position:absolute;top:calc(100% + 2px);left:16px;right:0;background:white;border:1.5px solid var(--tan-light);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:100;max-height:320px;overflow-y:auto;"></div>
-  </div>
 </div>
 <div class="page" id="earnPage">
   <div class="earnings-page">
@@ -304,40 +306,15 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
     <table class="earn-table"><thead><tr><th>Date</th><th>Customer</th><th>Dog(s)</th><th>Service(s)</th><th>Amount</th><th>Method</th></tr></thead><tbody id="earnBody"></tbody></table>
     <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;margin:24px 0 12px;color:#e05252;">Expenses</h3>
     <table class="earn-table"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th></th></tr></thead><tbody id="expBody"></tbody></table>
-    <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;margin:24px 0 8px;color:#b45309;">Staff Hours — Poppy</h3>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
-      <label style="font-size:0.83rem;color:#5a4a3a;font-weight:600;">Hourly rate: £</label>
-      <input type="number" id="staffRateInput" min="0" step="0.01" placeholder="e.g. 12.50" style="width:100px;padding:6px 10px;border:1.5px solid #c2a87a;border-radius:7px;font-size:0.88rem;">
-      <button onclick="saveStaffRate()" style="background:#b45309;color:white;border:none;padding:6px 14px;border-radius:7px;font-size:0.83rem;font-weight:600;cursor:pointer;">Save Rate</button>
-      <span id="staffRateNote" style="font-size:0.78rem;color:#92400e;"></span>
+    <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;margin:28px 0 8px;color:#0ea5e9;">🌴 Holiday Mode</h3>
+    <p style="font-size:0.85rem;color:#64748b;margin-bottom:12px;">When active, the online booking page will hide Emmi-Pet, teeth, anal glands and descaling — and show a note that Poppy is covering. Saves to your Google Sheet so all customers see it.</p>
+    <div style="background:white;border:1.5px solid var(--tan-light);border-radius:10px;padding:18px 20px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;">
+      <div class="fg" style="margin:0;min-width:140px;"><label style="font-size:0.78rem;">Holiday start</label><input type="date" id="holidayStart" style="padding:7px 10px;border:1.5px solid var(--tan-light);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:0.88rem;width:100%;"></div>
+      <div class="fg" style="margin:0;min-width:140px;"><label style="font-size:0.78rem;">Holiday end</label><input type="date" id="holidayEnd" style="padding:7px 10px;border:1.5px solid var(--tan-light);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:0.88rem;width:100%;"></div>
+      <button onclick="saveHolidayMode()" style="background:#0ea5e9;color:white;border:none;padding:8px 18px;border-radius:7px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:0.85rem;cursor:pointer;">Save</button>
+      <button onclick="clearHolidayMode()" style="background:none;border:1.5px solid #e0d8c8;color:#64748b;padding:8px 14px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:0.85rem;cursor:pointer;">Clear</button>
+      <span id="holidayModeNote" style="font-size:0.82rem;font-weight:600;"></span>
     </div>
-    <table class="earn-table"><thead><tr><th>Date</th><th>Times</th><th>Hours</th><th>Cost</th><th>Revenue that day</th><th>Covered?</th><th></th></tr></thead><tbody id="staffBody"></tbody></table>
-    <button onclick="openLogHours()" style="margin-top:10px;background:#b45309;color:white;border:none;padding:7px 16px;border-radius:7px;font-size:0.83rem;font-weight:600;cursor:pointer;">+ Log Staff Hours</button>
-  </div>
-</div>
-
-<!-- STAFF HOURS MODAL -->
-<div class="overlay" id="staffOverlay">
-  <div class="modal" style="width:400px;">
-    <h2 id="staffModalTitle">Log Staff Hours</h2>
-    <div class="fg"><label>Date</label><input type="date" id="staff-date"></div>
-    <div class="frow">
-      <div class="fg"><label>Start time</label><input type="time" id="staff-start" oninput="calcStaffHours()"></div>
-      <div class="fg"><label>End time</label><input type="time" id="staff-end" oninput="calcStaffHours()"></div>
-      <div class="fg"><label>Break (mins)</label><input type="number" id="staff-break" min="0" step="5" placeholder="0" value="0" oninput="calcStaffHours()"></div>
-    </div>
-    <div id="staffHoursCalc" style="display:none;background:#f0f6ff;border:1px solid #c2d9f0;border-radius:8px;padding:10px 14px;font-size:0.88rem;color:#1e3a5f;margin-bottom:10px;">
-      ⏱ Hours worked: <strong id="staffHoursResult">—</strong>
-      <span id="staffCostResult" style="margin-left:12px;color:#b45309;font-weight:600;"></span>
-    </div>
-    <div class="fg"><label>Notes (optional)</label><input type="text" id="staff-notes" placeholder="e.g. half day, late start..."></div>
-    <div class="modal-btns">
-      <button class="btn-del" id="btnStaffDel" onclick="deleteStaffHours()" style="display:none">Delete</button>
-      <button class="btn-cancel" onclick="closeLogHours()">Cancel</button>
-      <button class="btn-save" onclick="saveStaffHours()">Save</button>
-    </div>
-  </div>
-</div>
 
 <!-- DAY EXPENSES MODAL -->
 <div class="overlay" id="dayExpOverlay">
@@ -402,25 +379,6 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
     </div>
     <div class="noshow-flag" id="noshowFlag">⚠️ Previous No Show — reminders will be sent automatically!<span id="noshowDetail"></span></div>
     <div class="disc-flag" id="discFlag" style="display:none"><strong>6th Visit Loyalty Discount!</strong><br>This is <span id="discName"></span>'s 6th visit &#8212; remember to apply 10% discount.<br>Last price: <strong id="discLast"></strong> &rarr; Discounted: <strong id="discNew"></strong></div>
-    <div class="disc-flag" id="referralFlag" style="display:none;background:#fffbeb;border-color:#f59e0b;color:#92400e;"></div>
-    <div class="fg">
-      <label>Groomer</label>
-      <div class="tog">
-        <input type="radio" name="groomer" id="gr-becky" value="becky" checked onchange="checkGroomerWarning()"><label for="gr-becky">💚 Becky</label>
-        <input type="radio" name="groomer" id="gr-poppy" value="poppy" onchange="checkGroomerWarning()"><label for="gr-poppy">💜 Poppy</label>
-        <input type="radio" name="groomer" id="gr-both" value="both" onchange="checkGroomerWarning()"><label for="gr-both">💙 Both</label>
-      </div>
-      <div id="groomerWarning"></div>
-    </div>
-    <div class="fg">
-      <label>Happy around other dogs?</label>
-      <div class="tog">
-        <input type="radio" name="dogfriendly" id="df-yes" value="yes" onchange="loadDogFriendlyStatus(null,'yes')"><label for="df-yes">✅ Yes</label>
-        <input type="radio" name="dogfriendly" id="df-no" value="no" onchange="loadDogFriendlyStatus(null,'no')"><label for="df-no">❌ No</label>
-        <input type="radio" name="dogfriendly" id="df-unknown" value="unknown" checked onchange="loadDogFriendlyStatus(null,'unknown')"><label for="df-unknown">Not answered</label>
-      </div>
-      <div id="dogFriendlyFlag" style="display:none;margin-top:6px;border-radius:7px;padding:7px 10px;font-size:0.82rem;"></div>
-    </div>
     <div class="frow">
       <div class="fg"><label>Date</label><input type="date" id="f-date"></div>
       <div class="fg"><label>Start Time</label><select id="f-time" onchange="calcFinish()"></select><div class="hint" id="timeHint" style="display:none"></div></div>
@@ -429,7 +387,6 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
       <div class="fg"><label>Finish Time</label><input type="text" id="f-finish" readonly placeholder="Auto-calculated"></div>
       <div class="fg"><label>Notes (optional)</label><input type="text" id="f-notes" placeholder="Any special requirements..."></div>
     </div>
-    <div id="avgGroomBox" style="display:none;background:#f0f6ff;border:1px solid #c2d9f0;border-radius:8px;padding:8px 12px;font-size:0.82rem;color:#1e3a5f;margin-bottom:8px;">⏱ <span id="avgGroomText"></span></div>
     <div class="fg" id="referralGroup" style="display:none">
       <label>Referred by (optional)</label>
       <div class="sug-wrap"><input type="text" id="f-referral" placeholder="Who recommended Scruff to Buff?" autocomplete="off" oninput="onReferralInput(this.value)"><div class="sug-box" id="referralSugBox"></div></div>
@@ -500,10 +457,6 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 </div>
 <script>
 const SUMUP='https://pay.sumup.com/b2c/Q88WCHEE';
-const BANK_NAME='Scruff to Buff Dogs';
-const BANK_SORT='04-00-04';
-const BANK_ACC='20044824';
-const BANK_MSG='\n\n\uD83C\uDFE6 Bank transfer (preferred, no fees):\nAccount name: '+BANK_NAME+'\nSort code: '+BANK_SORT+'\nAccount number: '+BANK_ACC+'\nReference: your name\n\n\uD83D\uDCB3 Card payment: '+SUMUP;
 const SHEET_URL='https://script.google.com/macros/s/AKfycbwG00lLXzSbhkxVaigOD0arI9A9rns4f-i7GoUeKBXzUcRuxoYbXg7FP3cxhrIfVrB3/exec';
 const BIZ='Scruff to Buff Dogs';
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -529,8 +482,6 @@ let bookings=JSON.parse(localStorage.getItem('stbBookings')||'[]');
 let customers=JSON.parse(localStorage.getItem('stbCustomers')||'[]');
 let blocks=JSON.parse(localStorage.getItem('stbBlocks')||'[]');
 let expenses=JSON.parse(localStorage.getItem('stbExpenses')||'[]');
-let staffHours=JSON.parse(localStorage.getItem('stbStaffHours')||'[]');
-var staffHourlyRate=parseFloat(localStorage.getItem('stbStaffRate')||'0');
 let weekStart=getMonday(new Date());
 let mobileOffset=0;
 let editId=null,editBlockId=null;
@@ -543,8 +494,6 @@ function fmtISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,
 function titleCase(s){if(!s)return'';return s.toLowerCase().split(' ').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');}
 function fmtDD(ds){var d=new Date(ds+'T12:00:00');return d.getDate()+' '+FMONS[d.getMonth()]+' '+d.getFullYear();}
 function fmtTime(ts){if(!ts)return'';var parts=ts.split(':');var h=parseInt(parts[0]),m=parseInt(parts[1]);return(h%12||12)+':'+(m<10?'0'+m:''+m)+(h>=12?'pm':'am');}
-function timeToMins(ts){if(!ts)return 0;var parts=ts.split(':');return parseInt(parts[0])*60+(parseInt(parts[1])||0);}
-function minsToTime(mins){return(Math.floor(mins/60)<10?'0':'')+Math.floor(mins/60)+':'+(mins%60<10?'0':'')+mins%60;}
 function addMins(ts,mins){if(!ts)return'';var parts=ts.split(':');var h=parseInt(parts[0]),m=parseInt(parts[1]);var t=h*60+m+mins;return(Math.floor(t/60)%24<10?'0':'')+Math.floor(t/60)%24+':'+(t%60<10?'0':'')+t%60;}
 function fmtPhone(p){if(!p)return'';var c=p.replace(/\s+/g,'').replace(/^\+/,'');if(c.charAt(0)==='0')c='44'+c.slice(1);return c;}
 function openWA(phone,msg){window.open('https://wa.me/'+fmtPhone(phone)+'?text='+encodeURIComponent(msg),'_blank');}
@@ -595,17 +544,10 @@ function upsertCustomer(b){
   if(!c){c={name:name,phone:'',dogs:[],visits:0,lastTime:null};customers.push(c);}
   if(b.phone)c.phone=b.phone;
   c.visits=parseInt(b.visits)||c.visits;
+  // Store last appointment time
   if(b.time)c.lastTime=b.time;
-  if(b.dogFriendly&&b.dogFriendly!=='unknown')c.dogFriendly=b.dogFriendly;
+  // Store referral (only set once — first time)
   if(b.referral&&!c.referredBy)c.referredBy=b.referral;
-  if(b.referral&&parseInt(b.visits)===1){
-    var referrer=getCustomer(titleCase(b.referral));
-    if(referrer&&!referrer.pendingReferralDiscount){
-      referrer.pendingReferralDiscount=true;
-      referrer.referralDiscountEarnedFrom=titleCase(b.name);
-      referrer.referralDiscountEarnedDate=fmtISO(new Date());
-    }
-  }
   // Upsert each dog
   if(!c.dogs)c.dogs=[];
   if(b.dogs&&b.dogs.length){
@@ -682,10 +624,6 @@ function fillCustomer(name){
     // Single dog — pre-populate directly
     loadDogsFromCustomer(c,[0]);
     checkDiscount(c.name,next,c.dogs&&c.dogs[0]?c.dogs[0].lastPrice:null);
-    loadDogFriendlyStatus(c);
-    showAvgGroomTime(c.name);
-    checkReferralFlag(c);
-  showAvgGroomTime(c.name);
   }
 }
 
@@ -728,9 +666,6 @@ function confirmDogPicker(allIndices,custName){
   var nextVisit=window._dogPickerNextVisit;
   loadDogsFromCustomer(c,selected);
   checkDiscount(c.name,nextVisit,c.dogs&&c.dogs[selected[0]]?c.dogs[selected[0]].lastPrice:null);
-  loadDogFriendlyStatus(c);
-  showAvgGroomTime(c.name);
-  checkReferralFlag(c);
 }
 
 function loadDogsFromCustomer(c,selectedIndices){
@@ -1108,345 +1043,6 @@ function buildBlockTimeDropdowns(){
 }
 
 // ── DISCOUNT CHECK ────────────────────────────────────────────────────────
-function showAvgGroomTime(customerName){
-  var box=document.getElementById('avgGroomBox');
-  var txt=document.getElementById('avgGroomText');
-  if(!box||!txt)return;
-  if(!customerName){box.style.display='none';return;}
-  var GROOM_SVCS=['Full Groom','Wash & Dry','Trim & Tidy','Hand Stripping','De-shed Treatment'];
-  var past=bookings.filter(function(b){
-    return b.name&&b.name.toLowerCase()===customerName.toLowerCase()&&b.paid;
-  });
-  if(!past.length){box.style.display='none';return;}
-  var durations=[];
-  past.forEach(function(b){
-    if(b.dogs&&b.dogs.length){
-      b.dogs.forEach(function(d){
-        var svcs=d.services&&d.services.length?d.services:[{service:d.service,duration:d.duration}];
-        svcs.forEach(function(sv){
-          if(sv.duration&&GROOM_SVCS.indexOf(sv.service)>=0)durations.push(parseInt(sv.duration));
-        });
-      });
-    }
-  });
-  if(!durations.length){box.style.display='none';return;}
-  var avg=Math.round(durations.reduce(function(s,d){return s+d;},0)/durations.length);
-  var h=Math.floor(avg/60),m=avg%60;
-  var label=h>0&&m>0?h+'hr '+m+'min':h>0?h+(h===1?' hour':' hours'):m+' mins';
-  txt.textContent='Average groom time for '+titleCase(customerName)+': '+label+' (based on '+durations.length+' groom'+(durations.length!==1?'s':'')+')';
-  box.style.display='block';
-}
-
-// ── GROOMER ────────────────────────────────────────────────────────────────
-function checkGroomerWarning(){
-  var groomer=(document.querySelector('input[name="groomer"]:checked')||{value:'becky'}).value;
-  var warn=document.getElementById('groomerWarning');
-  if(!warn)return;
-  if(groomer!=='poppy'){warn.style.display='none';return;}
-  var warnings=[];
-  var POPPY_NO=['Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning','Emmi-Pet Teeth Cleaning PAYG','Emmi-Pet Teeth Cleaning x4','Emmi-Pet Teeth Cleaning x9','Emmi-Pet Teeth Maintenance','Teeth Descaling','Teeth Cleaning','Descaling'];
-  var name=(document.getElementById('f-name').value||'').toLowerCase();
-  if(name.indexOf('tia bliss')>=0)warnings.push('Poppy does not groom for Tia Bliss');
-  if(name.indexOf('jenny churchyard')>=0)warnings.push('Poppy does not groom for Jenny Churchyard');
-  for(var i=1;i<=dogCount;i++){
-    var dogName=(document.getElementById('f-dog-'+i)||{}).value||'';
-    if(dogName.toLowerCase().indexOf('rufus')>=0)warnings.push('Poppy does not groom Rufus');
-    for(var s=0;s<10;s++){
-      var sel=document.getElementById('f-service-'+i+'-'+s);
-      if(!sel)break;
-      if(POPPY_NO.indexOf(sel.value)>=0&&warnings.indexOf('Poppy does not do: '+sel.value)<0)
-        warnings.push('Poppy does not do: '+sel.value);
-    }
-  }
-  if(warnings.length){warn.style.display='block';warn.innerHTML='⚠️ '+[...new Set(warnings)].join(' · ');}
-  else warn.style.display='none';
-}
-
-// ── DOG FRIENDLY ───────────────────────────────────────────────────────────
-function loadDogFriendlyStatus(c,bookingVal){
-  var val=(c&&c.dogFriendly)||bookingVal||'unknown';
-  var el=document.getElementById('df-'+val);
-  if(el)el.checked=true;
-  else{var u=document.getElementById('df-unknown');if(u)u.checked=true;}
-  var flag=document.getElementById('dogFriendlyFlag');
-  if(!flag)return;
-  if(val==='yes'){
-    flag.style.display='block';flag.style.background='#e8f5ee';flag.style.border='1px solid #a8d5bc';flag.style.color='#2d6a4f';
-    flag.innerHTML='✅ Happy around other dogs';
-  } else if(val==='no'){
-    flag.style.display='block';flag.style.background='#fdeaea';flag.style.border='1px solid #e8b0b0';flag.style.color='#8b2020';
-    flag.innerHTML='❌ Not okay around other dogs — do not book alongside others';
-  } else {
-    flag.style.display='block';flag.style.background='#fff8e8';flag.style.border='1px solid #f0c060';flag.style.color='#7a4f00';
-    flag.innerHTML='⚠️ Dog compatibility not yet confirmed — please ask the owner';
-  }
-}
-
-// ── AVERAGE GROOM TIME ─────────────────────────────────────────────────────
-function showAvgGroomTime(customerName){
-  var box=document.getElementById('avgGroomBox');
-  var txt=document.getElementById('avgGroomText');
-  if(!box||!txt)return;
-  if(!customerName){box.style.display='none';return;}
-  var GROOM_SVCS=['Full Groom','Wash & Dry','Trim & Tidy','Hand Stripping','De-shed Treatment'];
-  var past=bookings.filter(function(b){return b.name&&b.name.toLowerCase()===customerName.toLowerCase()&&b.paid;});
-  if(!past.length){box.style.display='none';return;}
-  var durations=[];
-  past.forEach(function(b){
-    if(b.dogs&&b.dogs.length){
-      b.dogs.forEach(function(d){
-        var svcs=d.services&&d.services.length?d.services:[{service:d.service,duration:d.duration}];
-        svcs.forEach(function(sv){if(sv.duration&&GROOM_SVCS.indexOf(sv.service)>=0)durations.push(parseInt(sv.duration));});
-      });
-    }
-  });
-  if(!durations.length){box.style.display='none';return;}
-  var avg=Math.round(durations.reduce(function(s,d){return s+d;},0)/durations.length);
-  var h=Math.floor(avg/60),m=avg%60;
-  var label=h>0&&m>0?h+'hr '+m+'min':h>0?h+(h===1?' hour':' hours'):m+' mins';
-  txt.textContent='Average groom time for '+titleCase(customerName)+': '+label+' (based on '+durations.length+' groom'+(durations.length!==1?'s':'')+')';
-  box.style.display='block';
-}
-
-// ── REFERRAL FLAG IN BOOKING BOX ───────────────────────────────────────────
-function checkReferralFlag(c){
-  var f=document.getElementById('referralFlag');
-  if(!f)return;
-  if(c&&c.pendingReferralDiscount){
-    var lp=c.dogs&&c.dogs.length&&c.dogs[0].lastPrice?c.dogs[0].lastPrice:null;
-    var discStr=lp?'£'+(parseFloat(lp)*0.9).toFixed(2)+' (was £'+parseFloat(lp).toFixed(2)+')':'10% off';
-    f.style.display='block';
-    f.innerHTML='🎁 <strong>Referral discount earned!</strong> '+(c.referralDiscountEarnedFrom?'Referred by them: <strong>'+c.referralDiscountEarnedFrom+'</strong>. ':'')+' Remember to apply 10% off this booking'+(lp?' — suggested price: <strong>'+discStr+'</strong>':'')+'.<br><span style="font-size:0.78rem;font-weight:400;">Once applied, mark it done in the banner so it clears.</span>';
-  } else {
-    f.style.display='none';
-  }
-}
-
-// ── STAFF HOURS ────────────────────────────────────────────────────────────
-var editStaffId=null;
-function saveStaffRate(){
-  var val=parseFloat(document.getElementById('staffRateInput').value);
-  if(!val||val<=0){alert('Please enter a valid hourly rate.');return;}
-  staffHourlyRate=val;
-  localStorage.setItem('stbStaffRate',val.toString());
-  document.getElementById('staffRateNote').textContent='Saved — £'+val.toFixed(2)+'/hr';
-  renderEarnings();
-}
-function calcStaffHours(){
-  var start=document.getElementById('staff-start').value;
-  var end=document.getElementById('staff-end').value;
-  var brk=parseInt(document.getElementById('staff-break').value)||0;
-  var calc=document.getElementById('staffHoursCalc');
-  if(!start||!end){calc.style.display='none';return;}
-  var sm=timeToMins(start),em=timeToMins(end);
-  if(em<=sm){calc.style.display='none';return;}
-  var totalMins=em-sm-brk;
-  if(totalMins<=0){calc.style.display='none';return;}
-  var h=Math.floor(totalMins/60);
-  var m=totalMins%60;
-  var label=(h>0?h+'hr ':'')+( m>0?m+'min':'');
-  document.getElementById('staffHoursResult').textContent=label.trim();
-  var costEl=document.getElementById('staffCostResult');
-  var hoursDecimal=totalMins/60;
-  costEl.textContent=staffHourlyRate>0?'= £'+(hoursDecimal*staffHourlyRate).toFixed(2):'';
-  calc.style.display='block';
-}
-function openLogHours(dateStr){
-  editStaffId=null;
-  document.getElementById('staffModalTitle').textContent='Log Staff Hours';
-  document.getElementById('btnStaffDel').style.display='none';
-  document.getElementById('staff-date').value=dateStr||fmtISO(new Date());
-  document.getElementById('staff-start').value='';
-  document.getElementById('staff-end').value='';
-  document.getElementById('staff-break').value='0';
-  document.getElementById('staff-notes').value='';
-  document.getElementById('staffHoursCalc').style.display='none';
-  document.getElementById('staffOverlay').classList.add('open');
-}
-function openEditStaffHours(id){
-  var h=staffHours.find(function(x){return x.id===id;});
-  if(!h)return;
-  editStaffId=id;
-  document.getElementById('staffModalTitle').textContent='Edit Staff Hours';
-  document.getElementById('btnStaffDel').style.display='block';
-  document.getElementById('staff-date').value=h.date;
-  document.getElementById('staff-start').value=h.start||'';
-  document.getElementById('staff-end').value=h.end||'';
-  document.getElementById('staff-break').value=h.break||0;
-  document.getElementById('staff-notes').value=h.notes||'';
-  calcStaffHours();
-  document.getElementById('staffOverlay').classList.add('open');
-}
-function closeLogHours(){document.getElementById('staffOverlay').classList.remove('open');}
-function saveStaffHours(){
-  var date=document.getElementById('staff-date').value;
-  var start=document.getElementById('staff-start').value;
-  var end=document.getElementById('staff-end').value;
-  var brk=parseInt(document.getElementById('staff-break').value)||0;
-  if(!date||!start||!end){alert('Please enter a date, start time and end time.');return;}
-  var sm=timeToMins(start),em=timeToMins(end);
-  var hours=Math.max(0,(em-sm-brk)/60);
-  if(hours<=0){alert('End time must be after start time.');return;}
-  var entry={id:editStaffId||('sh-'+Date.now()),date:date,start:start,end:end,break:brk,hours:hours,notes:document.getElementById('staff-notes').value.trim()};
-  if(editStaffId){staffHours=staffHours.map(function(h){return h.id===editStaffId?entry:h;});}
-  else{staffHours.push(entry);}
-  localStorage.setItem('stbStaffHours',JSON.stringify(staffHours));
-  closeLogHours();
-  renderEarnings();
-}
-function deleteStaffHours(){
-  if(!editStaffId||!confirm('Delete this entry?'))return;
-  staffHours=staffHours.filter(function(h){return h.id!==editStaffId;});
-  localStorage.setItem('stbStaffHours',JSON.stringify(staffHours));
-  closeLogHours();
-  renderEarnings();
-}
-function renderStaffTable(range){
-  var tbody=document.getElementById('staffBody');
-  if(!tbody)return;
-  var rateInput=document.getElementById('staffRateInput');
-  if(rateInput&&staffHourlyRate>0&&!rateInput.value)rateInput.value=staffHourlyRate.toFixed(2);
-  var periodStaff=staffHours.filter(function(h){return h.date>=range.start&&h.date<=range.end;});
-  if(!periodStaff.length){tbody.innerHTML='<tr><td colspan="7" class="earn-empty">No hours logged. Click "+ Log Staff Hours" to add.</td></tr>';return;}
-  periodStaff.sort(function(a,b){return a.date.localeCompare(b.date);});
-  tbody.innerHTML=periodStaff.map(function(h){
-    var totalMins=Math.round(parseFloat(h.hours)*60);
-    var hh=Math.floor(totalMins/60),mm=totalMins%60;
-    var hoursLabel=(hh>0?hh+'hr ':''+(mm>0?mm+'min':''));
-    var cost=(parseFloat(h.hours)||0)*staffHourlyRate;
-    var dayRevenue=bookings.filter(function(b){return b.date===h.date&&b.paid;}).reduce(function(s,b){
-      return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.services&&d.services.length?d.services.reduce(function(sss,sv){return sss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):parseFloat(b.lastprice)||0);
-    },0);
-    var covered=staffHourlyRate>0?dayRevenue>=cost:null;
-    var coveredStr=staffHourlyRate>0?'<span style="font-weight:600;color:'+(covered?'#2d6a4f':'#e05252')+'">'+(covered?'✓ Yes':'✗ No — £'+(cost-dayRevenue).toFixed(2)+' short')+'</span>':'—';
-    return '<tr>'
-      +'<td>'+fmtDD(h.date)+(h.notes?'<br><span style="font-size:0.74rem;color:#94a3b8;">'+h.notes+'</span>':'')+'</td>'
-      +'<td>'+(h.start&&h.end?fmtTime(h.start)+' – '+fmtTime(h.end)+(h.break?'<br><span style="font-size:0.74rem;color:#94a3b8;">'+h.break+'min break</span>':''):'—')+'</td>'
-      +'<td>'+hoursLabel.trim()+'</td>'
-      +'<td style="color:#b45309;font-weight:600;">'+(staffHourlyRate>0?'£'+cost.toFixed(2):'Set rate above')+'</td>'
-      +'<td>£'+dayRevenue.toFixed(2)+'</td>'
-      +'<td>'+coveredStr+'</td>'
-      +'<td><button class="btn-wa-sm" style="background:#64748b;" onclick="openEditStaffHours(\''+h.id+'\')">Edit</button></td>'
-      +'</tr>';
-  }).join('');
-}
-
-// ── POPPY LATE START ───────────────────────────────────────────────────────
-function checkPoppyLateStart(){
-  var SOLO_SVCS=['Nail Clip','Nail Clip - £13','Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning','Emmi-Pet Teeth Cleaning PAYG','Emmi-Pet Teeth Cleaning x4','Emmi-Pet Teeth Cleaning x9','Emmi-Pet Teeth Maintenance','Anal Glands','Descaling','Teeth Cleaning'];
-  var today=new Date();today.setHours(0,0,0,0);
-  var todayStr=fmtISO(today);
-  var todayBookings=bookings.filter(function(b){return b.date===todayStr&&b.time;});
-  if(!todayBookings.length)return;
-  todayBookings.sort(function(a,b){return a.time.localeCompare(b.time);});
-  var soloCount=0;
-  for(var i=0;i<todayBookings.length;i++){
-    var b=todayBookings[i];
-    var allSolo=(b.dogs&&b.dogs.length?b.dogs:[{services:[{service:b.service||''}]}]).every(function(d){
-      var svcs=d.services&&d.services.length?d.services:[{service:d.service||''}];
-      return svcs.every(function(sv){return SOLO_SVCS.indexOf(sv.service)>=0;});
-    });
-    if(allSolo)soloCount++;else break;
-  }
-  if(!soloCount)return;
-  var firstGroomTime=todayBookings[soloCount]?todayBookings[soloCount].time:null;
-  var msg=soloCount===todayBookings.length
-    ?'All appointments today are solo — Poppy doesn\'t need to come in today!'
-    :'First '+soloCount+' appointment'+(soloCount>1?'s are':' is')+' solo — Poppy\'s start: <strong>'+(firstGroomTime?fmtTime(firstGroomTime):' later')+'</strong>';
-  document.getElementById('reminderBanner').classList.add('show');
-  document.getElementById('rl-poppy').innerHTML='<div class="banner-chip" style="background:#f0fdf4;border-color:#3a9e6e;"><span>🐩</span> '+msg+'</div>';
-}
-
-// ── UNPAID BOOKINGS ────────────────────────────────────────────────────────
-function checkUnpaidBookings(){
-  var today=new Date();today.setHours(0,0,0,0);
-  var todayStr=fmtISO(today);
-  var unpaid=bookings.filter(function(b){return b.date<todayStr&&!b.paid&&!b.noShow&&b.name;});
-  if(!unpaid.length)return;
-  document.getElementById('reminderBanner').classList.add('show');
-  document.getElementById('rl-unpaid').innerHTML=unpaid.map(function(b){
-    var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
-    return '<div class="banner-chip" style="background:#fdeaea;border-color:#e05252;">'
-      +'<span>💳</span><strong>'+b.name+'</strong>'+(dogNames?' ('+dogNames+')':'')+' — unpaid from '+fmtDD(b.date)
-      +(b.phone?'<button class="btn-wa-sm" style="background:#e05252;" onclick="sendPayChaseFromId(\''+b.id+'\')">Chase</button>':'')
-      +'</div>';
-  }).join('');
-}
-
-function sendPayChaseFromId(id){
-  var b=bookings.find(function(x){return x.id===id;});
-  if(!b||!b.phone)return;
-  var total=b.dogs&&b.dogs.length?b.dogs.reduce(function(s,d){return s+(d.price||0);},0):parseFloat(b.lastprice)||0;
-  var apptNote=total>0?' (£'+total.toFixed(2)+')':'';
-  openWA(b.phone,'Hi '+titleCase(b.name)+'! Just going through payments and cannot seem to see one from you for your recent appointment'+apptNote+'.'+BANK_MSG+'\n\nThank you!\nBecky - Scruff to Buff Dogs');
-}
-
-// ── BIRTHDAY REMINDERS ─────────────────────────────────────────────────────
-function checkBirthdayReminders(){
-  var today=new Date();today.setHours(0,0,0,0);
-  var mm=String(today.getMonth()+1).padStart(2,'0');
-  var dd=String(today.getDate()).padStart(2,'0');
-  var todayMMDD=mm+'-'+dd;
-  var birthdays=[];
-  customers.forEach(function(c){
-    if(!c.dogs)return;
-    c.dogs.forEach(function(d){
-      if(!d.dob)return;
-      var parts=d.dob.split('-');
-      if(parts.length<3)return;
-      var dogMMDD=parts[1]+'-'+parts[2];
-      if(dogMMDD===todayMMDD){
-        var age=today.getFullYear()-parseInt(parts[0]);
-        birthdays.push({owner:c.name,dog:d.name,age:age,phone:c.phone||''});
-      }
-    });
-  });
-  if(!birthdays.length)return;
-  document.getElementById('reminderBanner').classList.add('show');
-  document.getElementById('rl-birthday').innerHTML=birthdays.map(function(b){
-    return '<div class="banner-chip" style="background:#fff8e8;border-color:#f59e0b;">'
-      +'<span>🎂</span><strong>'+b.dog+'</strong> is '+b.age+' today! ('+b.owner+'\'s dog)'
-      +(b.phone?'<button class="btn-wa-sm" style="background:#f59e0b;" data-owner="'+b.owner.replace(/"/g,'&quot;')+'" data-dog="'+b.dog.replace(/"/g,'&quot;')+'" data-phone="'+b.phone+'" onclick="sendBirthdayMsg(this.dataset.owner,this.dataset.dog,this.dataset.phone)">Send 🎂</button>':'')
-      +'</div>';
-  }).join('');
-}
-
-function sendBirthdayMsg(owner,dog,phone){
-  openWA(phone,'Happy Birthday to the gorgeous '+dog+'! 🎂🐾 Hope they have a wonderful day — give them an extra treat from us! 🐶💕\nBecky - Scruff to Buff Dogs');
-}
-
-// ── REFERRAL DISCOUNTS BANNER ──────────────────────────────────────────────
-function checkReferralDiscounts(){
-  var pending=customers.filter(function(c){return c.pendingReferralDiscount;});
-  if(!pending.length)return;
-  document.getElementById('reminderBanner').classList.add('show');
-  document.getElementById('rl-referral').innerHTML=pending.map(function(c){
-    var lp=c.dogs&&c.dogs.length&&c.dogs[0].lastPrice?c.dogs[0].lastPrice:null;
-    var discStr=lp?'10% off = <strong>£'+(parseFloat(lp)*0.9).toFixed(2)+'</strong> (last price was £'+parseFloat(lp).toFixed(2)+')':'10% off next groom';
-    return '<div class="banner-chip" style="border-color:#f59e0b;background:#fffbeb;" id="refdisc-'+c.name.replace(/\s/g,'_')+'">'
-      +'<span>🎁</span><strong>'+c.name+'</strong> earned a referral discount — referred: <strong>'+c.referralDiscountEarnedFrom+'</strong> · '+discStr
-      +'<button class="btn-wa-sm" style="background:#f59e0b;" onclick="applyReferralDiscount(\''+c.name.replace(/'/g,"\\'")+'\')">✓ Applied</button>'
-      +'</div>';
-  }).join('');
-}
-
-function applyReferralDiscount(name){
-  var c=getCustomer(name);if(!c)return;
-  c.pendingReferralDiscount=false;
-  c.referralDiscountAppliedDate=fmtISO(new Date());
-  localStorage.setItem('stbCustomers',JSON.stringify(customers));
-  var chip=document.getElementById('refdisc-'+name.replace(/\s/g,'_'));
-  if(chip)chip.remove();
-  checkBannerVisibility();
-}
-
-function checkBannerVisibility(){
-  var zones=['rl-reminders','rl-requests','rl-rebook','rl-price','rl-unpaid','rl-birthday','rl-referral','rl-poppy'];
-  var hasContent=zones.some(function(z){var el=document.getElementById(z);return el&&el.children.length>0;});
-  var banner=document.getElementById('reminderBanner');
-  if(hasContent)banner.classList.add('show');else banner.classList.remove('show');
-}
-
 function checkDiscount(name,visits,lp){
   var f=document.getElementById('discFlag');
   if(parseInt(visits)===6){
@@ -1475,95 +1071,6 @@ function showSplitFields(){
 }
 
 // ── CALENDAR ───────────────────────────────────────────────────────────────
-function searchBookings(val){
-  var box=document.getElementById('bookingSearchResults');
-  if(!val||val.trim().length<2){box.style.display='none';return;}
-  var q=val.trim().toLowerCase();
-  var today=new Date();today.setHours(0,0,0,0);
-  var todayStr=fmtISO(today);
-  // Search future AND recent past (last 4 weeks) bookings
-  var fourWeeksAgo=fmtISO(addDays(today,-28));
-  var matches=bookings.filter(function(b){
-    if(!b.name||b.date<fourWeeksAgo)return false;
-    if(b.name.toLowerCase().indexOf(q)>=0)return true;
-    // Also search dog names
-    if(b.dogs&&b.dogs.some(function(d){return d.name&&d.name.toLowerCase().indexOf(q)>=0;}))return true;
-    if(b.dog&&b.dog.toLowerCase().indexOf(q)>=0)return true;
-    return false;
-  }).sort(function(a,b){return a.date.localeCompare(b.date);});
-
-  if(!matches.length){
-    box.style.display='block';
-    box.innerHTML='<div style="padding:12px 16px;font-size:0.85rem;color:#94a3b8;font-family:\'DM Sans\',sans-serif;">No bookings found for "'+val.replace(/</g,'&lt;')+'"</div>';
-    return;
-  }
-
-  box.style.display='block';
-  box.innerHTML=matches.map(function(b){
-    var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
-    var isFuture=b.date>=todayStr;
-    var isPast=b.date<todayStr;
-    var statusCol=isFuture?'#2d6a4f':b.paid?'#94a3b8':'#e05252';
-    var statusLabel=isFuture?'Upcoming':b.paid?'Past (paid)':'Past (unpaid)';
-    return '<div onclick="goToBooking(\''+b.id+'\')" style="padding:10px 16px;border-bottom:1px solid #f0f4fa;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background 0.1s;" onmouseover="this.style.background=\'#f5f8ff\'" onmouseout="this.style.background=\'white\'">'
-      +'<div style="flex:1;">'
-      +'<div style="font-family:\'DM Sans\',sans-serif;font-weight:600;font-size:0.88rem;color:#1e3a5f;">'+b.name+(dogNames?' — '+dogNames:'')+'</div>'
-      +'<div style="font-size:0.78rem;color:#64748b;font-family:\'DM Sans\',sans-serif;">'+fmtDD(b.date)+' at '+fmtTime(b.time)+'</div>'
-      +'</div>'
-      +'<span style="font-size:0.72rem;font-weight:600;color:'+statusCol+';font-family:\'DM Sans\',sans-serif;white-space:nowrap;">'+statusLabel+'</span>'
-      +'</div>';
-  }).join('');
-}
-
-function goToBooking(id){
-  // Jump to the week containing this booking and open it
-  var b=bookings.find(function(x){return x.id===id;});
-  if(!b)return;
-  document.getElementById('bookingSearch').value='';
-  document.getElementById('bookingSearchResults').style.display='none';
-  weekStart=getMonday(new Date(b.date+'T12:00:00'));
-  mobileOffset=0;
-  renderCal();
-  populateMonthPicker();
-  setTimeout(function(){openEdit(id);},300);
-}
-
-// Close search results when clicking outside
-document.addEventListener('click',function(e){
-  var wrap=document.getElementById('bookingSearchWrap');
-  if(wrap&&!wrap.contains(e.target)){
-    document.getElementById('bookingSearchResults').style.display='none';
-  }
-});
-
-function goToMonth(val){
-  if(!val)return;
-  var parts=val.split('-');
-  var d=new Date(parseInt(parts[0]),parseInt(parts[1])-1,1);
-  weekStart=getMonday(d);
-  mobileOffset=0;
-  renderCal();
-}
-
-function populateMonthPicker(){
-  var sel=document.getElementById('monthPicker');
-  if(!sel)return;
-  var now=new Date();
-  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  sel.innerHTML='<option value="">Jump to month...</option>';
-  // Show 6 months back and 12 months forward
-  for(var i=-6;i<=12;i++){
-    var d=new Date(now.getFullYear(),now.getMonth()+i,1);
-    var val=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-    var opt=document.createElement('option');
-    opt.value=val;
-    opt.textContent=months[d.getMonth()]+' '+d.getFullYear();
-    // Select current month
-    if(d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth())opt.selected=true;
-    sel.appendChild(opt);
-  }
-}
-
 function goToToday(){
   weekStart=getMonday(new Date());
   mobileOffset=0;
@@ -1612,10 +1119,10 @@ function checkReminders(){
     return customerIsNoShow||daysBooked>=3;
   });
   var banner=document.getElementById('reminderBanner');
-  if(!due.length){document.getElementById('rl-reminders').innerHTML='';checkBannerVisibility();return;}
+  if(!due.length){banner.classList.remove('show');return;}
   banner.classList.add('show');
   document.getElementById('reminderBanner').querySelector('h3').textContent='Upcoming appointments — send reminders or dismiss:';
-  document.getElementById('rl-reminders').innerHTML=due.map(function(b){
+  document.getElementById('reminderList').innerHTML=due.map(function(b){
     var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
     var today2=new Date();today2.setHours(0,0,0,0);
     var apptDate=new Date(b.date+'T12:00:00');
@@ -1770,8 +1277,7 @@ function renderCal(){
         else if(svc==='Anal Glands')svcCls='svc-anal-glands';
         else if(svc==='De-shed Treatment')svcCls='svc-deshed';
         else svcCls=bk.paid?'paid':'unpaid';
-        var groomerCls=bk.groomer==='poppy'?'groomer-poppy':bk.groomer==='both'?'groomer-both':'';
-        body+='<div class="bk '+svcCls+' '+groomerCls+'" style="top:'+tp+'px;height:'+hp+'px;padding-top:7px;left:'+leftOff+';width:'+colW+';right:'+rightOff+';" data-bkid="'+bk.id+'" onmousedown="startDrag(event,\''+bk.id+'\')" ontouchstart="startDrag(event,\''+bk.id+'\')" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">'
+        body+='<div class="bk '+svcCls+'" style="top:'+tp+'px;height:'+hp+'px;padding-top:7px;left:'+leftOff+';width:'+colW+';right:'+rightOff+';" data-bkid="'+bk.id+'" onmousedown="startDrag(event,\''+bk.id+'\')" ontouchstart="startDrag(event,\''+bk.id+'\')" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">'
           +'<div class="pay-dot '+(bk.paid?'paid':'unpaid')+'"></div>'
           +(function(){
             var sessionBadge='';
@@ -1847,16 +1353,10 @@ function clearForm(){
   document.getElementById('f-visits').value=1;
   document.getElementById('sugBox').innerHTML='';
   document.getElementById('discFlag').style.display='none';
-  document.getElementById('avgGroomBox').style.display='none';
   document.getElementById('referralGroup').style.display='none';
   document.getElementById('p-unpaid').checked=true;
   document.getElementById('payMethodGroup').style.display='none';
   document.getElementById('ct-existing').checked=true;
-  var grDef=document.getElementById('gr-becky');if(grDef)grDef.checked=true;
-  var dfDef=document.getElementById('df-unknown');if(dfDef)dfDef.checked=true;
-  var gw=document.getElementById('groomerWarning');if(gw)gw.style.display='none';
-  var dff=document.getElementById('dogFriendlyFlag');if(dff)dff.style.display='none';
-  var agb=document.getElementById('avgGroomBox');if(agb)agb.style.display='none';
   dogInfo={};dogServices={};
   setDogCount(1,true);
   buildTimeDropdown();
@@ -1896,11 +1396,6 @@ function openEdit(id){
   else{btnNs.textContent='✗ No Show';btnNs.style.background='#e05252';}
   checkNoshowFlag(b.name);
   document.getElementById('f-name').value=b.name;
-  showAvgGroomTime(b.name);
-  var grEl=document.getElementById('gr-'+(b.groomer||'becky'));
-  if(grEl)grEl.checked=true;
-  var c2=getCustomer(b.name);
-  loadDogFriendlyStatus(c2,b.dogFriendly);
   document.getElementById('f-phone').value=b.phone||'';
   document.getElementById('f-date').value=b.date;
   document.getElementById('f-visits').value=b.visits||1;
@@ -2065,26 +1560,13 @@ function saveBooking(){
     finishTime:finRaw,
     notes:document.getElementById('f-notes').value.trim(),
     referral:document.getElementById('f-referral').value.trim(),
-    groomer:(document.querySelector('input[name="groomer"]:checked')||{value:'becky'}).value,
-    dogFriendly:(document.querySelector('input[name="dogfriendly"]:checked')||{value:'unknown'}).value,
     paid:paid,
     payMethod:paid&&pmEl?pmEl.value:null,
     splitPayment:(paid&&pmEl&&pmEl.value==='split')?{cash:splitCash,card:splitCard,monzo:splitMonzo}:null,
     visits:parseInt(document.getElementById('f-visits').value)||1,
     ct:ct
   };
-  if(editId){
-    var oldBk=bookings.find(function(b){return b.id===editId;});
-    var dateChanged=oldBk&&(oldBk.date!==booking.date||oldBk.time!==booking.time);
-    bookings=bookings.map(function(b){return b.id===editId?booking:b;});
-    if(dateChanged&&booking.phone){
-      setTimeout(function(){
-        if(confirm('Date or time has changed!\n\nSend '+booking.name+' a WhatsApp message with the updated details?')){
-          sendRescheduleMsg(booking.id);
-        }
-      },200);
-    }
-  }
+  if(editId){bookings=bookings.map(function(b){return b.id===editId?booking:b;});}
   else{
     bookings.push(booking);
     if(booking.phone){
@@ -2253,64 +1735,13 @@ function renderWaButtons(){
   var isStrip=false;
   if(b&&b.dogs){b.dogs.forEach(function(d){var svcs=d.services&&d.services.length?d.services:[{service:d.service}];svcs.forEach(function(sv){if((sv.service||'').indexOf('Hand Strip')>-1)isStrip=true;});});}
   var stripBtn=isStrip?'<button class="btn-wa" style="background:#6b4226;" onclick="sendHandStripPriceMsg()"><span><span class="wa-title">Send Hand Stripping Price Notice</span><span class="wa-sub">Let client know current rate is £65/hr</span></span></button>':'';
-  var rebookNowBtn='<button class="btn-wa" style="background:#2d6a4f;" onclick="rebookNow()"><span><span class="wa-title">📅 Rebook Next Appointment</span><span class="wa-sub">Pre-fill a new booking from this one</span></span></button>';
   var rebookBtn='<button class="btn-wa" style="background:#0ea5e9;" onclick="sendRebookMsg()"><span><span class="wa-title">Send Rebook Link</span><span class="wa-sub">Let client choose 6–10 weeks ahead on same day</span></span></button>';
   var reviewBtn='<button class="btn-wa" style="background:#34a853;" onclick="sendGoogleReviewMsg()"><span><span class="wa-title">Request Google Review ⭐</span><span class="wa-sub">Send link to your Google review page</span></span></button>';
   var cancelFeeBtn='<button class="btn-wa" style="background:#e05252;" onclick="sendCancelFeeMsg()"><span><span class="wa-title">Send Cancellation Fee Notice</span><span class="wa-sub">Politely request late cancellation fee</span></span></button>';
-  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookNowBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
-  else{cont.innerHTML='<button class="btn-wa" onclick="sendConfirmMsg(null)"><span><span class="wa-title">Send Confirmation</span><span class="wa-sub">Booking confirmed with appointment details</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookNowBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
+  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
+  else{cont.innerHTML='<button class="btn-wa" onclick="sendConfirmMsg(null)"><span><span class="wa-title">Send Confirmation</span><span class="wa-sub">Booking confirmed with appointment details</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
 }
-function sendRescheduleMsg(id){
-  var b=id?bookings.find(function(x){return x.id===id;}):getCurrent();
-  if(!b||!b.phone)return;
-  var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
-  openWA(b.phone,'Hi '+titleCase(b.name)+'! Just a quick note to let you know that '+dogNames+'\'s appointment has been rescheduled.\n\nYour new date and time is:\n📅 '+fmtDD(b.date)+'\n🕐 '+fmtTime(b.time)+'\n\nPlease let me know if this doesn\'t work for you!\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
-}
-
 function getCurrent(){return editId?bookings.find(function(b){return b.id===editId;}):null;}
-
-function rebookNow(){
-  var b=getCurrent();if(!b)return;
-  // Close current booking
-  closeMain();
-  // Open a fresh booking pre-filled with the same details but no date/time
-  setTimeout(function(){
-    openAdd();
-    setTimeout(function(){
-      // Fill customer details
-      document.getElementById('f-name').value=b.name;
-      document.getElementById('f-phone').value=b.phone||'';
-      document.getElementById('f-visits').value=(parseInt(b.visits)||1)+1;
-      document.getElementById('f-notes').value=b.notes||'';
-      // Copy customer type
-      var ctEl=document.getElementById('ct-'+(b.ct||'existing'));
-      if(ctEl)ctEl.checked=true;
-      // Copy dog info and services
-      dogInfo={};dogServices={};
-      if(b.dogs&&b.dogs.length){
-        b.dogs.forEach(function(d,i){
-          var idx=i+1;
-          dogInfo[idx]={name:d.name||'',breed:d.breed||'',notes:d.notes||'',dob:d.dob||''};
-          dogServices[idx]=d.services&&d.services.length
-            ?d.services.map(function(sv){return {service:sv.service||'',duration:sv.duration||60,price:sv.price||'',groomer:sv.groomer||'becky'};})
-            :[{service:d.service||'',duration:d.duration||60,price:d.price||'',groomer:d.groomer||'becky'}];
-        });
-        setDogCount(b.dogs.length,true);
-      }
-      // Copy groomer at booking level if set
-      var c=getCustomer(b.name);
-      if(c){
-        checkDiscount(c.name,document.getElementById('f-visits').value,c.dogs&&c.dogs[0]?c.dogs[0].lastPrice:null);
-        loadDogFriendlyStatus(c);
-        showAvgGroomTime(c.name);
-      }
-      // Leave date/time blank so they pick the new slot
-      document.getElementById('f-date').value='';
-      document.getElementById('f-time').value='';
-      document.getElementById('f-finish').value='';
-    },200);
-  },300);
-}
 
 function sendHandStripPriceMsg(){
   var b=getCurrent();if(!b||!b.phone)return;
@@ -2359,7 +1790,7 @@ function sendReminderMsg(id){
 }
 function sendPaymentChase(){
   var b=getCurrent();if(!b||!b.phone)return;
-  openWA(b.phone,'Hi '+titleCase(b.name)+',\n\nJust going through payments, and can\'t seem to see one from you, please could you check from your end?'+BANK_MSG+'\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
+  openWA(b.phone,'Hi '+titleCase(b.name)+',\n\nJust going through payments, and can\'t seem to see one from you, please could you check from your end?\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
 }
 function sendReminderPayMsgId(id){
   var b=id?bookings.find(function(x){return x.id===id;}):getCurrent();
@@ -2390,7 +1821,7 @@ function sendPayment(){
   var price=parseFloat(document.getElementById('f-price-pay').value);
   if(!price||price<=0){alert('Please enter the final price.');return;}
   var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
-  openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\n'+dogNames+' was an absolute star today - thank you so much for bringing them in!\n\nTotal for today\'s groom: *£'+price.toFixed(2)+'*'+BANK_MSG+'\n\nThanks again - it was lovely to see you both!');
+  openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\n'+dogNames+' was an absolute star today - thank you so much for bringing them in!\n\nTotal for today\'s groom: *£'+price.toFixed(2)+'*\n\nYou are welcome to pay by card when you collect, or if you would prefer to pay in advance:\n'+SUMUP+'\n\nThanks again - it was lovely to see you both!');
   closePay();
 }
 
@@ -2459,7 +1890,59 @@ function renderEarnings(){
         +'</tr>';
     }).join('');
   }
-  renderStaffTable(range);
+}
+
+// ── HOLIDAY MODE ───────────────────────────────────────────────────────────
+function saveHolidayMode(){
+  var start=document.getElementById('holidayStart').value;
+  var end=document.getElementById('holidayEnd').value;
+  if(!start||!end){alert('Please set both a start and end date.');return;}
+  if(end<start){alert('End date must be after start date.');return;}
+  localStorage.setItem('stbHolidayStart',start);
+  localStorage.setItem('stbHolidayEnd',end);
+  fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'setHoliday',start:start,end:end})})
+    .then(function(){updateHolidayModeNote();})
+    .catch(function(){updateHolidayModeNote();});
+}
+function clearHolidayMode(){
+  localStorage.removeItem('stbHolidayStart');
+  localStorage.removeItem('stbHolidayEnd');
+  document.getElementById('holidayStart').value='';
+  document.getElementById('holidayEnd').value='';
+  fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'setHoliday',start:'',end:''})}).catch(function(){});
+  var note=document.getElementById('holidayModeNote');
+  note.style.color='#3a9e6e';note.textContent='Holiday mode cleared.';
+  setTimeout(function(){note.textContent='';},3000);
+}
+function updateHolidayModeNote(){
+  var start=localStorage.getItem('stbHolidayStart');
+  var end=localStorage.getItem('stbHolidayEnd');
+  var note=document.getElementById('holidayModeNote');
+  if(!note)return;
+  if(start){document.getElementById('holidayStart').value=start;}
+  if(end){document.getElementById('holidayEnd').value=end;}
+  if(start&&end){
+    var today=fmtISO(new Date());
+    if(today>end){
+      localStorage.removeItem('stbHolidayStart');
+      localStorage.removeItem('stbHolidayEnd');
+      document.getElementById('holidayStart').value='';
+      document.getElementById('holidayEnd').value='';
+      note.style.color='#3a9e6e';
+      note.textContent='Holiday period ended — automatically cleared. Welcome back! 🌴';
+      return;
+    }
+    if(today>=start&&today<=end){
+      note.style.color='#0ea5e9';
+      note.textContent='🌴 ACTIVE: '+fmtDD(start)+' – '+fmtDD(end);
+    } else {
+      note.style.color='#64748b';
+      note.textContent='Scheduled: '+fmtDD(start)+' – '+fmtDD(end);
+    }
+  } else {
+    note.style.color='#94a3b8';
+    note.textContent='Not set';
+  }
 }
 
 // ── EXPENSES ───────────────────────────────────────────────────────────────
@@ -2570,7 +2053,7 @@ function checkPrefill(){
   banner.style.background='#fff8e0';
   banner.style.borderBottomColor='#f59e0b';
   banner.classList.add('show');
-  document.getElementById('rl-requests').innerHTML=
+  document.getElementById('reminderList').innerHTML=
     '<div class="banner-chip" style="border-color:#f59e0b;flex-direction:column;align-items:flex-start;gap:4px;min-width:240px;">'
     +'<div style="font-weight:600;color:#92400e;">&#128276; New Booking Request</div>'
     +'<div><strong>'+name+'</strong> &mdash; '+dog+(breed?' ('+breed+')':'')+'</div>'
@@ -2587,40 +2070,27 @@ function checkPrefill(){
 }
 function addFromPrefill(){
   var p=window._prefill;if(!p)return;
-  // Open form with date/time
   openAddAt(p.date,p.time);
   setTimeout(function(){
-    // Basic fields
-    document.getElementById('f-name').value=p.name||'';
-    document.getElementById('f-phone').value=p.phone||'';
-    if(p.notes)document.getElementById('f-notes').value=p.notes;
+    document.getElementById('f-name').value=p.name;
+    document.getElementById('f-phone').value=p.phone;
+    var dogEl=document.getElementById('f-dog-1');if(dogEl)dogEl.value=p.dog;
+    var breedEl=document.getElementById('f-breed-1');if(breedEl)breedEl.value=p.breed;
+    // Service may be a single value or comma-separated list from multi-select booking page
+    var services = p.service ? p.service.split(',').map(function(s){return s.trim();}) : [];
+    if(services.length>0){
+      // Set first service in slot 0-0
+      dogServices[0] = services.map(function(svc,i){
+        var dur = SVC_DURATIONS[svc] || 60;
+        return {service:svc, duration:dur, price:''};
+      });
+      renderDogRows();
+      // trigger calcFinish after rows render
+      setTimeout(function(){ calcFinish(); }, 100);
+    }
     document.getElementById('ct-new').checked=true;
-    renderWaButtons();
-    // Build services for dog slot 1
-    var services=p.service?p.service.split(',').map(function(s){return s.trim();}).filter(Boolean):[];
-    dogInfo={};dogServices={};
-    dogInfo[1]={name:p.dog||'',breed:p.breed||'',notes:'',dob:''};
-    dogServices[1]=services.length>0
-      ?services.map(function(svc){return{service:svc,duration:SVC_DURATIONS[svc]||60,price:''};})
-      :[{service:'Full Groom',duration:60,price:''}];
-    setDogCount(1,true);
-    // After render, fill dog name and breed into the DOM fields
-    setTimeout(function(){
-      var dogEl=document.getElementById('f-dog-1');if(dogEl)dogEl.value=p.dog||'';
-      var breedEl=document.getElementById('f-breed-1');if(breedEl)breedEl.value=p.breed||'';
-      // Set service dropdown
-      if(services.length>0){
-        var svcEl=document.getElementById('f-service-1-0');
-        if(svcEl){
-          svcEl.value=services[0];
-          var otherGroup=document.getElementById('f-other-group-1-0');
-          if(otherGroup)otherGroup.style.display=services[0]==='Other'?'block':'none';
-        }
-      }
-      calcFinish();
-    },200);
     dismissPrefill();
-  },300);
+  },200);
 }
 function waReplyPrefill(){
   var p=window._prefill;if(!p||!p.phone)return;
@@ -2629,12 +2099,12 @@ function waReplyPrefill(){
   window.open('https://wa.me/'+c,'_blank');
 }
 function dismissPrefill(){
-  document.getElementById('rl-requests').innerHTML='';
+  var banner=document.getElementById('reminderBanner');
+  banner.classList.remove('show');
   banner.style.background='';
   banner.style.borderBottomColor='';
   window._prefill=null;
   localStorage.removeItem('pendingRequest');
-  checkBannerVisibility();
 }
 
 // ── RESTORE PENDING REQUEST ────────────────────────────────────────────────
@@ -2735,19 +2205,15 @@ document.getElementById('blockOverlay').addEventListener('click',function(e){if(
 document.getElementById('payOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('payOverlay'))closePay();});
 document.getElementById('daySummaryOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('daySummaryOverlay'))document.getElementById('daySummaryOverlay').classList.remove('open');});
 document.getElementById('expOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('expOverlay'))closeExpense();});
-document.getElementById('staffOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('staffOverlay'))closeLogHours();});
 document.addEventListener('click',function(e){if(!e.target.closest('#f-name')&&!e.target.closest('#sugBox'))document.getElementById('sugBox').innerHTML='';});
 document.getElementById('p-paid').addEventListener('change',function(){showPayMethod(true);});
 document.getElementById('p-unpaid').addEventListener('change',function(){showPayMethod(false);});
 renderCal();
-populateMonthPicker();
+updateHolidayModeNote();
+setTimeout(checkPrefill,300);
 setTimeout(checkSheetRequests,1000);
 setTimeout(checkSundayAutoExport,2000);
 setTimeout(checkFridayScheduleReminder,2500);
-setTimeout(checkPoppyLateStart,1500);
-setTimeout(checkBirthdayReminders,1800);
-setTimeout(checkUnpaidBookings,2200);
-setTimeout(checkReferralDiscounts,2700);
 setTimeout(checkRebookNudge,3000);
 setTimeout(checkPriceNudge,3500);
 
@@ -3040,7 +2506,7 @@ function sendGoogleReviewMsg(){
 
 function sendCancelFeeMsg(){
   var b=getCurrent();if(!b||!b.phone)return;
-  openWA(b.phone,'Hi '+titleCase(b.name)+', I hope you\'re well!\n\nAs your recent appointment was cancelled with less than 48 hours notice, a cancellation fee is applicable as per our terms and conditions.'+BANK_MSG+'\n\nI completely understand that things come up unexpectedly, and I do appreciate your understanding. Please don\'t hesitate to get in touch if you\'d like to discuss this.\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
+  openWA(b.phone,'Hi '+titleCase(b.name)+', I hope you\'re well!\n\nAs your recent appointment was cancelled with less than 48 hours notice, a cancellation fee is applicable as per our terms and conditions.\n\nIf you\'d like to pay this, you\'re welcome to do so here:\n'+SUMUP+'\n\nI completely understand that things come up unexpectedly, and I do appreciate your understanding. Please don\'t hesitate to get in touch if you\'d like to discuss this.\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
 }
 
 function onReferralInput(val){
@@ -3135,67 +2601,19 @@ function checkRebookNudge(){
   });
 
   if(!overdue.length)return;
-  var dismissed=JSON.parse(localStorage.getItem('stbDismissedRebook')||'[]');
   var banner=document.getElementById('reminderBanner');
+  var list=document.getElementById('reminderList');
   banner.classList.add('show');
-  var html=overdue.filter(function(o){return dismissed.indexOf(o.name)<0;}).map(function(o){
-    var safeId='rebook-'+o.name.replace(/[^a-zA-Z0-9]/g,'_');
+  var html=overdue.map(function(o){
     var weeks=Math.floor((today-new Date(o.lastDate+'T12:00:00'))/(7*864e5));
-    return '<div class="banner-chip rebook-chip" id="'+safeId+'">'
+    return '<div class="banner-chip rebook-chip">'
       +'<span>&#128337;</span>'
       +'<strong>'+o.name+'</strong>'
       +' — last seen '+weeks+' weeks ago'
-      +(o.phone
-        ?'<button class="btn-wa-sm" style="background:#f59e0b;" onclick="sendRebookNudge(\''+o.name+'\',\''+o.phone+'\')">WhatsApp</button>'
-        :'')
-      +'<button class="btn-wa-sm" style="background:#2d6a4f;" onclick="openRebookFor(\''+o.name.replace(/'/g,"\\'")+'\')">Rebook</button>'
-      +'<button class="btn-wa-sm" style="background:#94a3b8;margin-left:4px;" onclick="dismissRebookChip(\''+o.name.replace(/'/g,"\\'")+'\')" title="Dismiss">&#10005;</button>'
+      +(o.phone?'<button class="btn-wa-sm" style="background:#f59e0b;" onclick="sendRebookNudge(\''+o.name+'\',\''+o.phone+'\')">Rebook</button>':'')
       +'</div>';
   }).join('');
-  document.getElementById('rl-rebook').innerHTML=html;
-}
-
-function openRebookFor(name){
-  var c=getCustomer(name);
-  openAdd();
-  setTimeout(function(){
-    document.getElementById('f-name').value=name;
-    if(c){
-      document.getElementById('f-phone').value=c.phone||'';
-      var next=(c.visits||0)+1;
-      document.getElementById('f-visits').value=next;
-      loadDogFriendlyStatus(c);
-      showAvgGroomTime(name);
-      checkDiscount(name,next,c.dogs&&c.dogs[0]?c.dogs[0].lastPrice:null);
-      // Pre-fill dog info from customer record
-      if(c.dogs&&c.dogs.length){
-        dogInfo={};dogServices={};
-        c.dogs.forEach(function(d,i){
-          var idx=i+1;
-          dogInfo[idx]={name:d.name||'',breed:d.breed||'',notes:d.notes||'',dob:d.dob||''};
-          dogServices[idx]=[{service:d.lastService||'',duration:d.lastDuration||60,price:d.lastPrice||'',groomer:d.lastGroomer||'becky'}];
-        });
-        setDogCount(c.dogs.length,true);
-      }
-    }
-  },200);
-}
-
-function dismissRebookChip(name){
-  var dismissed=JSON.parse(localStorage.getItem('stbDismissedRebook')||'[]');
-  if(dismissed.indexOf(name)<0)dismissed.push(name);
-  localStorage.setItem('stbDismissedRebook',JSON.stringify(dismissed));
-  var safeId='rebook-'+name.replace(/[^a-zA-Z0-9]/g,'_');
-  var chip=document.getElementById(safeId);
-  if(chip)chip.remove();
-  checkBannerVisibility();
-}
-
-function checkBannerVisibility(){
-  var banner=document.getElementById('reminderBanner');
-  var zones=['rl-reminders','rl-requests','rl-rebook','rl-price','rl-unpaid','rl-birthday','rl-referral','rl-poppy'];
-  var hasContent=zones.some(function(z){var el=document.getElementById(z);return el&&el.children.length>0;});
-  if(hasContent)banner.classList.add('show');else banner.classList.remove('show');
+  list.innerHTML=list.innerHTML+html;
 }
 
 function sendRebookNudge(name,phone){
