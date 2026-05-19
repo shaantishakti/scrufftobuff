@@ -279,6 +279,13 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
     </div>
   </div>
   <div class="cal-wrap"><div class="cal-outer" id="calOuter"></div></div>
+  <!-- BOOKING SEARCH -->
+  <div id="bookingSearchWrap" style="padding:8px 16px 0;position:relative;max-width:400px;">
+    <input type="text" id="bookingSearch" placeholder="🔍 Search future bookings..." autocomplete="off"
+      oninput="searchBookings(this.value)"
+      style="width:100%;padding:8px 14px;border:1.5px solid var(--tan-light);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--brown);background:white;outline:none;">
+    <div id="bookingSearchResults" style="display:none;position:absolute;top:calc(100% + 2px);left:16px;right:0;background:white;border:1.5px solid var(--tan-light);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:100;max-height:320px;overflow-y:auto;"></div>
+  </div>
 </div>
 <div class="page" id="earnPage">
   <div class="earnings-page">
@@ -1461,6 +1468,67 @@ function showSplitFields(){
 }
 
 // ── CALENDAR ───────────────────────────────────────────────────────────────
+function searchBookings(val){
+  var box=document.getElementById('bookingSearchResults');
+  if(!val||val.trim().length<2){box.style.display='none';return;}
+  var q=val.trim().toLowerCase();
+  var today=new Date();today.setHours(0,0,0,0);
+  var todayStr=fmtISO(today);
+  // Search future AND recent past (last 4 weeks) bookings
+  var fourWeeksAgo=fmtISO(addDays(today,-28));
+  var matches=bookings.filter(function(b){
+    if(!b.name||b.date<fourWeeksAgo)return false;
+    if(b.name.toLowerCase().indexOf(q)>=0)return true;
+    // Also search dog names
+    if(b.dogs&&b.dogs.some(function(d){return d.name&&d.name.toLowerCase().indexOf(q)>=0;}))return true;
+    if(b.dog&&b.dog.toLowerCase().indexOf(q)>=0)return true;
+    return false;
+  }).sort(function(a,b){return a.date.localeCompare(b.date);});
+
+  if(!matches.length){
+    box.style.display='block';
+    box.innerHTML='<div style="padding:12px 16px;font-size:0.85rem;color:#94a3b8;font-family:\'DM Sans\',sans-serif;">No bookings found for "'+val.replace(/</g,'&lt;')+'"</div>';
+    return;
+  }
+
+  box.style.display='block';
+  box.innerHTML=matches.map(function(b){
+    var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
+    var isFuture=b.date>=todayStr;
+    var isPast=b.date<todayStr;
+    var statusCol=isFuture?'#2d6a4f':b.paid?'#94a3b8':'#e05252';
+    var statusLabel=isFuture?'Upcoming':b.paid?'Past (paid)':'Past (unpaid)';
+    return '<div onclick="goToBooking(\''+b.id+'\')" style="padding:10px 16px;border-bottom:1px solid #f0f4fa;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background 0.1s;" onmouseover="this.style.background=\'#f5f8ff\'" onmouseout="this.style.background=\'white\'">'
+      +'<div style="flex:1;">'
+      +'<div style="font-family:\'DM Sans\',sans-serif;font-weight:600;font-size:0.88rem;color:#1e3a5f;">'+b.name+(dogNames?' — '+dogNames:'')+'</div>'
+      +'<div style="font-size:0.78rem;color:#64748b;font-family:\'DM Sans\',sans-serif;">'+fmtDD(b.date)+' at '+fmtTime(b.time)+'</div>'
+      +'</div>'
+      +'<span style="font-size:0.72rem;font-weight:600;color:'+statusCol+';font-family:\'DM Sans\',sans-serif;white-space:nowrap;">'+statusLabel+'</span>'
+      +'</div>';
+  }).join('');
+}
+
+function goToBooking(id){
+  // Jump to the week containing this booking and open it
+  var b=bookings.find(function(x){return x.id===id;});
+  if(!b)return;
+  document.getElementById('bookingSearch').value='';
+  document.getElementById('bookingSearchResults').style.display='none';
+  weekStart=getMonday(new Date(b.date+'T12:00:00'));
+  mobileOffset=0;
+  renderCal();
+  populateMonthPicker();
+  setTimeout(function(){openEdit(id);},300);
+}
+
+// Close search results when clicking outside
+document.addEventListener('click',function(e){
+  var wrap=document.getElementById('bookingSearchWrap');
+  if(wrap&&!wrap.contains(e.target)){
+    document.getElementById('bookingSearchResults').style.display='none';
+  }
+});
+
 function goToMonth(val){
   if(!val)return;
   var parts=val.split('-');
