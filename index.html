@@ -1240,11 +1240,15 @@ function calcStaffHours(){
   if(!start||!end){calc.style.display='none';return;}
   var sm=timeToMins(start),em=timeToMins(end);
   if(em<=sm){calc.style.display='none';return;}
-  var worked=(em-sm-brk)/60;
-  if(worked<=0){calc.style.display='none';return;}
-  document.getElementById('staffHoursResult').textContent=worked.toFixed(2)+' hrs';
+  var totalMins=em-sm-brk;
+  if(totalMins<=0){calc.style.display='none';return;}
+  var h=Math.floor(totalMins/60);
+  var m=totalMins%60;
+  var label=(h>0?h+'hr ':'')+( m>0?m+'min':'');
+  document.getElementById('staffHoursResult').textContent=label.trim();
   var costEl=document.getElementById('staffCostResult');
-  costEl.textContent=staffHourlyRate>0?'= £'+(worked*staffHourlyRate).toFixed(2):'';
+  var hoursDecimal=totalMins/60;
+  costEl.textContent=staffHourlyRate>0?'= £'+(hoursDecimal*staffHourlyRate).toFixed(2):'';
   calc.style.display='block';
 }
 function openLogHours(dateStr){
@@ -1306,6 +1310,9 @@ function renderStaffTable(range){
   if(!periodStaff.length){tbody.innerHTML='<tr><td colspan="7" class="earn-empty">No hours logged. Click "+ Log Staff Hours" to add.</td></tr>';return;}
   periodStaff.sort(function(a,b){return a.date.localeCompare(b.date);});
   tbody.innerHTML=periodStaff.map(function(h){
+    var totalMins=Math.round(parseFloat(h.hours)*60);
+    var hh=Math.floor(totalMins/60),mm=totalMins%60;
+    var hoursLabel=(hh>0?hh+'hr ':''+(mm>0?mm+'min':''));
     var cost=(parseFloat(h.hours)||0)*staffHourlyRate;
     var dayRevenue=bookings.filter(function(b){return b.date===h.date&&b.paid;}).reduce(function(s,b){
       return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.services&&d.services.length?d.services.reduce(function(sss,sv){return sss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):parseFloat(b.lastprice)||0);
@@ -1315,7 +1322,7 @@ function renderStaffTable(range){
     return '<tr>'
       +'<td>'+fmtDD(h.date)+(h.notes?'<br><span style="font-size:0.74rem;color:#94a3b8;">'+h.notes+'</span>':'')+'</td>'
       +'<td>'+(h.start&&h.end?fmtTime(h.start)+' – '+fmtTime(h.end)+(h.break?'<br><span style="font-size:0.74rem;color:#94a3b8;">'+h.break+'min break</span>':''):'—')+'</td>'
-      +'<td>'+parseFloat(h.hours).toFixed(2)+' hrs</td>'
+      +'<td>'+hoursLabel.trim()+'</td>'
       +'<td style="color:#b45309;font-weight:600;">'+(staffHourlyRate>0?'£'+cost.toFixed(2):'Set rate above')+'</td>'
       +'<td>£'+dayRevenue.toFixed(2)+'</td>'
       +'<td>'+coveredStr+'</td>'
