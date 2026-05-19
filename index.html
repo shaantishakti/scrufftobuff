@@ -2512,27 +2512,40 @@ function checkPrefill(){
 }
 function addFromPrefill(){
   var p=window._prefill;if(!p)return;
+  // Open form with date/time
   openAddAt(p.date,p.time);
   setTimeout(function(){
-    document.getElementById('f-name').value=p.name;
-    document.getElementById('f-phone').value=p.phone;
-    var dogEl=document.getElementById('f-dog-1');if(dogEl)dogEl.value=p.dog;
-    var breedEl=document.getElementById('f-breed-1');if(breedEl)breedEl.value=p.breed;
-    // Service may be a single value or comma-separated list from multi-select booking page
-    var services = p.service ? p.service.split(',').map(function(s){return s.trim();}) : [];
-    if(services.length>0){
-      // Set first service in slot 0-0
-      dogServices[0] = services.map(function(svc,i){
-        var dur = SVC_DURATIONS[svc] || 60;
-        return {service:svc, duration:dur, price:''};
-      });
-      renderDogRows();
-      // trigger calcFinish after rows render
-      setTimeout(function(){ calcFinish(); }, 100);
-    }
+    // Basic fields
+    document.getElementById('f-name').value=p.name||'';
+    document.getElementById('f-phone').value=p.phone||'';
+    if(p.notes)document.getElementById('f-notes').value=p.notes;
     document.getElementById('ct-new').checked=true;
+    renderWaButtons();
+    // Build services for dog slot 1
+    var services=p.service?p.service.split(',').map(function(s){return s.trim();}).filter(Boolean):[];
+    dogInfo={};dogServices={};
+    dogInfo[1]={name:p.dog||'',breed:p.breed||'',notes:'',dob:''};
+    dogServices[1]=services.length>0
+      ?services.map(function(svc){return{service:svc,duration:SVC_DURATIONS[svc]||60,price:''};})
+      :[{service:'Full Groom',duration:60,price:''}];
+    setDogCount(1,true);
+    // After render, fill dog name and breed into the DOM fields
+    setTimeout(function(){
+      var dogEl=document.getElementById('f-dog-1');if(dogEl)dogEl.value=p.dog||'';
+      var breedEl=document.getElementById('f-breed-1');if(breedEl)breedEl.value=p.breed||'';
+      // Set service dropdown
+      if(services.length>0){
+        var svcEl=document.getElementById('f-service-1-0');
+        if(svcEl){
+          svcEl.value=services[0];
+          var otherGroup=document.getElementById('f-other-group-1-0');
+          if(otherGroup)otherGroup.style.display=services[0]==='Other'?'block':'none';
+        }
+      }
+      calcFinish();
+    },200);
     dismissPrefill();
-  },200);
+  },300);
 }
 function waReplyPrefill(){
   var p=window._prefill;if(!p||!p.phone)return;
