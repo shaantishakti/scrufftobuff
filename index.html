@@ -1215,7 +1215,8 @@ function calcStaffHours(){
   if(em<=sm){calc.style.display='none';return;}
   var totalMins=em-sm-brk;if(totalMins<=0){calc.style.display='none';return;}
   var h=Math.floor(totalMins/60),m=totalMins%60;
-  document.getElementById('staffHoursResult').textContent=(h>0?h+'hr ':''+(m>0?m+'min':''));
+  var label=(h>0?h+'hr ':'')+( m>0?m+'min':'');
+  document.getElementById('staffHoursResult').textContent=label.trim();
   var costEl=document.getElementById('staffCostResult');
   costEl.textContent=staffHourlyRate>0?'= £'+((totalMins/60)*staffHourlyRate).toFixed(2):'';
   calc.style.display='block';
@@ -1266,7 +1267,7 @@ function renderStaffTable(range){
   tbody.innerHTML=ps.map(function(h){
     var totalMins=Math.round(parseFloat(h.hours)*60);
     var hh=Math.floor(totalMins/60),mm=totalMins%60;
-    var hoursLabel=(hh>0?hh+'hr ':''+(mm>0?mm+'min':''));
+    var hoursLabel=(hh>0?hh+'hr ':'')+( mm>0?mm+'min':'');
     var cost=(parseFloat(h.hours)||0)*staffHourlyRate;
     var dayRev=bookings.filter(function(b){return b.date===h.date&&b.paid;}).reduce(function(s,b){return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,d){return ss+(d.services&&d.services.length?d.services.reduce(function(sss,sv){return sss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):parseFloat(b.lastprice)||0);},0);
     var covered=staffHourlyRate>0?dayRev>=cost:null;
