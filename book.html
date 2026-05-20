@@ -919,45 +919,51 @@ function submitRequest(){
     }
   }
 }
-// ── HOLIDAY MODE — fetch from Google Sheet so all devices see it ───────────
+
+// ── HOLIDAY MODE ──────────────────────────────────────────────────────────
+function applyHolidayMode(away){
+  // Only restrict services if Poppy is covering (Becky is away)
+  // If Becky is covering (Poppy is away) — no restrictions, no message needed
+  if(away==='becky'){
+    // Poppy is covering — hide what she can't do
+    var teethBtn=document.getElementById('teethTabBtn');
+    if(teethBtn)teethBtn.style.display='none';
+    var teethPanel=document.getElementById('svc-tab-teeth');
+    if(teethPanel)teethPanel.style.display='none';
+    document.querySelectorAll('.svc-chip,.slot-chip').forEach(function(chip){
+      var svc=chip.getAttribute('onclick')||chip.textContent||'';
+      if(svc.indexOf('Anal Glands')>=0||svc.indexOf('Descaling')>=0||svc.indexOf('Puppy Intro')>=0){
+        chip.style.display='none';
+      }
+    });
+    var notice=document.createElement('div');
+    notice.style.cssText='background:#f3e8ff;border:1.5px solid #c4b5fd;border-radius:10px;padding:12px 16px;font-size:0.85rem;color:#6b21a8;margin-bottom:16px;font-family:sans-serif;';
+    notice.innerHTML='🐩 <strong>Poppy is covering whilst Becky is away.</strong> Full grooms, wash & dry, nails and de-shed are available. Emmi-Pet, teeth, anal glands, descaling and puppy intros are not available during this period.';
+    var card=document.querySelector('.card');
+    if(card)card.insertBefore(notice,card.firstChild);
+  }
+  // If Poppy is away — Becky covers everything, no restrictions, no notice needed
+}
+
 (function checkHolidayMode(){
   fetch(SHEET_URL+'?action=getHoliday')
     .then(function(r){return r.json();})
     .then(function(h){
       if(!h||!h.start||!h.end)return;
       var today=new Date();today.setHours(0,0,0,0);
-      var start=new Date(h.start+'T00:00:00');
-      var end=new Date(h.end+'T23:59:59');
-      if(today<start||today>end)return;
-      applyHolidayMode();
+      var s=new Date(h.start+'T00:00:00');
+      var e=new Date(h.end+'T23:59:59');
+      if(today>=s&&today<=e)applyHolidayMode(h.away||'poppy');
     })
     .catch(function(){
-      // Fallback to localStorage if sheet unavailable
       var start=localStorage.getItem('stbHolidayStart');
       var end=localStorage.getItem('stbHolidayEnd');
+      var away=localStorage.getItem('stbHolidayAway')||'poppy';
       if(!start||!end)return;
       var today=new Date();today.setHours(0,0,0,0);
-      var s=new Date(start+'T00:00:00');
-      var e=new Date(end+'T23:59:59');
-      if(today>=s&&today<=e)applyHolidayMode();
+      if(today>=new Date(start+'T00:00:00')&&today<=new Date(end+'T23:59:59'))applyHolidayMode(away);
     });
 })();
-
-function applyHolidayMode(){
-  var teethBtn=document.getElementById('teethTabBtn');
-  if(teethBtn)teethBtn.style.display='none';
-  var teethPanel=document.getElementById('svc-tab-teeth');
-  if(teethPanel)teethPanel.style.display='none';
-  document.querySelectorAll('.svc-chip').forEach(function(chip){
-    var svc=chip.getAttribute('onclick')||'';
-    if(svc.indexOf('Anal Glands')>=0||svc.indexOf('Descaling')>=0){
-      chip.style.display='none';
-    }
-  });
-  var notice=document.createElement('div');
-  notice.style.cssText='background:#e0f2fe;border:1px solid #7dd3fc;border-radius:10px;padding:12px 16px;font-size:0.85rem;color:#0369a1;margin-bottom:16px;';
-  notice.innerHTML='🐩 <strong>Poppy is covering whilst Becky is away.</strong> Groom, nails and puppy services are available as normal. Emmi-Pet, teeth cleaning, anal glands and descaling are not available during this period.';
-  var card=document.querySelector('.card');
-  if(card)card.insertBefore(notice,card.firstChild);
-}
 </script>
+</body>
+</html>
