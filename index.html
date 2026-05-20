@@ -120,6 +120,8 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 #p-unpaid:checked~label[for=p-unpaid]{background:var(--unpaid-bg);border-color:var(--unpaid);color:var(--unpaid);}
 #ct-existing:checked~label[for=ct-existing]{background:var(--paid-bg);border-color:var(--paid);color:var(--paid);}
 #ct-new:checked~label[for=ct-new]{background:#e0f2fe;border-color:#0ea5e9;color:#0369a1;}
+#hol-becky:checked~label[for=hol-becky]{background:var(--becky-bg);border-color:var(--becky);color:var(--becky);}
+#hol-poppy:checked~label[for=hol-poppy]{background:var(--poppy-bg);border-color:var(--poppy);color:var(--poppy);}
 #pm-cash:checked~label[for=pm-cash]{background:#fef3c7;border-color:var(--cash);color:#92400e;}
 #pm-card:checked~label[for=pm-card]{background:#ede9fe;border-color:var(--card);color:#4338ca;}
 #pm-monzo:checked~label[for=pm-monzo]{background:#fee2e2;border-color:var(--monzo);color:#b91c1c;}
@@ -1372,12 +1374,15 @@ function saveHolidayMode(){
   var away=(document.querySelector('input[name="holidayAway"]:checked')||{value:'poppy'}).value;
   if(!start||!end){alert('Please set both a start and end date.');return;}
   if(end<start){alert('End date must be after start date.');return;}
+  // Save locally immediately — works straight away
   localStorage.setItem('stbHolidayStart',start);
   localStorage.setItem('stbHolidayEnd',end);
   localStorage.setItem('stbHolidayAway',away);
+  updateHolidayModeNote();
+  renderCal();
+  // Also try to save to sheet for customer booking page
   fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'setHoliday',start:start,end:end,away:away})})
-    .then(function(){updateHolidayModeNote();renderCal();})
-    .catch(function(){updateHolidayModeNote();renderCal();});
+    .catch(function(){});// Sheet save is best-effort, local save already done
 }
 function clearHolidayMode(){
   localStorage.removeItem('stbHolidayStart');localStorage.removeItem('stbHolidayEnd');localStorage.removeItem('stbHolidayAway');
