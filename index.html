@@ -324,8 +324,15 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
     <table class="earn-table"><thead><tr><th>Date</th><th>Times</th><th>Hours</th><th>Cost</th><th>Revenue that day</th><th>Covered?</th><th></th></tr></thead><tbody id="staffBody"></tbody></table>
     <button onclick="openLogHours()" style="margin-top:10px;background:#b45309;color:white;border:none;padding:7px 16px;border-radius:7px;font-size:0.83rem;font-weight:600;cursor:pointer;">+ Log Staff Hours</button>
     <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;margin:28px 0 8px;color:#0ea5e9;">🌴 Holiday Mode</h3>
-    <p style="font-size:0.85rem;color:#64748b;margin-bottom:12px;">When active, the booking page hides Emmi-Pet, teeth, anal glands and descaling. Saves to Google Sheet so all customers see it.</p>
+    <p style="font-size:0.85rem;color:#64748b;margin-bottom:12px;">Sets who is away so the calendar colours update and the booking page only shows what the covering groomer can do.</p>
     <div style="background:white;border:1.5px solid var(--tan-light);border-radius:10px;padding:18px 20px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;">
+      <div class="fg" style="margin:0;">
+        <label style="font-size:0.78rem;">Who is away?</label>
+        <div class="tog" style="margin-top:6px;">
+          <input type="radio" name="holidayAway" id="hol-becky" value="becky"><label for="hol-becky">💚 Becky</label>
+          <input type="radio" name="holidayAway" id="hol-poppy" value="poppy" checked><label for="hol-poppy">💜 Poppy</label>
+        </div>
+      </div>
       <div class="fg" style="margin:0;min-width:140px;"><label style="font-size:0.78rem;">Holiday start</label><input type="date" id="holidayStart" style="padding:7px 10px;border:1.5px solid var(--tan-light);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:0.88rem;width:100%;"></div>
       <div class="fg" style="margin:0;min-width:140px;"><label style="font-size:0.78rem;">Holiday end</label><input type="date" id="holidayEnd" style="padding:7px 10px;border:1.5px solid var(--tan-light);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:0.88rem;width:100%;"></div>
       <button onclick="saveHolidayMode()" style="background:#0ea5e9;color:white;border:none;padding:8px 18px;border-radius:7px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:0.85rem;cursor:pointer;">Save</button>
@@ -1362,33 +1369,41 @@ function checkBannerVisibility(){
 function saveHolidayMode(){
   var start=document.getElementById('holidayStart').value;
   var end=document.getElementById('holidayEnd').value;
+  var away=(document.querySelector('input[name="holidayAway"]:checked')||{value:'poppy'}).value;
   if(!start||!end){alert('Please set both a start and end date.');return;}
   if(end<start){alert('End date must be after start date.');return;}
-  localStorage.setItem('stbHolidayStart',start);localStorage.setItem('stbHolidayEnd',end);
-  fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'setHoliday',start:start,end:end})})
-    .then(function(){updateHolidayModeNote();}).catch(function(){updateHolidayModeNote();});
+  localStorage.setItem('stbHolidayStart',start);
+  localStorage.setItem('stbHolidayEnd',end);
+  localStorage.setItem('stbHolidayAway',away);
+  fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'setHoliday',start:start,end:end,away:away})})
+    .then(function(){updateHolidayModeNote();renderCal();})
+    .catch(function(){updateHolidayModeNote();renderCal();});
 }
 function clearHolidayMode(){
-  localStorage.removeItem('stbHolidayStart');localStorage.removeItem('stbHolidayEnd');
+  localStorage.removeItem('stbHolidayStart');localStorage.removeItem('stbHolidayEnd');localStorage.removeItem('stbHolidayAway');
   document.getElementById('holidayStart').value='';document.getElementById('holidayEnd').value='';
-  fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'setHoliday',start:'',end:''})}).catch(function(){});
+  fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'setHoliday',start:'',end:'',away:''})}).catch(function(){});
   var note=document.getElementById('holidayModeNote');note.style.color='#3a9e6e';note.textContent='Holiday mode cleared.';
   setTimeout(function(){note.textContent='';},3000);
+  renderCal();
 }
 function updateHolidayModeNote(){
   var start=localStorage.getItem('stbHolidayStart');var end=localStorage.getItem('stbHolidayEnd');
+  var away=localStorage.getItem('stbHolidayAway')||'poppy';
   var note=document.getElementById('holidayModeNote');if(!note)return;
+  var awayEl=document.getElementById('hol-'+away);if(awayEl)awayEl.checked=true;
   if(start)document.getElementById('holidayStart').value=start;
   if(end)document.getElementById('holidayEnd').value=end;
   if(start&&end){
     var today=fmtISO(new Date());
     if(today>end){
-      localStorage.removeItem('stbHolidayStart');localStorage.removeItem('stbHolidayEnd');
+      localStorage.removeItem('stbHolidayStart');localStorage.removeItem('stbHolidayEnd');localStorage.removeItem('stbHolidayAway');
       document.getElementById('holidayStart').value='';document.getElementById('holidayEnd').value='';
       note.style.color='#3a9e6e';note.textContent='Holiday ended — cleared. Welcome back! 🌴';return;
     }
+    var awayName=away==='becky'?'Becky':'Poppy';
     note.style.color=today>=start&&today<=end?'#0ea5e9':'#64748b';
-    note.textContent=(today>=start&&today<=end?'🌴 ACTIVE: ':'Scheduled: ')+fmtDD(start)+' – '+fmtDD(end);
+    note.textContent=(today>=start&&today<=end?'🌴 ACTIVE — '+awayName+' is away: ':'Scheduled — '+awayName+' away: ')+fmtDD(start)+' – '+fmtDD(end);
   }else{note.style.color='#94a3b8';note.textContent='Not set';}
 }
 
@@ -1586,6 +1601,27 @@ function checkReminders(){
 function renderCal(){
   var outer=document.getElementById('calOuter');
   var today=fmtISO(new Date());
+  // Check holiday mode — auto-colour all blocks and show banner
+  var holidayStart=localStorage.getItem('stbHolidayStart');
+  var holidayEnd=localStorage.getItem('stbHolidayEnd');
+  var holidayAway=localStorage.getItem('stbHolidayAway')||'poppy';
+  var holidayActive=holidayStart&&holidayEnd&&today>=holidayStart&&today<=holidayEnd;
+  var existingHolBanner=document.getElementById('calHolidayBanner');
+  if(holidayActive){
+    if(existingHolBanner)existingHolBanner.remove();
+    var hb=document.createElement('div');hb.id='calHolidayBanner';
+    var awayName=holidayAway==='becky'?'Becky':'Poppy';
+    var coverName=holidayAway==='becky'?'Poppy':'Becky';
+    var coverColour=holidayAway==='becky'?'#7c3aed':'#2d6a4f';
+    var bannerBg=holidayAway==='becky'?'#f3e8ff':'#d1fae5';
+    var bannerBorder=holidayAway==='becky'?'#c4b5fd':'#6ee7b7';
+    hb.style.cssText='padding:8px 16px;font-size:0.82rem;font-family:\'DM Sans\',sans-serif;font-weight:600;text-align:center;background:'+bannerBg+';border-bottom:2px solid '+bannerBorder+';color:'+coverColour+';';
+    hb.innerHTML='🌴 '+awayName+' is away — '+coverName+' is covering. All bookings shown in '+coverName+'\'s colour.';
+    var calWrapEl=document.querySelector('.cal-wrap');
+    if(calWrapEl)calWrapEl.parentNode.insertBefore(hb,calWrapEl);
+  } else {
+    if(existingHolBanner)existingHolBanner.remove();
+  }
   var isMobile=window.innerWidth<=640;
   var numDays=isMobile?3:7;
   var allDays=[];
@@ -1718,7 +1754,9 @@ function renderCal(){
         else if(svc==='Anal Glands')svcCls='svc-anal-glands';
         else if(svc==='De-shed Treatment')svcCls='svc-deshed';
         else svcCls=bk.paid?'paid':'unpaid';
-        var groomerCls=bk.groomer==='poppy'?'groomer-poppy':bk.groomer==='both'?'groomer-both':'';
+        var groomerCls=holidayActive
+          ?(holidayAway==='becky'?'groomer-poppy':'')  // becky away = poppy covers = purple; poppy away = becky covers = green (default)
+          :bk.groomer==='poppy'?'groomer-poppy':bk.groomer==='both'?'groomer-both':'';
         body+='<div class="bk '+svcCls+' '+groomerCls+'" style="top:'+tp+'px;height:'+hp+'px;padding-top:7px;left:'+leftOff+';width:'+colW+';right:'+rightOff+';" data-bkid="'+bk.id+'" onmousedown="startDrag(event,\''+bk.id+'\')" ontouchstart="startDrag(event,\''+bk.id+'\')" onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">'
           +'<div class="pay-dot '+(bk.paid?'paid':'unpaid')+'"></div>'
           +(function(){
@@ -2195,12 +2233,19 @@ function renderWaButtons(){
   var isStrip=false;
   if(b&&b.dogs){b.dogs.forEach(function(d){var svcs=d.services&&d.services.length?d.services:[{service:d.service}];svcs.forEach(function(sv){if((sv.service||'').indexOf('Hand Strip')>-1)isStrip=true;});});}
   var stripBtn=isStrip?'<button class="btn-wa" style="background:#6b4226;" onclick="sendHandStripPriceMsg()"><span><span class="wa-title">Send Hand Stripping Price Notice</span><span class="wa-sub">Let client know current rate is £65/hr</span></span></button>':'';
-  var rebookBtn='<button class="btn-wa" style="background:#0ea5e9;" onclick="sendRebookMsg()"><span><span class="wa-title">Send Rebook Link</span><span class="wa-sub">Let client choose 6–10 weeks ahead on same day</span></span></button>';
+  var rebookNowBtn='<button class="btn-wa" style="background:#2d6a4f;" onclick="rebookFromCurrent()"><span><span class="wa-title">📅 Rebook Next Appointment</span><span class="wa-sub">Pre-fill a new booking from this one</span></span></button>';
+  var rebookBtn='<button class="btn-wa" style="background:#0ea5e9;" onclick="sendRebookMsg()"><span><span class="wa-title">Send Rebook Link</span><span class="wa-sub">Let client choose their next slot online</span></span></button>';
   var reviewBtn='<button class="btn-wa" style="background:#34a853;" onclick="sendGoogleReviewMsg()"><span><span class="wa-title">Request Google Review ⭐</span><span class="wa-sub">Send link to your Google review page</span></span></button>';
   var cancelFeeBtn='<button class="btn-wa" style="background:#e05252;" onclick="sendCancelFeeMsg()"><span><span class="wa-title">Send Cancellation Fee Notice</span><span class="wa-sub">Politely request late cancellation fee</span></span></button>';
-  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
-  else{cont.innerHTML='<button class="btn-wa" onclick="sendConfirmMsg(null)"><span><span class="wa-title">Send Confirmation</span><span class="wa-sub">Booking confirmed with appointment details</span></span></button>'+remBtn+remPayBtn+payBtn+chaseBtn+stripBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
+  if(isNew){cont.innerHTML='<button class="btn-wa blue" onclick="sendNewConfirmMsg()"><span><span class="wa-title">Send New Customer Confirmation</span><span class="wa-sub">Booking details + directions + T&Cs. Attach location pin first!</span></span></button>'+payBtn+chaseBtn+stripBtn+rebookNowBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
+  else{cont.innerHTML=payBtn+chaseBtn+stripBtn+rebookNowBtn+rebookBtn+reviewBtn+cancelFeeBtn;}
 }
+function rebookFromCurrent(){
+  var b=getCurrent();if(!b)return;
+  closeMain();
+  setTimeout(function(){openRebookFor(b.name);},300);
+}
+
 function getCurrent(){return editId?bookings.find(function(b){return b.id===editId;}):null;}
 
 function sendHandStripPriceMsg(){
