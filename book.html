@@ -373,10 +373,68 @@ function jumpWeeksAhead(weeks, btn){
   setTimeout(function(){ selectDate(iso); }, 50);
 }
 
+// ── HOLIDAY MODE ──────────────────────────────────────────────────────────
+var HOLIDAY_RESTRICTED_SVCS = [];
+
+function applyHolidayMode(away){
+  if(away !== 'becky') return; // Only restrict when Becky is away (Poppy covering)
+  // Services Poppy cannot do
+  HOLIDAY_RESTRICTED_SVCS = [
+    'Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning','Emmi-Pet Teeth Cleaning PAYG',
+    'Emmi-Pet Teeth Cleaning x4','Emmi-Pet Teeth Cleaning x9','Emmi-Pet Teeth Maintenance',
+    'Anal Glands','Descaling','Puppy Intro (Inc. Bath) - £30','Puppy Intro (Exc. Bath) - £15'
+  ];
+  // Hide teeth tab completely
+  var teethBtn = document.getElementById('teethTabBtn');
+  if(teethBtn) teethBtn.style.display = 'none';
+  var teethPanel = document.getElementById('svc-tab-teeth');
+  if(teethPanel) teethPanel.style.display = 'none';
+  // Hide restricted chips and disable them
+  document.querySelectorAll('.svc-chip').forEach(function(chip){
+    var onclick = chip.getAttribute('onclick') || '';
+    var blocked = HOLIDAY_RESTRICTED_SVCS.some(function(s){ return onclick.indexOf(s) >= 0; });
+    if(blocked){
+      chip.style.display = 'none';
+      chip.classList.remove('selected');
+    }
+  });
+  // Show notice
+  var notice = document.createElement('div');
+  notice.id = 'holidayNotice';
+  notice.style.cssText = 'background:#f3e8ff;border:1.5px solid #c4b5fd;border-radius:10px;padding:12px 16px;font-size:0.85rem;color:#6b21a8;margin-bottom:16px;font-family:sans-serif;';
+  notice.innerHTML = '🐩 <strong>Poppy is covering whilst Becky is away.</strong> Full grooms, wash &amp; dry, nails and de-shed are available. Emmi-Pet, teeth, anal glands, descaling and puppy intros are not available during this period.';
+  var card = document.querySelector('.card');
+  if(card) card.insertBefore(notice, card.firstChild);
+}
+
+(function checkHolidayMode(){
+  fetch(SHEET_URL + '?action=getHoliday')
+    .then(function(r){ return r.json(); })
+    .then(function(h){
+      if(!h || !h.start || !h.end) return;
+      var today = new Date(); today.setHours(0,0,0,0);
+      if(today >= new Date(h.start+'T00:00:00') && today <= new Date(h.end+'T23:59:59'))
+        applyHolidayMode(h.away || 'becky');
+    })
+    .catch(function(){
+      var start = localStorage.getItem('stbHolidayStart');
+      var end = localStorage.getItem('stbHolidayEnd');
+      var away = localStorage.getItem('stbHolidayAway') || 'becky';
+      if(!start || !end) return;
+      var today = new Date(); today.setHours(0,0,0,0);
+      if(today >= new Date(start+'T00:00:00') && today <= new Date(end+'T23:59:59'))
+        applyHolidayMode(away);
+    });
+})();
+
 function toggleService(el, svc){
+  // Block restricted services during holiday
+  if(HOLIDAY_RESTRICTED_SVCS.indexOf(svc) >= 0){
+    alert('Sorry, this service is not available during this period.');
+    return;
+  }
   el.classList.toggle('selected');
   onServiceSelected();
-  // update summary
   var sel = [];
   document.querySelectorAll('.svc-chip.selected').forEach(function(c){
     sel.push(c.textContent.trim());
@@ -680,15 +738,25 @@ function getAvailableSlots(dateStr){
     : ' <span style="color:red">NO MATCH</span> — first 3 sheet dates: '+sheetBookings.slice(0,3).map(function(b){return '"'+b.date+'"('+typeof b.date+')'}).join(', ')
     +' — looking for: "'+dateStr+'"('+typeof dateStr+')');
 
+  var isTeeth = selectedService && (
+    selectedService.indexOf('Emmi-Pet') >= 0 ||
+    selectedService.indexOf('Teeth') >= 0 ||
+    selectedService.indexOf('Consultation') >= 0
+  );
+
   var slots = [];
 
   if(dayBookings.length === 0){
-    // No bookings — offer morning start
+    // No bookings — offer morning start only
     if(morningStart + dur <= closeMins){
       slots.push({time: minsToTime(morningStart), label: fmtTime12(minsToTime(morningStart))});
     }
-    // Offer 3:30pm on weekdays
-    if(dow !== 6){
+    // For non-teeth only: also offer afternoon slot
+    if(!isTeeth && dow !== 6){
+      var tenTen = timeToMins('10:10');
+      if(tenTen >= morningStart + dur && tenTen + dur <= closeMins){
+        slots.push({time: minsToTime(tenTen), label: fmtTime12(minsToTime(tenTen))});
+      }
       var pm = timeToMins('15:30');
       if(pm + dur <= closeMins){
         slots.push({time: minsToTime(pm), label: fmtTime12(minsToTime(pm))+' (afternoon)'});
@@ -707,14 +775,27 @@ function getAvailableSlots(dateStr){
       return {start: startMins, end: endMins};
     }).sort(function(a,b){return a.start-b.start;});
 
+    var firstStart = bookedRanges[0].start;
     var lastEnd = bookedRanges[bookedRanges.length-1].end;
-    // Round up to next 10 min boundary strictly after last booking
     lastEnd = Math.ceil((lastEnd + 1) / 10) * 10;
 
     if(dbg) dbg.innerHTML += '<br>lastEnd='+minsToTime(lastEnd)+' dur='+dur+' close='+minsToTime(closeMins)+' fits='+(lastEnd+dur<=closeMins);
 
-    if(lastEnd + dur <= closeMins){
-      slots.push({time: minsToTime(lastEnd), label: fmtTime12(minsToTime(lastEnd))});
+    if(isTeeth){
+      // Teeth: only offer at morning start (before first booking) or immediately after last booking
+      // Morning slot — only if it fits before the first booking
+      if(morningStart + dur <= firstStart){
+        slots.push({time: minsToTime(morningStart), label: fmtTime12(minsToTime(morningStart))});
+      }
+      // After last booking — only if it fits before close and there's no gap being created
+      if(lastEnd + dur <= closeMins){
+        slots.push({time: minsToTime(lastEnd), label: fmtTime12(minsToTime(lastEnd))});
+      }
+    } else {
+      // Normal booking — next available after last booking
+      if(lastEnd + dur <= closeMins){
+        slots.push({time: minsToTime(lastEnd), label: fmtTime12(minsToTime(lastEnd))});
+      }
     }
   }
 
@@ -919,51 +1000,6 @@ function submitRequest(){
     }
   }
 }
-
-// ── HOLIDAY MODE ──────────────────────────────────────────────────────────
-function applyHolidayMode(away){
-  // Only restrict services if Poppy is covering (Becky is away)
-  // If Becky is covering (Poppy is away) — no restrictions, no message needed
-  if(away==='becky'){
-    // Poppy is covering — hide what she can't do
-    var teethBtn=document.getElementById('teethTabBtn');
-    if(teethBtn)teethBtn.style.display='none';
-    var teethPanel=document.getElementById('svc-tab-teeth');
-    if(teethPanel)teethPanel.style.display='none';
-    document.querySelectorAll('.svc-chip,.slot-chip').forEach(function(chip){
-      var svc=chip.getAttribute('onclick')||chip.textContent||'';
-      if(svc.indexOf('Anal Glands')>=0||svc.indexOf('Descaling')>=0||svc.indexOf('Puppy Intro')>=0){
-        chip.style.display='none';
-      }
-    });
-    var notice=document.createElement('div');
-    notice.style.cssText='background:#f3e8ff;border:1.5px solid #c4b5fd;border-radius:10px;padding:12px 16px;font-size:0.85rem;color:#6b21a8;margin-bottom:16px;font-family:sans-serif;';
-    notice.innerHTML='🐩 <strong>Poppy is covering whilst Becky is away.</strong> Full grooms, wash & dry, nails and de-shed are available. Emmi-Pet, teeth, anal glands, descaling and puppy intros are not available during this period.';
-    var card=document.querySelector('.card');
-    if(card)card.insertBefore(notice,card.firstChild);
-  }
-  // If Poppy is away — Becky covers everything, no restrictions, no notice needed
-}
-
-(function checkHolidayMode(){
-  fetch(SHEET_URL+'?action=getHoliday')
-    .then(function(r){return r.json();})
-    .then(function(h){
-      if(!h||!h.start||!h.end)return;
-      var today=new Date();today.setHours(0,0,0,0);
-      var s=new Date(h.start+'T00:00:00');
-      var e=new Date(h.end+'T23:59:59');
-      if(today>=s&&today<=e)applyHolidayMode(h.away||'poppy');
-    })
-    .catch(function(){
-      var start=localStorage.getItem('stbHolidayStart');
-      var end=localStorage.getItem('stbHolidayEnd');
-      var away=localStorage.getItem('stbHolidayAway')||'poppy';
-      if(!start||!end)return;
-      var today=new Date();today.setHours(0,0,0,0);
-      if(today>=new Date(start+'T00:00:00')&&today<=new Date(end+'T23:59:59'))applyHolidayMode(away);
-    });
-})();
 </script>
 </body>
 </html>
