@@ -286,7 +286,8 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
           <label style="padding:10px 18px;cursor:pointer;font-size:0.88rem;font-weight:600;color:#1e3a5f;border-bottom:1px solid #f0f4fa;display:block;">&#8593; Import Data<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this);toggleMoreMenu()"></label>
           <div onclick="syncFromCloud();toggleMoreMenu()" id="syncBtn" style="padding:10px 18px;cursor:pointer;font-size:0.88rem;font-weight:600;color:#1e3a5f;border-bottom:1px solid #f0f4fa;">&#9729; Sync from Cloud</div>
           <div onclick="pushAllToSheet();toggleMoreMenu()" id="pushAllBtn" style="padding:10px 18px;cursor:pointer;font-size:0.88rem;font-weight:600;color:#3a9e6e;border-bottom:1px solid #f0f4fa;">⬆ Push All to Sheet</div>
-          <div onclick="clearAndPushAll();toggleMoreMenu()" id="clearPushBtn" style="padding:10px 18px;cursor:pointer;font-size:0.88rem;font-weight:600;color:#e05252;">🔄 Clear &amp; Push All</div>
+          <div onclick="clearAndPushAll();toggleMoreMenu()" id="clearPushBtn" style="padding:10px 18px;cursor:pointer;font-size:0.88rem;font-weight:600;color:#e05252;border-bottom:1px solid #f0f4fa;">🔄 Clear &amp; Push All</div>
+          <div onclick="openShoppingList();toggleMoreMenu()" style="padding:10px 18px;cursor:pointer;font-size:0.88rem;font-weight:600;color:#1e3a5f;">🛒 Shopping List</div>
         </div>
       </div>
     </div>
@@ -363,6 +364,24 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
       <button class="btn-del" id="btnStaffDel" onclick="deleteStaffHours()" style="display:none">Delete</button>
       <button class="btn-cancel" onclick="closeLogHours()">Cancel</button>
       <button class="btn-save" onclick="saveStaffHours()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHOPPING LIST MODAL -->
+<div class="overlay" id="shoppingOverlay">
+  <div class="modal" style="width:420px;max-height:80vh;display:flex;flex-direction:column;">
+    <h2>🛒 Shopping List</h2>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <input type="text" id="shoppingInput" placeholder="Add item..." autocomplete="off"
+        style="flex:1;padding:8px 12px;border:1.5px solid var(--tan-light);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.88rem;"
+        onkeydown="if(event.key==='Enter')addShoppingItem()">
+      <button onclick="addShoppingItem()" style="background:var(--brown);color:white;border:none;padding:8px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;">Add</button>
+    </div>
+    <div id="shoppingList" style="flex:1;overflow-y:auto;max-height:400px;"></div>
+    <div class="modal-btns" style="margin-top:12px;">
+      <button onclick="clearDoneItems()" style="background:none;border:1.5px solid var(--tan-light);color:#64748b;padding:7px 14px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:0.84rem;cursor:pointer;">Clear done</button>
+      <button class="btn-cancel" onclick="document.getElementById('shoppingOverlay').classList.remove('open')">Close</button>
     </div>
   </div>
 </div>
@@ -1368,6 +1387,56 @@ function checkBannerVisibility(){
   if(has)banner.classList.add('show');else banner.classList.remove('show');
 }
 
+// ── SHOPPING LIST ──────────────────────────────────────────────────────────
+function openShoppingList(){
+  document.getElementById('shoppingOverlay').classList.add('open');
+  renderShoppingList();
+  setTimeout(function(){document.getElementById('shoppingInput').focus();},200);
+}
+function addShoppingItem(){
+  var input=document.getElementById('shoppingInput');
+  var val=input.value.trim();
+  if(!val)return;
+  var items=JSON.parse(localStorage.getItem('stbShopping')||'[]');
+  items.push({id:'s'+Date.now(),text:val,done:false});
+  localStorage.setItem('stbShopping',JSON.stringify(items));
+  input.value='';
+  renderShoppingList();
+}
+function toggleShoppingItem(id){
+  var items=JSON.parse(localStorage.getItem('stbShopping')||'[]');
+  items=items.map(function(i){return i.id===id?{id:i.id,text:i.text,done:!i.done}:i;});
+  localStorage.setItem('stbShopping',JSON.stringify(items));
+  renderShoppingList();
+}
+function deleteShoppingItem(id){
+  var items=JSON.parse(localStorage.getItem('stbShopping')||'[]');
+  items=items.filter(function(i){return i.id!==id;});
+  localStorage.setItem('stbShopping',JSON.stringify(items));
+  renderShoppingList();
+}
+function clearDoneItems(){
+  var items=JSON.parse(localStorage.getItem('stbShopping')||'[]');
+  items=items.filter(function(i){return !i.done;});
+  localStorage.setItem('stbShopping',JSON.stringify(items));
+  renderShoppingList();
+}
+function renderShoppingList(){
+  var list=document.getElementById('shoppingList');if(!list)return;
+  var items=JSON.parse(localStorage.getItem('stbShopping')||'[]');
+  if(!items.length){
+    list.innerHTML='<div style="font-size:0.85rem;color:#94a3b8;text-align:center;padding:20px;">No items yet — add something above!</div>';
+    return;
+  }
+  list.innerHTML=items.map(function(item){
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid #f0f4fa;">'
+      +'<input type="checkbox" '+(item.done?'checked':'')+' onchange="toggleShoppingItem(\''+item.id+'\')" style="width:18px;height:18px;accent-color:var(--paid);cursor:pointer;flex-shrink:0;">'
+      +'<span style="flex:1;font-size:0.88rem;'+(item.done?'text-decoration:line-through;color:#94a3b8;':'color:#1e3a5f;')+'">'+item.text.replace(/</g,'&lt;')+'</span>'
+      +'<button onclick="deleteShoppingItem(\''+item.id+'\')" style="background:none;border:none;color:#cbd5e1;cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;" title="Remove">✕</button>'
+      +'</div>';
+  }).join('');
+}
+
 // ── HOLIDAY MODE ───────────────────────────────────────────────────────────
 function saveHolidayMode(){
   var start=document.getElementById('holidayStart').value;
@@ -2291,11 +2360,13 @@ function buildDogSummary(b){
 function sendConfirmMsg(id){
   var b=id?bookings.find(function(x){return x.id===id;}):getCurrent();
   if(!b||!b.phone)return;
-  openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\nYour booking with '+BIZ+' is confirmed:\n\n'+buildDogSummary(b)+'\nDate: '+fmtDD(b.date)+'\nTime: '+fmtTime(b.time)+'\n\nIf you need to reschedule, just drop me a message!\n\nSee you soon!');
+  var bookUrl='https://shaantishakti.github.io/scrufftobuff/book.html';
+  openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\nYour booking with '+BIZ+' is confirmed:\n\n'+buildDogSummary(b)+'\nDate: '+fmtDD(b.date)+'\nTime: '+fmtTime(b.time)+'\n\nIf you need to reschedule, just drop me a message!\n\nWhenever you\'re ready to book your next appointment, you can do it online here:\n\uD83D\uDC47 '+bookUrl+'\n\n\uD83D\uDC9B If you recommend a friend, you\'ll receive 10% off your next full groom!\n\nSee you soon!');
 }
 function sendNewConfirmMsg(){
   var b=getCurrent();if(!b||!b.phone)return;
-  openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\nYour booking with '+BIZ+' is confirmed for '+fmtDD(b.date)+' at '+fmtTime(b.time)+'.\n\n'+buildDogSummary(b)+'\n\nDIRECTIONS:\nI will follow this message with a WhatsApp location pin. I recommend coming from the A22/Nutley - turn onto Cackle Street, take the second left (about 10 seconds after entering Cackle Street). As you reach the 5th house on your right (Spring House, with a Farm Watch sign), turn right. We are the last on the left - Spring Cottage. The gates will be open and the house has a sign.\n\nPLEASE NOTE:\n- In the event of a cancellation, we kindly ask for at least 48 hours notice, or a cancellation fee may apply.\n- All prices quoted are estimates only, and may vary based on coat condition, matting, behaviour and size.\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
+  var bookUrl='https://shaantishakti.github.io/scrufftobuff/book.html';
+  openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\nYour booking with '+BIZ+' is confirmed for '+fmtDD(b.date)+' at '+fmtTime(b.time)+'.\n\n'+buildDogSummary(b)+'\n\nDIRECTIONS:\nI will follow this message with a WhatsApp location pin. I recommend coming from the A22/Nutley - turn onto Cackle Street, take the second left (about 10 seconds after entering Cackle Street). As you reach the 5th house on your right (Spring House, with a Farm Watch sign), turn right. We are the last on the left - Spring Cottage. The gates will be open and the house has a sign.\n\nPLEASE NOTE:\n- In the event of a cancellation, we kindly ask for at least 48 hours notice, or a cancellation fee may apply.\n- All prices quoted are estimates only, and may vary based on coat condition, matting, behaviour and size.\n\nWhenever you\'re ready to book your next appointment, you can do it online here:\n\uD83D\uDC47 '+bookUrl+'\n\n\uD83D\uDC9B If you recommend a friend, you\'ll receive 10% off your next full groom!\n\nMany thanks,\nBecky - Scruff to Buff Dogs');
 }
 function sendReminderMsg(id){
   var b=id?bookings.find(function(x){return x.id===id;}):getCurrent();
@@ -2671,6 +2742,7 @@ document.getElementById('blockOverlay').addEventListener('click',function(e){if(
 document.getElementById('payOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('payOverlay'))closePay();});
 document.getElementById('daySummaryOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('daySummaryOverlay'))document.getElementById('daySummaryOverlay').classList.remove('open');});
 document.getElementById('expOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('expOverlay'))closeExpense();});
+document.getElementById('shoppingOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('shoppingOverlay'))document.getElementById('shoppingOverlay').classList.remove('open');});
 document.getElementById('staffOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('staffOverlay'))closeLogHours();});
 document.addEventListener('click',function(e){var wrap=document.getElementById('bookingSearchWrap');if(wrap&&!wrap.contains(e.target))document.getElementById('bookingSearchResults').style.display='none';});
 document.addEventListener('click',function(e){if(!e.target.closest('#f-name')&&!e.target.closest('#sugBox'))document.getElementById('sugBox').innerHTML='';});
