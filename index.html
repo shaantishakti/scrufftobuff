@@ -255,7 +255,7 @@ header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
 <div class="page active" id="calPage">
   <div class="banner" id="reminderBanner">
     <h3>Reminders due &#8212; appointments in 4 days:</h3>
-    <div class="banner-list" id="reminderList"></div>
+    <div class="banner-list" id="reminderList"><div id="rl-reminders"></div><div id="rl-requests"></div><div id="rl-rebook"></div><div id="rl-price"></div><div id="rl-unpaid"></div><div id="rl-birthday"></div><div id="rl-referral"></div><div id="rl-poppy"></div></div>
   </div>
   <div class="toolbar">
     <div class="week-nav">
@@ -1112,10 +1112,11 @@ function checkReminders(){
     return customerIsNoShow||daysBooked>=3;
   });
   var banner=document.getElementById('reminderBanner');
-  if(!due.length){banner.classList.remove('show');return;}
+  var rlRem=document.getElementById('rl-reminders');
+  if(!due.length){if(rlRem)rlRem.innerHTML='';checkBannerVisibility();return;}
   banner.classList.add('show');
   document.getElementById('reminderBanner').querySelector('h3').textContent='Upcoming appointments — send reminders or dismiss:';
-  document.getElementById('reminderList').innerHTML=due.map(function(b){
+  if(rlRem)rlRem.innerHTML=due.map(function(b){
     var dogNames=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).join(' & '):b.dog||'';
     var today2=new Date();today2.setHours(0,0,0,0);
     var apptDate=new Date(b.date+'T12:00:00');
@@ -2163,13 +2164,22 @@ function waReplyPrefill(){
   if(c.charAt(0)==='0')c='44'+c.slice(1);
   window.open('https://wa.me/'+c,'_blank');
 }
-function dismissPrefill(){
+function checkBannerVisibility(){
+  var zones=['rl-reminders','rl-requests','rl-rebook','rl-price','rl-unpaid','rl-birthday','rl-referral','rl-poppy'];
+  var hasContent=zones.some(function(z){var el=document.getElementById(z);return el&&el.children.length>0;});
   var banner=document.getElementById('reminderBanner');
-  banner.classList.remove('show');
+  if(hasContent)banner.classList.add('show');else banner.classList.remove('show');
+}
+
+function dismissPrefill(){
+  // Only clear the pending request chip, not the whole banner
+  var chip=document.getElementById('rl-requests');
+  if(chip)chip.innerHTML='';
   banner.style.background='';
   banner.style.borderBottomColor='';
   window._prefill=null;
   localStorage.removeItem('pendingRequest');
+  checkBannerVisibility();
 }
 
 // ── RESTORE PENDING REQUEST ────────────────────────────────────────────────
@@ -2183,8 +2193,8 @@ function dismissPrefill(){
     banner.style.background='#fff8e0';
     banner.style.borderBottomColor='#f59e0b';
     banner.classList.add('show');
-    document.getElementById('reminderList').innerHTML=
-      '<div class="banner-chip" style="border-color:#f59e0b;flex-direction:column;align-items:flex-start;gap:4px;min-width:240px;">'
+    var rlReq=document.getElementById('rl-requests');
+    var chipHtml='<div class="banner-chip" style="border-color:#f59e0b;flex-direction:column;align-items:flex-start;gap:4px;min-width:240px;">'
       +'<div style="font-weight:600;color:#92400e;">&#128276; Pending Booking Request</div>'
       +'<div><strong>'+p.name+'</strong> &mdash; '+p.dog+(p.breed?' ('+p.breed+')':'')+'</div>'
       +'<div style="font-size:0.75rem;color:#92400e;">'+p.service+' &bull; '+fmtDD(p.date)+' at '+fmtTime(p.time)+'</div>'
@@ -2194,6 +2204,7 @@ function dismissPrefill(){
       +'<button class="btn-wa-sm" style="background:#e05252;padding:5px 10px;" onclick="dismissPrefill()">&#10007; Dismiss</button>'
       +'<button class="btn-wa-sm" style="background:#0ea5e9;padding:5px 10px;" onclick="waReplyPrefill()">WhatsApp</button>'
       +'</div></div>';
+    if(rlReq)rlReq.innerHTML=chipHtml;
     window._prefill = p;
   } catch(e) {}
 })();
@@ -2226,8 +2237,9 @@ function checkSheetRequests(){
         banner.style.background='#fff8e0';
         banner.style.borderBottomColor='#f59e0b';
         banner.classList.add('show');
-        // Prepend to existing banner content
-        list.innerHTML = html + list.innerHTML;
+        var rlReq=document.getElementById('rl-requests');
+        if(rlReq)rlReq.innerHTML=html;
+        else list.innerHTML = html + list.innerHTML;
       }
     }).catch(function(){});
 }
@@ -2245,17 +2257,9 @@ function addFromSheetRequest(id){
 
 function dismissSheetRequest(id, btn){
   fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'dismissRequest', id:id})}).catch(function(){});
-  // Find and remove the chip by request ID
   var chip = btn ? btn.closest('.banner-chip') : document.querySelector('[data-request-id="'+id+'"]');
   if(chip) chip.remove();
-  // Hide banner if no more chips
-  var list = document.getElementById('reminderList');
-  if(list && !list.querySelector('.banner-chip') && !list.querySelector('.banner-slot')){
-    var banner = document.getElementById('reminderBanner');
-    banner.classList.remove('show');
-    banner.style.background='';
-    banner.style.borderBottomColor='';
-  }
+  checkBannerVisibility();
 }
 
 function waReplySheetRequest(phone){
