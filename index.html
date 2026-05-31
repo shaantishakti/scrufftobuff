@@ -2012,25 +2012,47 @@ function addFromPrefill(){
   var p=window._prefill;if(!p)return;
   openAddAt(p.date,p.time);
   setTimeout(function(){
-    document.getElementById('f-name').value=p.name;
-    document.getElementById('f-phone').value=p.phone;
-    var dogEl=document.getElementById('f-dog-1');if(dogEl)dogEl.value=p.dog;
-    var breedEl=document.getElementById('f-breed-1');if(breedEl)breedEl.value=p.breed;
-    // Service may be a single value or comma-separated list from multi-select booking page
-    var services = p.service ? p.service.split(',').map(function(s){return s.trim();}) : [];
-    if(services.length>0){
-      // Set first service in slot 0-0
-      dogServices[0] = services.map(function(svc,i){
-        var dur = SVC_DURATIONS[svc] || 60;
-        return {service:svc, duration:dur, price:''};
-      });
-      renderDogRows();
-      // trigger calcFinish after rows render
-      setTimeout(function(){ calcFinish(); }, 100);
-    }
+    // Name and phone — restore leading 0 if phone was stored as 44...
+    document.getElementById('f-name').value=p.name||'';
+    var phoneVal=String(p.phone||'').trim().replace(/^\+/,'');
+    if(phoneVal.indexOf('44')===0&&phoneVal.length>=12)phoneVal='0'+phoneVal.slice(2);
+    document.getElementById('f-phone').value=phoneVal;
+    // New customer
     document.getElementById('ct-new').checked=true;
+    renderWaButtons();
+    // Set up dog info and services in slot 1 (not 0)
+    var services=p.service?p.service.split(',').map(function(s){return s.trim();}).filter(Boolean):[];
+    dogInfo={};dogServices={};
+    dogInfo[1]={name:p.dog||'',breed:p.breed||'',notes:'',dob:''};
+    if(services.length>0){
+      dogServices[1]=services.map(function(svc){
+        return {service:svc,duration:SVC_DURATIONS[svc]||60,price:SVC_PRICES[svc]||''};
+      });
+    } else {
+      dogServices[1]=[{service:'',duration:60,price:''}];
+    }
+    setDogCount(1,true);
+    // After renderDogRows runs, fill dog name/breed and restore the time
+    setTimeout(function(){
+      var dogEl=document.getElementById('f-dog-1');if(dogEl)dogEl.value=p.dog||'';
+      var breedEl=document.getElementById('f-breed-1');if(breedEl)breedEl.value=p.breed||'';
+      // Restore time — renderDogRows may have wiped it
+      if(p.time){buildTimeDropdown(p.time);}
+      // Set service dropdown
+      if(services.length>0){
+        var svcEl=document.getElementById('f-service-1-0');
+        if(svcEl){svcEl.value=services[0];}
+        // Set duration
+        var durEl=document.getElementById('f-duration-1-0');
+        if(durEl){durEl.value=SVC_DURATIONS[services[0]]||60;}
+        // Set price
+        var priceEl=document.getElementById('f-price-1-0');
+        if(priceEl&&SVC_PRICES[services[0]]){priceEl.value=SVC_PRICES[services[0]];}
+      }
+      calcFinish();
+    },250);
     dismissPrefill();
-  },200);
+  },300);
 }
 function waReplyPrefill(){
   var p=window._prefill;if(!p||!p.phone)return;
