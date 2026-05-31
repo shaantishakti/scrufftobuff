@@ -1786,6 +1786,21 @@ function doRebookCustom(){
   rebookWithDate(b,date);
 }
 
+function openRebookFor(name){
+  var c=getCustomer(name);
+  // Find their most recent booking to carry over services
+  var recentBookings=bookings.filter(function(b){return b.name&&b.name.toLowerCase()===name.toLowerCase();}).sort(function(a,b){return b.date.localeCompare(a.date);});
+  var lastBk=recentBookings[0];
+  if(lastBk){rebookWithDate(lastBk,null);}
+  else{
+    openAdd();
+    setTimeout(function(){
+      document.getElementById('f-name').value=name;
+      if(c){document.getElementById('f-phone').value=c.phone||'';}
+    },200);
+  }
+}
+
 function rebookWithDate(b,newDate){
   // Store full booking details before closing
   var rebookData={
@@ -2700,19 +2715,32 @@ function checkRebookNudge(){
   });
 
   if(!overdue.length)return;
-  var banner=document.getElementById('reminderBanner');
-  var list=document.getElementById('reminderList');
-  banner.classList.add('show');
-  var html=overdue.map(function(o){
+  var dismissed=JSON.parse(localStorage.getItem('stbDismissedRebook')||'[]');
+  document.getElementById('reminderBanner').classList.add('show');
+  var rlr=document.getElementById('rl-rebook');
+  var html=overdue.filter(function(o){return dismissed.indexOf(o.name)<0;}).map(function(o){
+    var safeId='rebook-'+o.name.replace(/[^a-zA-Z0-9]/g,'_');
     var weeks=Math.floor((today-new Date(o.lastDate+'T12:00:00'))/(7*864e5));
-    return '<div class="banner-chip rebook-chip">'
+    return '<div class="banner-chip rebook-chip" id="'+safeId+'">'
       +'<span>&#128337;</span>'
       +'<strong>'+o.name+'</strong>'
       +' — last seen '+weeks+' weeks ago'
-      +(o.phone?'<button class="btn-wa-sm" style="background:#f59e0b;" onclick="sendRebookNudge(\''+o.name+'\',\''+o.phone+'\')">Rebook</button>':'')
+      +(o.phone?'<button class="btn-wa-sm" style="background:#f59e0b;" onclick="sendRebookNudge(\''+o.name+'\',\''+o.phone+'\')">WhatsApp</button>':'')
+      +'<button class="btn-wa-sm" style="background:#2d6a4f;" onclick="openRebookFor(\''+o.name.replace(/'/g,"\\'")+'\')" >Rebook</button>'
+      +'<button class="btn-wa-sm" style="background:#94a3b8;margin-left:4px;" onclick="dismissRebookChip(\''+o.name.replace(/'/g,"\\'")+'\')">&#10005;</button>'
       +'</div>';
   }).join('');
-  list.innerHTML=list.innerHTML+html;
+  if(rlr)rlr.innerHTML=html;
+  else document.getElementById('reminderList').innerHTML+=html;
+}
+
+function dismissRebookChip(name){
+  var dismissed=JSON.parse(localStorage.getItem('stbDismissedRebook')||'[]');
+  if(dismissed.indexOf(name)<0)dismissed.push(name);
+  localStorage.setItem('stbDismissedRebook',JSON.stringify(dismissed));
+  var safeId='rebook-'+name.replace(/[^a-zA-Z0-9]/g,'_');
+  var chip=document.getElementById(safeId);if(chip)chip.remove();
+  checkBannerVisibility();
 }
 
 function sendRebookNudge(name,phone){
