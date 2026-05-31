@@ -2102,21 +2102,29 @@ function checkPrefill(){
   var date=params.get('date')||'';
   var time=params.get('time')||'';
   if(!name||!date)return;
+  // Safe date display — handle YYYY-MM-DD or any other format
+  var dateDisplay=date;
+  try{if(date.match(/^\d{4}-\d{2}-\d{2}$/))dateDisplay=fmtDD(date);}catch(e){}
+  // Safe time display
+  var timeDisplay=time;
+  try{if(time&&time.indexOf(':')>-1)timeDisplay=fmtTime(time);}catch(e){}
   var banner=document.getElementById('reminderBanner');
   banner.style.background='#fff8e0';
   banner.style.borderBottomColor='#f59e0b';
   banner.classList.add('show');
-  document.getElementById('reminderList').innerHTML=
-    '<div class="banner-chip" style="border-color:#f59e0b;flex-direction:column;align-items:flex-start;gap:4px;min-width:240px;">'
+  var chipHtml='<div class="banner-chip" style="border-color:#f59e0b;flex-direction:column;align-items:flex-start;gap:4px;min-width:240px;">'
     +'<div style="font-weight:600;color:#92400e;">&#128276; New Booking Request</div>'
     +'<div><strong>'+name+'</strong> &mdash; '+dog+(breed?' ('+breed+')':'')+'</div>'
-    +'<div style="font-size:0.75rem;color:#92400e;">'+service+' &bull; '+fmtDD(date)+' at '+fmtTime(time)+'</div>'
+    +'<div style="font-size:0.75rem;color:#92400e;">'+service+(dateDisplay?' &bull; '+dateDisplay:'')+(timeDisplay?' at '+timeDisplay:'')+'</div>'
     +(notes?'<div style="font-size:0.72rem;font-style:italic;color:#7a5c00;">'+notes+'</div>':'')
     +'<div style="display:flex;gap:6px;margin-top:4px;">'
     +'<button class="btn-wa-sm" style="background:#3a9e6e;padding:5px 10px;" onclick="addFromPrefill()">&#10003; Add to Diary</button>'
     +'<button class="btn-wa-sm" style="background:#e05252;padding:5px 10px;" onclick="dismissPrefill()">&#10007; Dismiss</button>'
     +'<button class="btn-wa-sm" style="background:#0ea5e9;padding:5px 10px;" onclick="waReplyPrefill()">WhatsApp</button>'
     +'</div></div>';
+  var rlReq=document.getElementById('rl-requests');
+  if(rlReq)rlReq.innerHTML=chipHtml;
+  else document.getElementById('reminderList').innerHTML=chipHtml;
   window._prefill={name:name,phone:phone,dog:dog,breed:breed,service:service,notes:notes,date:date,time:time};
   localStorage.setItem('pendingRequest', JSON.stringify(window._prefill));
   window.history.replaceState({},'',window.location.pathname);
@@ -2231,10 +2239,12 @@ function dismissPrefill(){
     banner.style.borderBottomColor='#f59e0b';
     banner.classList.add('show');
     var rlReq=document.getElementById('rl-requests');
+    var dateDisp2=p.date;try{if(p.date&&p.date.match&&p.date.match(/^\d{4}-\d{2}-\d{2}$/))dateDisp2=fmtDD(p.date);}catch(e){}
+    var timeDisp2=p.time;try{if(p.time&&p.time.indexOf&&p.time.indexOf(':')>-1)timeDisp2=fmtTime(p.time);}catch(e){}
     var chipHtml='<div class="banner-chip" style="border-color:#f59e0b;flex-direction:column;align-items:flex-start;gap:4px;min-width:240px;">'
       +'<div style="font-weight:600;color:#92400e;">&#128276; Pending Booking Request</div>'
       +'<div><strong>'+p.name+'</strong> &mdash; '+p.dog+(p.breed?' ('+p.breed+')':'')+'</div>'
-      +'<div style="font-size:0.75rem;color:#92400e;">'+p.service+' &bull; '+fmtDD(p.date)+' at '+fmtTime(p.time)+'</div>'
+      +'<div style="font-size:0.75rem;color:#92400e;">'+p.service+(dateDisp2?' &bull; '+dateDisp2:'')+(timeDisp2?' at '+timeDisp2:'')+'</div>'
       +(p.notes?'<div style="font-size:0.72rem;font-style:italic;color:#7a5c00;">'+p.notes+'</div>':'')
       +'<div style="display:flex;gap:6px;margin-top:4px;">'
       +'<button class="btn-wa-sm" style="background:#3a9e6e;padding:5px 10px;" onclick="addFromPrefill()">&#10003; Add to Diary</button>'
@@ -2259,10 +2269,12 @@ function checkSheetRequests(){
       if(!window._sheetRequests) window._sheetRequests = {};
       requests.forEach(function(p){
         window._sheetRequests[p.id] = p;
+        var dateDisp=p.date;try{if(p.date&&p.date.match&&p.date.match(/^\d{4}-\d{2}-\d{2}$/))dateDisp=fmtDD(p.date);}catch(e){}
+        var timeDisp=p.time;try{if(p.time&&p.time.indexOf&&p.time.indexOf(':')>-1)timeDisp=fmtTime(p.time);}catch(e){}
         html += '<div class="banner-chip" data-request-id="'+p.id+'" style="border-color:#f59e0b;flex-direction:column;align-items:flex-start;gap:4px;min-width:240px;">'
           +'<div style="font-weight:600;color:#92400e;">&#128276; New Booking Request</div>'
           +'<div><strong>'+p.name+'</strong> &mdash; '+p.dog+(p.breed?' ('+p.breed+')':'')+'</div>'
-          +'<div style="font-size:0.75rem;color:#92400e;">'+p.service+' &bull; '+fmtDD(p.date)+' at '+fmtTime(p.time)+'</div>'
+          +'<div style="font-size:0.75rem;color:#92400e;">'+p.service+(dateDisp?' &bull; '+dateDisp:'')+(timeDisp?' at '+timeDisp:'')+'</div>'
           +(p.notes?'<div style="font-size:0.72rem;font-style:italic;color:#7a5c00;">'+p.notes+'</div>':'')
           +'<div style="display:flex;gap:6px;margin-top:4px;">'
           +'<button class="btn-wa-sm" style="background:#3a9e6e;padding:5px 10px;" onclick="addFromSheetRequest(this.dataset.rid)" data-rid="'+p.id+'">&#10003; Add to Diary</button>'
