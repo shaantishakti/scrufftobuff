@@ -549,6 +549,7 @@ function upsertCustomer(b){
       var existing=c.dogs.find(function(x){return x.name.toLowerCase()===d.name.toLowerCase();});
       if(!existing){existing={name:titleCase(d.name),breed:'',lastService:'',lastPrice:null,lastDuration:null,lastPriceDate:null};c.dogs.push(existing);}
       if(d.breed)existing.breed=titleCase(d.breed);
+      if(d.dob)existing.dob=d.dob;
       // Groom-type services take priority for storing last service/price/duration.
       // If there's no groom in the booking (e.g. nails-only dog), fall back to whatever was done.
       var GROOM_SVCS=['Full Groom','Wash & Dry','Trim & Tidy','Hand Stripping','De-shed Treatment','Puppy Groom','Puppy Intro (Inc. Bath) - £28','Puppy Intro (Exc. Bath) - £15'];
@@ -672,7 +673,7 @@ function loadDogsFromCustomer(c,selectedIndices){
       duration:d.lastDuration||60,
       price:d.lastPrice||''
     }];
-    dogInfo[idx]={name:d.name||'',breed:d.breed||''};
+    dogInfo[idx]={name:d.name||'',breed:d.breed||'',dob:d.dob||''};
   });
   setDogCount(Math.max(1,selectedIndices.length),true);
   setTimeout(function(){
@@ -716,12 +717,17 @@ function saveDogInfoToState(){
     var breedEl=document.getElementById('f-breed-'+i);
     // Only read from DOM if the elements exist — don't overwrite pre-populated dogInfo
     if(nameEl){
-      if(!dogInfo[i])dogInfo[i]={name:'',breed:''};
+      if(!dogInfo[i])dogInfo[i]={name:'',breed:'',dob:''};
       dogInfo[i].name=nameEl.value;
     }
     if(breedEl){
-      if(!dogInfo[i])dogInfo[i]={name:'',breed:''};
+      if(!dogInfo[i])dogInfo[i]={name:'',breed:'',dob:''};
       dogInfo[i].breed=breedEl.value;
+    }
+    var dobEl=document.getElementById('f-dob-'+i);
+    if(dobEl){
+      if(!dogInfo[i])dogInfo[i]={name:'',breed:'',dob:''};
+      dogInfo[i].dob=dobEl.value;
     }
   }
 }
@@ -735,6 +741,7 @@ function renderDogRows(){
     if(!dogServices[i]) dogServices[i]=[{service:'',duration:60,price:''}];
     var savedName=(dogInfo[i]&&dogInfo[i].name)||'';
     var savedBreed=(dogInfo[i]&&dogInfo[i].breed)||'';
+    var savedDob=(dogInfo[i]&&dogInfo[i].dob)||'';
     html+='<div class="dog-row" id="dog-row-'+i+'">'
       +(dogCount>1
         ?'<div class="dog-row-label" style="display:flex;justify-content:space-between;align-items:center;">Dog '+i
@@ -743,6 +750,7 @@ function renderDogRows(){
       +'<div class="frow">'
       +'<div class="fg"><label>Dogs Name</label><input type="text" id="f-dog-'+i+'" placeholder="Buddy" value="'+savedName.replace(/"/g,'&quot;')+'"></div>'
       +'<div class="fg" style="position:relative;"><label>Breed</label><input type="text" id="f-breed-'+i+'" placeholder="Cockapoo" autocomplete="off" oninput="onBreedInput(this.value,'+i+')" onblur="setTimeout(function(){hideBreedSug('+i+')},150)" value="'+savedBreed.replace(/"/g,'&quot;')+'"><div class="breed-sug-box" id="breed-sug-'+i+'" style="display:none;"></div></div>'
+      +'<div class="fg"><label>Birthday <span style="font-size:0.7rem;color:#94a3b8;">(optional)</span></label><input type="date" id="f-dob-'+i+'" value="'+savedDob+'" style="width:100%;"></div>'
       +'</div>'
       +'<div id="svc-rows-'+i+'"></div>'
       +'<button type="button" class="dog-count-btn" onclick="addServiceRow('+i+')" style="margin-top:6px;">+ Add Service</button>'
@@ -958,6 +966,7 @@ function getDogsFromForm(){
     dogs.push({
       name:nameEl?nameEl.value.trim():'',
       breed:(document.getElementById('f-breed-'+i)||{}).value||'',
+      dob:(document.getElementById('f-dob-'+i)||{}).value||'',
       service:services[0]?services[0].service:'',
       duration:services[0]?services[0].duration:60,
       price:services[0]?services[0].price:null,
@@ -1420,7 +1429,7 @@ function openEdit(id){
     b.dogs.forEach(function(d,i){
       var idx=i+1;
       dogServices[idx]=d.services&&d.services.length?d.services.map(function(sv){return {service:sv.service||'',duration:sv.duration||60,price:sv.price||''};}):[{service:d.service||'',duration:d.duration||60,price:d.price||''}];
-      dogInfo[idx]={name:d.name||'',breed:d.breed||''};
+      dogInfo[idx]={name:d.name||'',breed:d.breed||'',dob:d.dob||''};
     });
     setDogCount(b.dogs.length,true);
   } else {
@@ -2164,6 +2173,34 @@ function waReplyPrefill(){
   if(c.charAt(0)==='0')c='44'+c.slice(1);
   window.open('https://wa.me/'+c,'_blank');
 }
+function checkBirthdayReminders(){
+  var today=new Date();today.setHours(0,0,0,0);
+  var todayMMDD=String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  var birthdays=[];
+  customers.forEach(function(c){
+    if(!c.dogs)return;
+    c.dogs.forEach(function(d){
+      if(!d.dob)return;
+      var parts=d.dob.split('-');if(parts.length<3)return;
+      if(parts[1]+'-'+parts[2]===todayMMDD){
+        birthdays.push({owner:c.name,dog:d.name,age:today.getFullYear()-parseInt(parts[0]),phone:c.phone||''});
+      }
+    });
+  });
+  if(!birthdays.length)return;
+  document.getElementById('reminderBanner').classList.add('show');
+  var rlb=document.getElementById('rl-birthday');
+  if(rlb)rlb.innerHTML=birthdays.map(function(b){
+    return '<div class="banner-chip" style="background:#fff8e8;border-color:#f59e0b;">'
+      +'<span>🎂</span><strong>'+b.dog+'</strong> is '+b.age+' today! ('+b.owner+'\'s dog)'
+      +(b.phone?'<button class="btn-wa-sm" style="background:#f59e0b;" data-owner="'+b.owner.replace(/"/g,'&quot;')+'" data-dog="'+b.dog.replace(/"/g,'&quot;')+'" data-phone="'+b.phone+'" onclick="sendBirthdayMsg(this.dataset.owner,this.dataset.dog,this.dataset.phone)">Send 🎂</button>':'')
+      +'</div>';
+  }).join('');
+}
+function sendBirthdayMsg(owner,dog,phone){
+  openWA(phone,'Happy Birthday to the gorgeous '+dog+'! 🎂🐾 Hope they have a wonderful day — give them an extra treat from us! 🐶💕\nBecky - Scruff to Buff Dogs');
+}
+
 function checkBannerVisibility(){
   var zones=['rl-reminders','rl-requests','rl-rebook','rl-price','rl-unpaid','rl-birthday','rl-referral','rl-poppy'];
   var hasContent=zones.some(function(z){var el=document.getElementById(z);return el&&el.children.length>0;});
@@ -2279,6 +2316,7 @@ document.getElementById('p-paid').addEventListener('change',function(){showPayMe
 document.getElementById('p-unpaid').addEventListener('change',function(){showPayMethod(false);});
 renderCal();
 setTimeout(checkPrefill,300);
+setTimeout(checkBirthdayReminders,1500);
 setTimeout(checkSheetRequests,1000);
 setTimeout(checkSundayAutoExport,2000);
 setTimeout(checkFridayScheduleReminder,2500);
