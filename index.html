@@ -1418,6 +1418,26 @@ function checkReminders(){
 function renderCal(){
   var outer=document.getElementById('calOuter');
   var today=fmtISO(new Date());
+  var holidayStart=localStorage.getItem('stbHolidayStart');
+  var holidayEnd=localStorage.getItem('stbHolidayEnd');
+  var holidayAway=localStorage.getItem('stbHolidayAway')||'poppy';
+  var holidayActive=holidayStart&&holidayEnd&&today>=holidayStart&&today<=holidayEnd;
+  // Holiday banner
+  var existingHolBanner=document.getElementById('calHolidayBanner');
+  if(holidayActive){
+    if(existingHolBanner)existingHolBanner.remove();
+    var hb=document.createElement('div');hb.id='calHolidayBanner';
+    var awayName=holidayAway==='becky'?'Becky':'Poppy';
+    var coverName=holidayAway==='becky'?'Poppy':'Becky';
+    var holCol=holidayAway==='becky'?'#6b21a8':'#2d6a4f';
+    var holBg=holidayAway==='becky'?'#f3e8ff':'#d1fae5';
+    hb.style.cssText='padding:8px 16px;font-size:0.82rem;font-family:\'DM Sans\',sans-serif;font-weight:600;text-align:center;background:'+holBg+';border-bottom:2px solid '+(holidayAway==='becky'?'#c4b5fd':'#6ee7b7')+';color:'+holCol+';';
+    hb.innerHTML='\U0001f334 '+awayName+' is away \u2014 '+coverName+' is covering. All bookings shown in '+coverName+'\'s colour.';
+    var calWrapEl=document.querySelector('.cal-wrap');
+    if(calWrapEl)calWrapEl.parentNode.insertBefore(hb,calWrapEl);
+  } else {
+    if(existingHolBanner)existingHolBanner.remove();
+  }
   var isMobile=window.innerWidth<=640;
   var numDays=isMobile?3:7;
   var allDays=[];
@@ -1438,7 +1458,15 @@ function renderCal(){
     var tod=fmtISO(d)===today;
     var lastSat=isLastSatOfMonth(fmtISO(d));
     var isThu=d.getDay()===4;
-    hdr+='<div class="day-hdr'+(tod?' today':'')+(lastSat||isThu?' closed-day':'')+'">'+(lastSat?'<span style="font-size:0.6rem;opacity:0.7;">Closed</span>':isThu?'<span style="font-size:0.6rem;opacity:0.7;">Client Closed</span>':'')+' <span class="dn">'+DAYS[gi]+'</span><span>'+d.getDate()+' '+MONS[d.getMonth()]+'</span></div>';
+    var ds=fmtISO(d);
+    var holTag='';
+    if(holidayActive&&ds>=holidayStart&&ds<=holidayEnd){
+      var holCol2=holidayAway==='becky'?'#6b21a8':'#2d6a4f';
+      var holBg2=holidayAway==='becky'?'#f3e8ff':'#d1fae5';
+      var holLbl=holidayAway==='becky'?'Becky away':'Poppy away';
+      holTag='<span style="display:block;font-size:0.58rem;font-weight:700;color:'+holCol2+';background:'+holBg2+';border-radius:4px;padding:1px 4px;margin-top:2px;">\U0001f334 '+holLbl+'</span>';
+    }
+    hdr+='<div class="day-hdr'+(tod?' today':'')+(lastSat||isThu?' closed-day':'')+'">'+(lastSat?'<span style="font-size:0.6rem;opacity:0.7;">Closed</span>':isThu?'<span style="font-size:0.6rem;opacity:0.7;">Client Closed</span>':'')+' <span class="dn">'+DAYS[gi]+'</span><span>'+d.getDate()+' '+MONS[d.getMonth()]+'</span>'+holTag+'</div>';
   });
   var body='';
   for(var row=1;row<=63;row++){
