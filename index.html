@@ -58,29 +58,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
 .cal-wrap{padding:0 16px 60px;overflow-x:auto;}
 .cal-outer{position:relative;min-width:560px;}
 .cal-header{display:grid;border-bottom:2px solid var(--tan-light);background:white;position:sticky;top:48px;z-index:10;}
-.day-hdr{padding:6px 4px;text-align:center;font-size:0.72rem;font-weight:700;color:var(--brown);border-right:1px solid var(--tan-light);}
+.day-hdr{padding:6px 4px;text-align:center;font-size:0.72rem;font-weight:700;color:#111;border-right:1px solid var(--tan-light);}
 .day-hdr:first-child{border-right:none;}
 .day-hdr.today{background:var(--becky-bg);}
 .day-hdr.closed-day{background:#f5f5f5;color:#aaa;}
-.day-hdr .dn{display:block;font-size:0.65rem;opacity:0.7;font-weight:500;}
+.day-hdr .dn{display:block;font-size:0.65rem;font-weight:500;color:#333;}
 .time-col{color:#94a3b8;font-size:0.65rem;text-align:right;padding-right:6px;border-right:1px solid var(--tan-light);}
 .cal-body{position:relative;}
 .day-col{border-right:1px solid var(--tan-light);position:relative;cursor:pointer;}
 .day-col:hover{background:rgba(91,155,213,0.04);}
 .hour-line{position:absolute;left:0;right:0;border-top:1px solid var(--tan-light);pointer-events:none;}
 .half-line{position:absolute;left:0;right:0;border-top:1px dashed #e8f0fa;pointer-events:none;}
-.time-lbl{position:absolute;font-size:0.62rem;color:#94a3b8;right:4px;transform:translateY(-50%);}
+.time-lbl{position:absolute;font-size:0.62rem;color:#444;right:4px;transform:translateY(-50%);}
 
 /* ── BOOKING BLOCK ────────────────────────────────────────────────────────── */
-.bk{position:absolute;border-radius:6px;background:var(--becky-bg);border-left:3px solid var(--becky);padding:3px 5px;cursor:pointer;overflow:hidden;font-size:0.7rem;transition:opacity 0.1s;box-shadow:0 1px 3px rgba(0,0,0,0.08);z-index:2;}
+.bk{position:absolute;border-radius:6px;background:var(--becky-bg);border-left:3px solid var(--becky);padding:3px 5px;cursor:pointer;overflow:hidden;font-size:0.7rem;transition:opacity 0.1s;box-shadow:0 1px 3px rgba(0,0,0,0.08);z-index:2;color:#111!important;}
 .bk:hover{opacity:0.85;z-index:3;}
-.bk.groomer-poppy{background:var(--poppy-bg)!important;border-left-color:var(--poppy)!important;}
+.bk.groomer-poppy{background:var(--poppy-bg)!important;border-left-color:var(--poppy)!important;color:var(--brown)!important;}
 .bk.groomer-both{background:linear-gradient(135deg,var(--becky-bg) 50%,var(--poppy-bg) 50%)!important;border-left-color:var(--brown)!important;}
 .bk.paid-block{opacity:0.7;}
-.bn{font-weight:700;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.bd{font-size:0.65rem;opacity:0.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.bt{font-size:0.6rem;opacity:0.7;}
-.bb{font-size:0.6rem;}
+.bn{font-weight:700;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#111!important;}
+.bd{font-size:0.65rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#111!important;}
+.bt{font-size:0.6rem;color:#111!important;}
+.bb{font-size:0.6rem;color:#111!important;}
 .pay-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:3px;}
 .pay-dot.paid{background:var(--paid);}
 .pay-dot.unpaid{background:var(--unpaid);}
@@ -321,7 +321,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
     <div id="referralGroup" style="display:none;" class="fg"><label>Referred by</label><input type="text" id="f-referral" placeholder="Who recommended us?"></div>
     <div class="frow">
       <div class="fg"><label>Date</label><input type="date" id="f-date"></div>
-      <div class="fg"><label>Time</label><select id="f-time" onchange="calcFinish()"></select></div>
+      <div class="fg"><label>Time <span id="timeStepToggle" onclick="toggleTimeStep()" style="font-size:0.68rem;font-weight:600;color:var(--tan);cursor:pointer;margin-left:6px;text-decoration:underline;" title="Toggle 5/10 min slots">10min slots</span></label><select id="f-time" onchange="calcFinish()"></select></div>
       <div class="fg"><label>Finish</label><input type="text" id="f-finish" readonly style="background:#f8faff;"></div>
     </div>
     <div class="fg">
@@ -694,7 +694,7 @@ function renderCal(){
       var svcNames=bk.dogs&&bk.dogs.length?bk.dogs.map(function(d){var s=d.services&&d.services.length?d.services.map(function(sv){return sv.service;}).join('+'):(d.service||'');return s;}).join(' | '):(bk.service||'');
       var total=bk.dogs&&bk.dogs.length?bk.dogs.reduce(function(s,d){return s+(d.services&&d.services.length?d.services.reduce(function(ss,sv){return ss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):(parseFloat(bk.lastprice)||0);
       body+='<div class="bk '+groomerCls+(bk.paid?' paid-block':'')+'" style="top:'+Math.max(tp,0)+'px;height:'+Math.max(hp-2,18)+'px;left:2px;right:2px;" '
-        +'onmousedown="startDrag(event,\''+bk.id+'\')" ontouchstart="startDrag(event,\''+bk.id+'\')" '
+        +''
         +'onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">'
         +'<div class="bn"><span class="pay-dot '+(bk.paid?'paid':'unpaid')+'"></span>'+bk.name+'</div>'
         +(dogNames?'<div class="bd">'+dogNames+'</div>':'')
@@ -709,7 +709,7 @@ function renderCal(){
   var wEnd=days[days.length-1];
   document.getElementById('weekLabel').textContent=days[0].getDate()+' '+MONS[days[0].getMonth()]+' – '+wEnd.getDate()+' '+MONS[wEnd.getMonth()];
   // Month picker
-  var mp=document.getElementById('monthPicker');if(mp&&!mp.children.length)populateMonthPicker();
+  populateMonthPicker();
 }
 function getTotalDuration(bk){
   if(bk.dogs&&bk.dogs.length){
@@ -741,34 +741,6 @@ function populateMonthPicker(){
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// DRAG TO MOVE
-// ═══════════════════════════════════════════════════════════════════════════
-var _drag={active:false,id:null,startY:0,startMins:0};
-function startDrag(e,id){
-  if(e.target.classList.contains('btn-wa-sm'))return;
-  _drag={active:true,id:id,startY:e.touches?e.touches[0].clientY:e.clientY,startMins:timeToMins(bookings.find(function(b){return b.id===id;}).time)};
-  document.addEventListener('mousemove',onDrag);document.addEventListener('touchmove',onDrag,{passive:false});
-  document.addEventListener('mouseup',endDrag);document.addEventListener('touchend',endDrag);
-  e.stopPropagation();
-}
-function onDrag(e){
-  if(!_drag.active)return;
-  e.preventDefault();
-  var y=e.touches?e.touches[0].clientY:e.clientY;
-  var deltaMins=Math.round((y-_drag.startY)/ROW_H)*10;
-  var newMins=Math.round((_drag.startMins+deltaMins)/30)*30;
-  newMins=Math.max(GRID_START,Math.min(newMins,GRID_END-30));
-  var bk=bookings.find(function(b){return b.id===_drag.id;});
-  if(bk){bk.time=minsToTime(newMins);renderCal();}
-}
-function endDrag(){
-  if(!_drag.active)return;
-  _drag.active=false;
-  document.removeEventListener('mousemove',onDrag);document.removeEventListener('touchmove',onDrag);
-  document.removeEventListener('mouseup',endDrag);document.removeEventListener('touchend',endDrag);
-  saveAll();
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // BOOKING SEARCH
@@ -824,7 +796,7 @@ function openAdd(){
   document.getElementById('btnNS').style.display='none';
   clearForm();
   document.getElementById('f-date').value=fmtISO(new Date());
-  buildTimeDropdown(minsToTime(MORNING_DEFAULT));
+  buildTimeDropdown(minsToTime(MORNING_DEFAULT,_timeStep));
   calcFinish();
   document.getElementById('mainOverlay').classList.add('open');
   renderWaButtons();
@@ -832,7 +804,7 @@ function openAdd(){
 function openAddAt(date,time){
   openAdd();
   document.getElementById('f-date').value=date;
-  buildTimeDropdown(time||minsToTime(MORNING_DEFAULT));
+  buildTimeDropdown(time||minsToTime(MORNING_DEFAULT,_timeStep));
   calcFinish();
 }
 function openEdit(id){
@@ -874,7 +846,7 @@ function openEdit(id){
   if(b.noShow){nsBtn.textContent='✓ Undo No Show';nsBtn.style.background='#64748b';}
   else{nsBtn.textContent='✗ No Show';nsBtn.style.background='var(--unpaid)';}
   // Build time dropdown
-  buildTimeDropdown(b.time);
+  buildTimeDropdown(b.time,_timeStep);
   calcFinish();
   // Dogs
   if(b.dogs&&b.dogs.length){
@@ -922,16 +894,26 @@ function clearForm(){
 // ═══════════════════════════════════════════════════════════════════════════
 // TIME DROPDOWN & FINISH CALC
 // ═══════════════════════════════════════════════════════════════════════════
-function buildTimeDropdown(selected){
+var _timeStep=10;
+function toggleTimeStep(){
+  _timeStep=_timeStep===10?5:10;
+  var lbl=document.getElementById('timeStepToggle');
+  if(lbl)lbl.textContent=_timeStep+'min slots';
+  var cur=document.getElementById('f-time').value;
+  buildTimeDropdown(cur,_timeStep);
+}
+function buildTimeDropdown(selected,step){
+  step=step||10;
   var sel=document.getElementById('f-time');
   sel.innerHTML='';
-  for(var m=GRID_START;m<=GRID_END;m+=30){
+  for(var m=GRID_START;m<=GRID_END;m+=step){
     var t=minsToTime(m);
     var opt=document.createElement('option');
     opt.value=t;opt.textContent=fmtTime(t);
-    if(t===selected||(!selected&&m===MORNING_DEFAULT))opt.selected=true;
+    if(t===selected)opt.selected=true;
     sel.appendChild(opt);
   }
+  if(!selected)sel.value=minsToTime(MORNING_DEFAULT);
 }
 function calcFinish(){
   var t=document.getElementById('f-time').value;
@@ -1299,15 +1281,24 @@ function upsertCustomer(b){
 // ═══════════════════════════════════════════════════════════════════════════
 function renderWaButtons(){
   var cont=document.getElementById('waButtons');if(!cont)return;
-  if(!editId){cont.innerHTML='';return;}
+  if(!editId){
+    // For new bookings, just show confirm options
+    var isNewCust=document.getElementById('ct-new')&&document.getElementById('ct-new').checked;
+    cont.innerHTML='<div style="font-size:0.78rem;color:#94a3b8;font-style:italic;padding:8px 0;">Save the booking first to send WhatsApp messages.</div>';
+    return;
+  }
   var b=bookings.find(function(x){return x.id===editId;});if(!b){cont.innerHTML='';return;}
   var isNew=document.getElementById('ct-new').checked;
   var hasStrip=b.dogs&&b.dogs.some(function(d){return d.services&&d.services.some(function(sv){return sv.service==='Hand Stripping';});});
   var btns=[
     {label:'📅 Rebook Next Appointment',sub:'6 weeks / 8 weeks / custom date',color:'var(--becky)',fn:'showRebookPicker()'},
   ];
-  if(isNew){btns.push({label:'Send New Customer Confirmation',sub:'Directions + T&Cs + rebook link',color:'#0369a1',fn:'sendNewConfirmMsg()'});}
-  else{btns.push({label:'Send Confirmation',sub:'Booking details + rebook link',color:'var(--wa-dark)',fn:'sendConfirmMsg()'});}
+  if(isNew){
+    btns.push({label:'Send New Customer Confirmation',sub:'Directions + T&Cs + rebook link',color:'#0369a1',fn:'sendNewConfirmMsg()'});
+  } else {
+    btns.push({label:'Send Confirmation',sub:'Booking details + rebook link',color:'var(--wa-dark)',fn:'sendConfirmMsg()'});
+    btns.push({label:'Send New Customer Confirmation',sub:'If sending to a new customer',color:'#0369a1',fn:'sendNewConfirmMsg()'});
+  }
   btns.push(
     {label:'Send 4-Day Reminder',sub:'Shows actual date & time',color:'var(--wa-dark)',fn:'sendReminderMsg()'},
     {label:'Send Reminder + Payment Link',sub:'Reminder with payment request',color:'var(--wa-dark)',fn:'sendReminderPayMsg()'},
@@ -1456,7 +1447,7 @@ function doRebookWith(newDate){
     document.getElementById('refFlag').style.display='none';
     document.getElementById('noshowFlag').style.display='none';
     renderDogRows();
-    buildTimeDropdown(b.time);
+    buildTimeDropdown(b.time,_timeStep);
     calcFinish();
     var c=getCustomer(b.name);
     var dfVal=(b.dogFriendly)||(c&&c.dogFriendly)||'unknown';
@@ -1846,7 +1837,8 @@ function checkSheetRequests(){
       if(!requests||!requests.length){checkBannerVisibility();return;}
       var html=requests.map(function(p){
         var dateDisp=p.date;try{if(p.date&&String(p.date).match(/^\d{4}-\d{2}-\d{2}$/))dateDisp=fmtDD(p.date);}catch(e){}
-        var timeDisp=p.time;try{if(p.time&&String(p.time).indexOf(':')>-1)timeDisp=fmtTime(p.time);}catch(e){}
+        var timeFixed=fixSheetTime(p.time);
+        var timeDisp=timeFixed!==minsToTime(MORNING_DEFAULT)||p.time?fmtTime(timeFixed):'';
         _sheetRequests[p.id]=p;
         return '<div class="banner-chip" style="flex-direction:column;align-items:flex-start;gap:4px;background:#fff8e0;border-color:#f59e0b;">'
           +'<div style="font-weight:700;color:#92400e;">📋 New Booking Request</div>'
@@ -1864,36 +1856,70 @@ function checkSheetRequests(){
 }
 function addFromRequest(id){
   var p=_sheetRequests[id];if(!p)return;
+  // Fix phone
   var phone=String(p.phone||'').trim().replace(/^\+/,'');
   if(phone.indexOf('44')===0&&phone.length>=12)phone='0'+phone.slice(2);
+  // Fix date — strip non-date chars
   var date=String(p.date||'').replace(/[^0-9\-]/g,'');
-  var time=String(p.time||'').trim();
-  // Validate date
   if(!date.match(/^\d{4}-\d{2}-\d{2}$/))date=fmtISO(new Date());
-  // Validate time
-  if(!time.match(/^\d{2}:\d{2}$/))time=minsToTime(MORNING_DEFAULT);
-  dogInfo={};dogServices={};dogCount=1;
-  dogInfo[1]={name:p.dog||'',breed:p.breed||'',dob:''};
+  // Fix time — Google Sheets often sends as decimal fraction (e.g. 0.625 = 15:00)
+  // or as HH:MM string
+  var time=fixSheetTime(p.time);
+  // Parse services
   var svcs=(p.service||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
-  dogServices[1]=svcs.length?svcs.map(function(svc){return{service:svc,duration:SVC_DURATIONS[svc]||60,price:SVC_PRICES[svc]||''};}):[{service:'',duration:60,price:''}];
+  // Open form first (this calls clearForm which resets dogInfo/dogServices)
   openAddAt(date,time);
+  // Then set everything AFTER the form is open
   setTimeout(function(){
     document.getElementById('f-name').value=titleCase(p.name||'');
     document.getElementById('f-phone').value=phone;
     document.getElementById('ct-new').checked=true;onCtypeChange();
+    // Set dog info AFTER clearForm has run
+    dogInfo={};dogServices={};dogCount=1;
+    dogInfo[1]={name:p.dog||'',breed:p.breed||'',dob:''};
+    dogServices[1]=svcs.length?svcs.map(function(svc){
+      return{service:svc,duration:SVC_DURATIONS[svc]||60,price:SVC_PRICES[svc]||''};
+    }):[{service:'Full Groom',duration:120,price:''}];
     renderDogRows();
+    // Restore time and fill dog fields AFTER renderDogRows
     setTimeout(function(){
+      // Restore time — renderDogRows may reset it
+      buildTimeDropdown(time,_timeStep);
+      document.getElementById('f-date').value=date;
+      calcFinish();
+      // Fill dog name and breed
       var dogEl=document.getElementById('f-dog-1');if(dogEl)dogEl.value=p.dog||'';
       var breedEl=document.getElementById('f-breed-1');if(breedEl)breedEl.value=p.breed||'';
+      // Fill service, duration, price
       if(svcs.length){
-        var svcEl=document.getElementById('f-svc-1-0');if(svcEl)svcEl.value=svcs[0];
-        var durEl=document.getElementById('f-dur-1-0');if(durEl)durEl.value=SVC_DURATIONS[svcs[0]]||60;
-        var priceEl=document.getElementById('f-price-1-0');if(priceEl&&SVC_PRICES[svcs[0]])priceEl.value=SVC_PRICES[svcs[0]];
+        var sEl=document.getElementById('f-svc-1-0');
+        if(sEl){sEl.value=svcs[0];onSvcChange(1,0);}
+        // onSvcChange sets duration and price automatically
       }
-      buildTimeDropdown(time);calcFinish();
-    },250);
+      calcFinish();
+    },300);
   },300);
   dismissRequest(id);
+}
+
+// Converts any time format from Google Sheets to HH:MM
+function fixSheetTime(raw){
+  if(!raw&&raw!==0)return minsToTime(MORNING_DEFAULT);
+  var s=String(raw).trim();
+  // Already HH:MM format
+  if(s.match(/^\d{2}:\d{2}(:\d{2})?$/))return s.substring(0,5);
+  // ISO date string from Sheets e.g. 1899-12-30T09:00:00.000Z
+  if(s.indexOf('T')>-1){
+    var tp=s.split('T')[1].split(':');
+    return pad(parseInt(tp[0]))+':'+pad(parseInt(tp[1]));
+  }
+  // Decimal fraction e.g. 0.375 = 9:00am, 0.625 = 3:00pm
+  var n=parseFloat(s);
+  if(!isNaN(n)&&n>=0&&n<1){
+    var totalMins=Math.round(n*1440);
+    return minsToTime(totalMins);
+  }
+  return minsToTime(MORNING_DEFAULT);
 }
 function waReplyRequest(id){
   var p=_sheetRequests[id];if(!p||!p.phone)return;
@@ -2040,7 +2066,7 @@ function checkPrefill(){
   };
   if(!p.name)return;
   var dateDisp=p.date;try{if(p.date.match(/^\d{4}-\d{2}-\d{2}$/))dateDisp=fmtDD(p.date);}catch(e){}
-  var timeDisp=p.time;try{if(p.time.indexOf(':')>-1)timeDisp=fmtTime(p.time);}catch(e){}
+  var timeDisp=fmtTime(fixSheetTime(p.time));
   localStorage.setItem('pendingRequest',JSON.stringify(p));
   window.history.replaceState({},'',window.location.pathname);
   showPendingRequest(p,dateDisp,timeDisp);
@@ -2051,7 +2077,8 @@ function checkPendingRequest(){
   try{
     var p=JSON.parse(stored);
     var dateDisp=p.date;try{if(p.date&&p.date.match(/^\d{4}-\d{2}-\d{2}$/))dateDisp=fmtDD(p.date);}catch(e){}
-    var timeDisp=p.time;try{if(p.time&&p.time.indexOf(':')>-1)timeDisp=fmtTime(p.time);}catch(e){}
+    var timeDisp=fmtTime(fixSheetTime(p.time));
+    var timeDisp_IGNORE=fmtTime(fixSheetTime(p.time));
     showPendingRequest(p,dateDisp,timeDisp);
   }catch(e){}
 }
@@ -2074,32 +2101,36 @@ function addFromPrefill(){
   var phone=String(p.phone||'').trim().replace(/^\+/,'');
   if(phone.indexOf('44')===0&&phone.length>=12)phone='0'+phone.slice(2);
   var date=String(p.date||'').replace(/[^0-9\-]/g,'');
-  var time=String(p.time||'').trim();
   if(!date.match(/^\d{4}-\d{2}-\d{2}$/))date=fmtISO(new Date());
-  if(!time.match(/^\d{2}:\d{2}$/))time=minsToTime(MORNING_DEFAULT);
-  dogInfo={};dogServices={};dogCount=1;
-  dogInfo[1]={name:p.dog||'',breed:p.breed||'',dob:''};
+  var time=fixSheetTime(p.time);
   var svcs=(p.service||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
-  dogServices[1]=svcs.length?svcs.map(function(svc){return{service:svc,duration:SVC_DURATIONS[svc]||60,price:SVC_PRICES[svc]||''};}):[{service:'',duration:60,price:''}];
   openAddAt(date,time);
   setTimeout(function(){
     document.getElementById('f-name').value=titleCase(p.name||'');
     document.getElementById('f-phone').value=phone;
     document.getElementById('ct-new').checked=true;onCtypeChange();
+    dogInfo={};dogServices={};dogCount=1;
+    dogInfo[1]={name:p.dog||'',breed:p.breed||'',dob:''};
+    dogServices[1]=svcs.length?svcs.map(function(svc){
+      return{service:svc,duration:SVC_DURATIONS[svc]||60,price:SVC_PRICES[svc]||''};
+    }):[{service:'Full Groom',duration:120,price:''}];
     renderDogRows();
     setTimeout(function(){
+      buildTimeDropdown(time,_timeStep);
+      document.getElementById('f-date').value=date;
+      calcFinish();
       var dogEl=document.getElementById('f-dog-1');if(dogEl)dogEl.value=p.dog||'';
       var breedEl=document.getElementById('f-breed-1');if(breedEl)breedEl.value=p.breed||'';
       if(svcs.length){
-        var sEl=document.getElementById('f-svc-1-0');if(sEl)sEl.value=svcs[0];
-        var dEl=document.getElementById('f-dur-1-0');if(dEl)dEl.value=SVC_DURATIONS[svcs[0]]||60;
-        var pEl=document.getElementById('f-price-1-0');if(pEl&&SVC_PRICES[svcs[0]])pEl.value=SVC_PRICES[svcs[0]];
+        var sEl=document.getElementById('f-svc-1-0');
+        if(sEl){sEl.value=svcs[0];onSvcChange(1,0);}
       }
-      buildTimeDropdown(time);calcFinish();
-    },250);
+      calcFinish();
+    },300);
     dismissPrefill();
   },300);
 }
+
 function waReplyPrefill(){
   var p=window._prefill;if(!p||!p.phone)return;
   var phone=String(p.phone).trim().replace(/^\+/,'');if(phone.indexOf('44')===0&&phone.length>=12)phone='0'+phone.slice(2);
@@ -2212,13 +2243,16 @@ document.getElementById('mainOverlay').addEventListener('click',function(e){if(e
 // SWIPE TO CHANGE WEEK (mobile)
 // ═══════════════════════════════════════════════════════════════════════════
 (function(){
-  var el=document.getElementById('calOuter');
-  if(!el)return;
-  var startX=0;
-  document.querySelector('.cal-wrap').addEventListener('touchstart',function(e){startX=e.touches[0].clientX;},{passive:true});
-  document.querySelector('.cal-wrap').addEventListener('touchend',function(e){
-    var diff=e.changedTouches[0].clientX-startX;
-    if(Math.abs(diff)>50){changeWeek(diff<0?1:-1);}
+  var swipeStartX=0,swipeStartY=0;
+  document.addEventListener('touchstart',function(e){
+    if(!e.target.closest('.cal-outer')&&!e.target.closest('.cal-wrap'))return;
+    swipeStartX=e.touches[0].clientX;swipeStartY=e.touches[0].clientY;
+  },{passive:true});
+  document.addEventListener('touchend',function(e){
+    if(!e.target.closest('.cal-outer')&&!e.target.closest('.cal-wrap'))return;
+    var dx=e.changedTouches[0].clientX-swipeStartX;
+    var dy=e.changedTouches[0].clientY-swipeStartY;
+    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){changeWeek(dx<0?1:-1);}
   },{passive:true});
 })();
 
