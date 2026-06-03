@@ -99,7 +99,7 @@ body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--blue);
         <div class="svc-tab-btns">
           <button type="button" class="svc-tab-btn active" onclick="switchSvcTab('groom',this)">✂️ Groom</button>
           <button type="button" class="svc-tab-btn" onclick="switchSvcTab('nails',this)">💅 Nails</button>
-          <button type="button" id="teethTabBtn" class="svc-tab-btn" onclick="switchSvcTab('teeth',this)">🦷 Teeth</button>
+          <button type="button" class="svc-tab-btn" onclick="switchSvcTab('teeth',this)">🦷 Teeth</button>
           <button type="button" class="svc-tab-btn" onclick="switchSvcTab('puppy',this)">🐶 Puppy</button>
           <button type="button" class="svc-tab-btn" onclick="switchSvcTab('standalone',this)">✨ Stand Alone</button>
         </div>
@@ -265,8 +265,20 @@ const HOURS = {
   3:{open:'08:30',close:'17:30'},
   4:{open:'08:30',close:'17:30'},
   5:{open:'08:30',close:'17:30'},
-  6:{open:'09:30',close:'14:00'}
+  6:{open:'09:30',close:'13:00'}
 };
+// Every other Saturday — use a fixed reference date (a known working Saturday)
+// Week number from epoch divided by 2 gives alternating pattern
+function isAlternateSaturday(dateStr){
+  var d=new Date(dateStr+'T12:00:00');
+  if(d.getDay()!==6)return false; // not a Saturday
+  // Count weeks from a reference Monday (2024-01-01 was a Monday)
+  var ref=new Date('2024-01-06T12:00:00'); // a known Saturday
+  var diffMs=d-ref;
+  var diffWeeks=Math.round(diffMs/(7*24*60*60*1000));
+  return diffWeeks%2!==0; // block odd-numbered weeks from reference
+}
+
 function isLastSatOfMonth(dateStr){
   var d=new Date(dateStr+'T12:00:00');
   if(d.getDay()!==6)return false;
@@ -373,68 +385,10 @@ function jumpWeeksAhead(weeks, btn){
   setTimeout(function(){ selectDate(iso); }, 50);
 }
 
-// ── HOLIDAY MODE ──────────────────────────────────────────────────────────
-var HOLIDAY_RESTRICTED_SVCS = [];
-
-function applyHolidayMode(away){
-  if(away !== 'becky') return; // Only restrict when Becky is away (Poppy covering)
-  // Services Poppy cannot do
-  HOLIDAY_RESTRICTED_SVCS = [
-    'Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning','Emmi-Pet Teeth Cleaning PAYG',
-    'Emmi-Pet Teeth Cleaning x4','Emmi-Pet Teeth Cleaning x9','Emmi-Pet Teeth Maintenance',
-    'Anal Glands','Descaling','Puppy Intro (Inc. Bath) - £30','Puppy Intro (Exc. Bath) - £15'
-  ];
-  // Hide teeth tab completely
-  var teethBtn = document.getElementById('teethTabBtn');
-  if(teethBtn) teethBtn.style.display = 'none';
-  var teethPanel = document.getElementById('svc-tab-teeth');
-  if(teethPanel) teethPanel.style.display = 'none';
-  // Hide restricted chips and disable them
-  document.querySelectorAll('.svc-chip').forEach(function(chip){
-    var onclick = chip.getAttribute('onclick') || '';
-    var blocked = HOLIDAY_RESTRICTED_SVCS.some(function(s){ return onclick.indexOf(s) >= 0; });
-    if(blocked){
-      chip.style.display = 'none';
-      chip.classList.remove('selected');
-    }
-  });
-  // Show notice
-  var notice = document.createElement('div');
-  notice.id = 'holidayNotice';
-  notice.style.cssText = 'background:#f3e8ff;border:1.5px solid #c4b5fd;border-radius:10px;padding:12px 16px;font-size:0.85rem;color:#6b21a8;margin-bottom:16px;font-family:sans-serif;';
-  notice.innerHTML = '🐩 <strong>Poppy is covering whilst Becky is away.</strong> Full grooms, wash &amp; dry, nails and de-shed are available. Emmi-Pet, teeth, anal glands, descaling and puppy intros are not available during this period.';
-  var card = document.querySelector('.card');
-  if(card) card.insertBefore(notice, card.firstChild);
-}
-
-(function checkHolidayMode(){
-  fetch(SHEET_URL + '?action=getHoliday')
-    .then(function(r){ return r.json(); })
-    .then(function(h){
-      if(!h || !h.start || !h.end) return;
-      var today = new Date(); today.setHours(0,0,0,0);
-      if(today >= new Date(h.start+'T00:00:00') && today <= new Date(h.end+'T23:59:59'))
-        applyHolidayMode(h.away || 'becky');
-    })
-    .catch(function(){
-      var start = localStorage.getItem('stbHolidayStart');
-      var end = localStorage.getItem('stbHolidayEnd');
-      var away = localStorage.getItem('stbHolidayAway') || 'becky';
-      if(!start || !end) return;
-      var today = new Date(); today.setHours(0,0,0,0);
-      if(today >= new Date(start+'T00:00:00') && today <= new Date(end+'T23:59:59'))
-        applyHolidayMode(away);
-    });
-})();
-
 function toggleService(el, svc){
-  // Block restricted services during holiday
-  if(HOLIDAY_RESTRICTED_SVCS.indexOf(svc) >= 0){
-    alert('Sorry, this service is not available during this period.');
-    return;
-  }
   el.classList.toggle('selected');
   onServiceSelected();
+  // update summary
   var sel = [];
   document.querySelectorAll('.svc-chip.selected').forEach(function(c){
     sel.push(c.textContent.trim());
@@ -707,9 +661,10 @@ function getAvailableSlots(dateStr){
   // Closed days
   if(dow === 0 || dow === 4) return []; // Sunday or Thursday
   if(isLastSatOfMonth(dateStr)) return [];
+  if(isAlternateSaturday(dateStr)) return [];
 
   var dur = selectedServiceDuration || DEFAULT_SLOT;
-  var closeMins = dow === 6 ? timeToMins('14:00') : timeToMins('17:30');
+  var closeMins = dow === 6 ? timeToMins('13:00') : timeToMins('17:30');
 
   // Fixed morning start times per day
   var morningStart;
@@ -738,12 +693,6 @@ function getAvailableSlots(dateStr){
     : ' <span style="color:red">NO MATCH</span> — first 3 sheet dates: '+sheetBookings.slice(0,3).map(function(b){return '"'+b.date+'"('+typeof b.date+')'}).join(', ')
     +' — looking for: "'+dateStr+'"('+typeof dateStr+')');
 
-  var isTeeth = selectedService && (
-    selectedService.indexOf('Emmi-Pet') >= 0 ||
-    selectedService.indexOf('Teeth') >= 0 ||
-    selectedService.indexOf('Consultation') >= 0
-  );
-
   var slots = [];
 
   if(dayBookings.length === 0){
@@ -751,19 +700,16 @@ function getAvailableSlots(dateStr){
     if(morningStart + dur <= closeMins){
       slots.push({time: minsToTime(morningStart), label: fmtTime12(minsToTime(morningStart))});
     }
-    // For non-teeth only: also offer afternoon slot
-    if(!isTeeth && dow !== 6){
-      var tenTen = timeToMins('10:10');
-      if(tenTen >= morningStart + dur && tenTen + dur <= closeMins){
-        slots.push({time: minsToTime(tenTen), label: fmtTime12(minsToTime(tenTen))});
-      }
+    // Offer afternoon on weekdays only
+    if(dow !== 6){
       var pm = timeToMins('15:30');
       if(pm + dur <= closeMins){
         slots.push({time: minsToTime(pm), label: fmtTime12(minsToTime(pm))+' (afternoon)'});
       }
     }
   } else {
-    // Has bookings — find end of last booking
+    // Has bookings — ONLY offer slot immediately after last booking
+    // Never offer morning start again once any booking exists
     var bookedRanges = dayBookings.map(function(b){
       var startMins = timeToMins(b.time);
       var endMins;
@@ -779,23 +725,16 @@ function getAvailableSlots(dateStr){
     var lastEnd = bookedRanges[bookedRanges.length-1].end;
     lastEnd = Math.ceil((lastEnd + 1) / 10) * 10;
 
+    // Only offer morning start if it fits BEFORE the first booking (no gap)
+    if(morningStart + dur <= firstStart){
+      slots.push({time: minsToTime(morningStart), label: fmtTime12(minsToTime(morningStart))});
+    }
+
     if(dbg) dbg.innerHTML += '<br>lastEnd='+minsToTime(lastEnd)+' dur='+dur+' close='+minsToTime(closeMins)+' fits='+(lastEnd+dur<=closeMins);
 
-    if(isTeeth){
-      // Teeth: only offer at morning start (before first booking) or immediately after last booking
-      // Morning slot — only if it fits before the first booking
-      if(morningStart + dur <= firstStart){
-        slots.push({time: minsToTime(morningStart), label: fmtTime12(minsToTime(morningStart))});
-      }
-      // After last booking — only if it fits before close and there's no gap being created
-      if(lastEnd + dur <= closeMins){
-        slots.push({time: minsToTime(lastEnd), label: fmtTime12(minsToTime(lastEnd))});
-      }
-    } else {
-      // Normal booking — next available after last booking
-      if(lastEnd + dur <= closeMins){
-        slots.push({time: minsToTime(lastEnd), label: fmtTime12(minsToTime(lastEnd))});
-      }
+    // Offer slot after last booking if it fits
+    if(lastEnd + dur <= closeMins){
+      slots.push({time: minsToTime(lastEnd), label: fmtTime12(minsToTime(lastEnd))});
     }
   }
 
@@ -823,7 +762,7 @@ function renderMiniCal(){
     var isPast = d < today;
     var isOpen = HOURS[dow] !== undefined && HOURS[dow] !== null && dow !== 0;
     var blocks = JSON.parse(localStorage.getItem('stbBlocks')||'[]');
-    var isBlocked = blocks.some(function(b){return b.date===iso&&b.fullDay;}) || isLastSatOfMonth(iso) || dow===4;
+    var isBlocked = blocks.some(function(b){return b.date===iso&&b.fullDay;}) || isLastSatOfMonth(iso) || dow===4 || isAlternateSaturday(iso);
     var avail = !isPast && isOpen && !isBlocked;
     var cls = 'mc-day';
     if(isPast || !isOpen || isBlocked) cls += ' mc-unavail';
