@@ -94,6 +94,7 @@ body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--blue);
       </div>
     </div>
     <div class="fg" id="serviceGroup" style="display:none">
+      <div id="holidayNotice" style="display:none;background:#f3e8ff;border:1.5px solid #c4b5fd;border-radius:8px;padding:10px 14px;font-size:0.82rem;color:#6b21a8;margin-bottom:12px;"></div>
       <label>Services Required * <span style="font-size:0.78rem;font-weight:400;opacity:0.7;">(select all that apply)</span></label>
       <div class="svc-tabs">
         <div class="svc-tab-btns">
@@ -256,7 +257,9 @@ body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--blue);
 const BIZ_WA = '447767749349';
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwG00lLXzSbhkxVaigOD0arI9A9rns4f-i7GoUeKBXzUcRuxoYbXg7FP3cxhrIfVrB3/exec';
 let sheetBookings = [];
+let sheetBlocks = [];
 let sheetLoaded = false;
+let holidayInfo = {start:'', end:'', away:''};
 const DIARY_URL = 'https://shaantishakti.github.io/scrufftobuff/';
 
 const HOURS = {
@@ -267,23 +270,19 @@ const HOURS = {
   5:{open:'08:30',close:'17:30'},
   6:{open:'09:30',close:'13:00'}
 };
-// Every other Saturday — use a fixed reference date (a known working Saturday)
-// Week number from epoch divided by 2 gives alternating pattern
-function isAlternateSaturday(dateStr){
-  var d=new Date(dateStr+'T12:00:00');
-  if(d.getDay()!==6)return false; // not a Saturday
-  // Count weeks from a reference Monday (2024-01-01 was a Monday)
-  var ref=new Date('2024-01-06T12:00:00'); // a known Saturday
-  var diffMs=d-ref;
-  var diffWeeks=Math.round(diffMs/(7*24*60*60*1000));
-  return diffWeeks%2!==0; // block odd-numbered weeks from reference
-}
-
 function isLastSatOfMonth(dateStr){
   var d=new Date(dateStr+'T12:00:00');
   if(d.getDay()!==6)return false;
   var next=new Date(d);next.setDate(d.getDate()+7);
   return next.getMonth()!==d.getMonth();
+}
+// Every other Saturday — anchored to a known working Saturday (6 Jan 2024)
+function isAlternateSaturday(dateStr){
+  var d=new Date(dateStr+'T12:00:00');
+  if(d.getDay()!==6)return false;
+  var ref=new Date('2024-01-06T12:00:00');
+  var diffWeeks=Math.round((d-ref)/(7*24*60*60*1000));
+  return diffWeeks%2!==0;
 }
 
 const SVC_DURATIONS = {
@@ -340,6 +339,39 @@ function timeToMins(ts){
 function minsToTime(m){return(Math.floor(m/60)<10?'0':'')+Math.floor(m/60)+':'+(m%60<10?'0':'')+m%60;}
 function addMins(ts,mins){var p=ts.split(':');var t=parseInt(p[0])*60+parseInt(p[1])+mins;return minsToTime(t);}
 
+function loadHolidayMode(){
+  fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'getHoliday'})})
+    .then(function(r){return r.json();})
+    .then(function(data){
+      holidayInfo = data || {start:'',end:'',away:''};
+      applyHolidayMode();
+    })
+    .catch(function(){});
+}
+function applyHolidayMode(){
+  var notice = document.getElementById('holidayNotice');
+  if(!notice) return;
+  var today = new Date(); today.setHours(0,0,0,0);
+  var todayStr = today.getFullYear()+'-'+(today.getMonth()+1<10?'0':'')+(today.getMonth()+1)+'-'+(today.getDate()<10?'0':'')+today.getDate();
+  var active = holidayInfo.start && holidayInfo.end && todayStr >= holidayInfo.start && todayStr <= holidayInfo.end;
+  var restrictedTabBtn = document.querySelector('.svc-tab-btn[onclick*="\'teeth\'"]');
+  var restrictedChips = ['Anal Glands','Puppy Intro (Inc. Bath) - £28','Puppy Intro (Exc. Bath) - £15','Puppy Groom'];
+  if(active && holidayInfo.away === 'becky'){
+    notice.style.display = 'block';
+    notice.innerHTML = '🌴 <strong>Becky is currently away</strong> — Poppy is covering, so teeth, anal glands and puppy intro services aren\'t available right now. Please choose a grooming service instead, or get in touch to discuss.';
+    if(restrictedTabBtn){restrictedTabBtn.style.display='none';}
+    restrictedChips.forEach(function(label){
+      document.querySelectorAll('.svc-chip').forEach(function(c){
+        if(c.textContent.indexOf(label.split(' - ')[0].split(' (')[0])>=0) c.style.display='none';
+      });
+    });
+  } else {
+    notice.style.display = 'none';
+    if(restrictedTabBtn){restrictedTabBtn.style.display='';}
+    document.querySelectorAll('.svc-chip').forEach(function(c){c.style.display='';});
+  }
+}
+
 function loadSheetBookings(callback){
   fetch(SHEET_URL)
     .then(function(r){return r.json();})
@@ -349,8 +381,19 @@ function loadSheetBookings(callback){
       });
       var dbg = document.getElementById('sheetDebug');
       if(dbg) dbg.innerHTML = '<strong>All Sheet bookings ('+sheetBookings.length+' total):</strong><br>' + sheetBookings.map(function(b){return b.date+' '+b.time+'-'+b.finishTime+' ('+b.duration+'min)';}).join('<br>');
-      sheetLoaded = true;
-      if(callback) callback();
+      // Also fetch blocked time slots so customers can't book over them
+      fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'getBlocks'})})
+        .then(function(r){return r.json();})
+        .then(function(blockData){
+          sheetBlocks = Array.isArray(blockData) ? blockData : [];
+          sheetLoaded = true;
+          if(callback) callback();
+        })
+        .catch(function(){
+          sheetBlocks = [];
+          sheetLoaded = true;
+          if(callback) callback();
+        });
     })
     .catch(function(){
       sheetLoaded = true;
@@ -686,6 +729,13 @@ function getAvailableSlots(dateStr){
     return bDate === sDate;
   });
 
+  // Also block out any full-day blocks for this date (from owner's app)
+  var dayBlocks = sheetBlocks.filter(function(bl){
+    var blDate = String(bl.date||'').trim();
+    return blDate === dateStr;
+  });
+  if(dayBlocks.some(function(bl){return bl.fullDay;})) return [];
+
   // Debug
   var dbg = document.getElementById('sheetDebug');
   if(dbg) dbg.innerHTML += '<br><strong>'+dateStr+':</strong> '+dayBookings.length+' sheet bookings'
@@ -695,12 +745,28 @@ function getAvailableSlots(dateStr){
 
   var slots = [];
 
-  if(dayBookings.length === 0){
-    // No bookings — offer morning start only
+  // Build combined busy ranges from bookings AND timed blocks
+  var busyRanges = dayBookings.map(function(b){
+    var startMins = timeToMins(b.time);
+    var endMins;
+    if(b.finishTime && String(b.finishTime).trim() !== '' && timeToMins(b.finishTime) > startMins){
+      endMins = timeToMins(b.finishTime);
+    } else {
+      endMins = startMins + (parseInt(b.duration)||DEFAULT_SLOT);
+    }
+    return {start: startMins, end: endMins};
+  });
+  dayBlocks.filter(function(bl){return !bl.fullDay && bl.start && bl.end;}).forEach(function(bl){
+    busyRanges.push({start: timeToMins(bl.start), end: timeToMins(bl.end)});
+  });
+  busyRanges.sort(function(a,b){return a.start-b.start;});
+
+  if(busyRanges.length === 0){
+    // No bookings — offer morning start
     if(morningStart + dur <= closeMins){
       slots.push({time: minsToTime(morningStart), label: fmtTime12(minsToTime(morningStart))});
     }
-    // Offer afternoon on weekdays only
+    // Offer 3:30pm on weekdays
     if(dow !== 6){
       var pm = timeToMins('15:30');
       if(pm + dur <= closeMins){
@@ -708,33 +774,26 @@ function getAvailableSlots(dateStr){
       }
     }
   } else {
-    // Has bookings — ONLY offer slot immediately after last booking
-    // Never offer morning start again once any booking exists
-    var bookedRanges = dayBookings.map(function(b){
-      var startMins = timeToMins(b.time);
-      var endMins;
-      if(b.finishTime && String(b.finishTime).trim() !== '' && timeToMins(b.finishTime) > startMins){
-        endMins = timeToMins(b.finishTime);
-      } else {
-        endMins = startMins + (parseInt(b.duration)||DEFAULT_SLOT);
-      }
-      return {start: startMins, end: endMins};
-    }).sort(function(a,b){return a.start-b.start;});
+    // Has bookings/blocks — check EVERY gap, not just after the last one
+    var firstStart = busyRanges[0].start;
 
-    var firstStart = bookedRanges[0].start;
-    var lastEnd = bookedRanges[bookedRanges.length-1].end;
-    lastEnd = Math.ceil((lastEnd + 1) / 10) * 10;
-
-    // Only offer morning start if it fits BEFORE the first booking (no gap)
+    // 1) Morning slot — only if it fits before the first busy period with no overlap
     if(morningStart + dur <= firstStart){
       slots.push({time: minsToTime(morningStart), label: fmtTime12(minsToTime(morningStart))});
     }
 
+    // 2) Slot immediately after the last busy period ends, rounded up to next 10 min
+    var lastEnd = busyRanges[busyRanges.length-1].end;
+    lastEnd = Math.ceil((lastEnd + 1) / 10) * 10;
+
     if(dbg) dbg.innerHTML += '<br>lastEnd='+minsToTime(lastEnd)+' dur='+dur+' close='+minsToTime(closeMins)+' fits='+(lastEnd+dur<=closeMins);
 
-    // Offer slot after last booking if it fits
     if(lastEnd + dur <= closeMins){
-      slots.push({time: minsToTime(lastEnd), label: fmtTime12(minsToTime(lastEnd))});
+      // Make sure this slot doesn't overlap any OTHER busy range (in case of gaps between multiple bookings)
+      var overlaps = busyRanges.some(function(r){return lastEnd < r.end && (lastEnd+dur) > r.start;});
+      if(!overlaps){
+        slots.push({time: minsToTime(lastEnd), label: fmtTime12(minsToTime(lastEnd))});
+      }
     }
   }
 
@@ -761,8 +820,8 @@ function renderMiniCal(){
     var iso=y+'-'+(mo<10?'0':'')+mo+'-'+(da<10?'0':'')+da;
     var isPast = d < today;
     var isOpen = HOURS[dow] !== undefined && HOURS[dow] !== null && dow !== 0;
-    var blocks = JSON.parse(localStorage.getItem('stbBlocks')||'[]');
-    var isBlocked = blocks.some(function(b){return b.date===iso&&b.fullDay;}) || isLastSatOfMonth(iso) || dow===4 || isAlternateSaturday(iso);
+    var isFullDayBlocked = sheetBlocks.some(function(b){return b.date===iso&&b.fullDay;});
+    var isBlocked = isFullDayBlocked || isLastSatOfMonth(iso) || isAlternateSaturday(iso) || dow===4;
     var avail = !isPast && isOpen && !isBlocked;
     var cls = 'mc-day';
     if(isPast || !isOpen || isBlocked) cls += ' mc-unavail';
@@ -880,6 +939,7 @@ function initRebook(){
 }
 
 setTimeout(initRebook, 300);
+loadHolidayMode();
 
 function submitRequest(){
   var name = document.getElementById('req-name').value.trim();
