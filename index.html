@@ -2241,8 +2241,45 @@ function sendPoppySchedule(){
 }
 function clearAndPushAll(){
   if(!confirm('This will push every booking to the Google Sheet. Are you sure?'))return;
-  bookings.forEach(function(bk){syncToSheet(bk,'add');});
-  alert('Pushed all bookings to the sheet.');
+  var total=bookings.length;
+  if(!total){alert('No bookings to push.');return;}
+  var i=0;
+  var failed=[];
+  var progressDiv=document.createElement('div');
+  progressDiv.id='pushProgress';
+  progressDiv.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.3);padding:24px 32px;z-index:999999;text-align:center;font-family:sans-serif;';
+  progressDiv.innerHTML='<div style="font-weight:700;margin-bottom:8px;">Pushing bookings to sheet…</div><div id="pushProgressText">0 / '+total+'</div>';
+  document.body.appendChild(progressDiv);
+  function pushNext(){
+    var txt=document.getElementById('pushProgressText');
+    if(txt)txt.textContent=i+' / '+total+(failed.length?' ('+failed.length+' failed)':'');
+    if(i>=total){
+      var pd=document.getElementById('pushProgress');if(pd)pd.remove();
+      showSyncWarning(); // refresh the banner now that failures (if any) are up to date
+      if(failed.length){
+        alert('Pushed '+(total-failed.length)+' of '+total+' bookings. '+failed.length+' failed — check the red warning banner to retry those.');
+      } else {
+        alert('All '+total+' bookings pushed successfully.');
+      }
+      return;
+    }
+    var bk=bookings[i];
+    i++;
+    var totalDur=getTotalDuration(bk);
+    var finTime=bk.finishTime||minsToTime(timeToMins(bk.time)+totalDur);
+    fetch(SHEET_URL,{
+      method:'POST',
+      body:JSON.stringify({action:'add',id:bk.id,date:bk.date,time:bk.time,finishTime:finTime,duration:totalDur,name:bk.name||''})
+    }).then(function(){
+      clearSyncFailure(bk.id); // clear any stale failure flag for this booking now it's succeeded
+      setTimeout(pushNext,800); // longer stagger to respect Apps Script's rate limits
+    }).catch(function(){
+      failed.push(bk.id);
+      flagSyncFailure(bk);
+      setTimeout(pushNext,800);
+    });
+  }
+  pushNext();
 }
 
 ['blockOverlay','expOverlay','staffOverlay','shoppingOverlay','rebookOverlay','payOverlay'].forEach(function(id){
