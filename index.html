@@ -185,6 +185,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
   <div class="more-menu-item" onclick="openFridayPreview();toggleMoreMenu()">📅 This Week's Schedule</div>
   <div class="more-menu-item" onclick="sendPoppySchedule();toggleMoreMenu()">📍 Send Poppy's Schedule</div>
   <div class="more-menu-item" style="color:var(--unpaid);" onclick="clearAndPushAll();toggleMoreMenu()">🔄 Clear &amp; Push All</div>
+  <div class="more-menu-item" style="color:var(--unpaid);" onclick="dedupeBookingsOnSheet();toggleMoreMenu()">🧹 Remove Duplicate Bookings</div>
 </div>
 
 <div class="reminder-banner" id="reminderBanner">
@@ -2238,6 +2239,17 @@ function sendPoppySchedule(){
   if(!nextWeekBks.length)msg+='No bookings next week!';
   msg+='\nBecky x';
   openWA('07487506835',msg);
+}
+function dedupeBookingsOnSheet(){
+  if(!confirm('This will remove duplicate booking rows from the Google Sheet (keeping the most recent version of each). Continue?'))return;
+  fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'dedupeBookings'})})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      alert('Removed '+(res.deleted||0)+' duplicate row(s) from the sheet.');
+    })
+    .catch(function(){
+      alert('Could not reach the sheet — please check your connection and try again.');
+    });
 }
 function clearAndPushAll(){
   if(!confirm('This will push every booking to the Google Sheet. Are you sure?'))return;
