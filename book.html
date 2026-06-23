@@ -373,7 +373,7 @@ function applyHolidayMode(){
 }
 
 function loadSheetBookings(callback){
-  fetch(SHEET_URL)
+  fetch(SHEET_URL+'?_cb='+Date.now(),{cache:'no-store'})
     .then(function(r){return r.json();})
     .then(function(data){
       sheetBookings = data.map(function(r){
@@ -382,7 +382,7 @@ function loadSheetBookings(callback){
       var dbg = document.getElementById('sheetDebug');
       if(dbg) dbg.innerHTML = '<strong>All Sheet bookings ('+sheetBookings.length+' total):</strong><br>' + sheetBookings.map(function(b){return b.date+' '+b.time+'-'+b.finishTime+' ('+b.duration+'min)';}).join('<br>');
       // Also fetch blocked time slots so customers can't book over them
-      fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'getBlocks'})})
+      fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'getBlocks'}), cache:'no-store'})
         .then(function(r){return r.json();})
         .then(function(blockData){
           sheetBlocks = Array.isArray(blockData) ? blockData : [];
