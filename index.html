@@ -2002,7 +2002,14 @@ function dismissRebookChip(name){
 
 function checkUnpaid(){
   var todayStr=fmtISO(new Date());
-  var unpaid=bookings.filter(function(b){return b.date<todayStr&&!b.paid&&!b.noShow&&b.name;});
+  var dismissed=JSON.parse(localStorage.getItem('stbDismissedUnpaid')||'{}');
+  var now=Date.now();
+  var unpaid=bookings.filter(function(b){
+    if(!(b.date<todayStr&&!b.paid&&!b.noShow&&b.name))return false;
+    var dismissedAt=dismissed[b.id];
+    if(dismissedAt&&(now-dismissedAt)<14*24*60*60*1000)return false;
+    return true;
+  });
   if(!unpaid.length){setZone('rl-unpaid','');return;}
   setZone('rl-unpaid',unpaid.map(function(b){
     var dn=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).filter(Boolean).join(' & '):b.dog||'';
@@ -2014,6 +2021,9 @@ function checkUnpaid(){
   }).join(''));
 }
 function dismissUnpaid(id){
+  var dismissed=JSON.parse(localStorage.getItem('stbDismissedUnpaid')||'{}');
+  dismissed[id]=Date.now();
+  localStorage.setItem('stbDismissedUnpaid',JSON.stringify(dismissed));
   var el=document.getElementById('unpaid-'+id);if(el)el.remove();
   checkBannerVisibility();
 }
