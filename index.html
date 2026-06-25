@@ -184,6 +184,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
   <div class="more-menu-item" onclick="openShoppingList();toggleMoreMenu()">🛒 Shopping List</div>
   <div class="more-menu-item" onclick="openFridayPreview();toggleMoreMenu()">📅 This Week's Schedule</div>
   <div class="more-menu-item" onclick="sendPoppySchedule();toggleMoreMenu()">📍 Send Poppy's Schedule</div>
+  <div class="more-menu-item" onclick="sendPoppyStartTimesMsg();toggleMoreMenu()">⏰ Send Poppy's Start Times</div>
   <div class="more-menu-item" style="color:var(--unpaid);" onclick="clearAndPushAll();toggleMoreMenu()">🔄 Clear &amp; Push All</div>
   <div class="more-menu-item" style="color:var(--unpaid);" onclick="dedupeBookingsOnSheet();toggleMoreMenu()">🧹 Remove Duplicate Bookings</div>
 </div>
@@ -198,6 +199,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
     <div id="rl-birthday"></div>
     <div id="rl-referral"></div>
     <div id="rl-poppy"></div>
+    <div id="rl-friday"></div>
   </div>
 </div>
 
@@ -252,6 +254,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
       <button onclick="openLogHours()" class="block-btn" style="background:#b45309;font-size:0.8rem;margin-left:auto;">+ Log Hours</button>
     </div>
     <table class="earn-table"><thead><tr><th>Date</th><th>Times</th><th>Hours</th><th>Cost</th><th>Day Revenue</th><th>Covered?</th><th></th></tr></thead><tbody id="staffBody"></tbody></table>
+    <h3 style="font-family:'Playfair Display',serif;font-size:1rem;margin:20px 0 8px;color:#b45309;">🏖️ Poppy's Holiday Accrual</h3>
+    <p style="font-size:0.82rem;color:#64748b;margin-bottom:10px;">Calculated at 10.77% of hours worked, as per your accountant's figure. Broken down month by month.</p>
+    <table class="earn-table">
+      <thead><tr><th>Month</th><th>Hours Worked</th><th>Holiday Accrued</th><th>Holiday Taken</th><th>Running Balance</th><th>Value</th></tr></thead>
+      <tbody id="holidayAccrualBody"></tbody>
+    </table>
     <h3 style="font-family:'Playfair Display',serif;font-size:1rem;margin:20px 0 8px;color:#0ea5e9;">🌴 Holiday Mode</h3>
     <p style="font-size:0.82rem;color:#64748b;margin-bottom:10px;">Sets who is away. Updates calendar colours and restricts the online booking page.</p>
     <div style="background:white;border:1.5px solid var(--tan-light);border-radius:10px;padding:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
@@ -1690,6 +1698,51 @@ function saveStaffRate(){
   renderEarnings();
 }
 
+// ── HOLIDAY ACCRUAL (10.77% method, per accountant) ──────────
+function saveHolidayTakenMonth(monthKey){
+  var input=document.getElementById('hol-taken-'+monthKey);
+  if(!input)return;
+  var val=parseFloat(input.value);
+  if(isNaN(val)||val<0){alert('Please enter a valid number of hours.');return;}
+  var taken=JSON.parse(localStorage.getItem('stbHolidayTakenByMonth')||'{}');
+  taken[monthKey]=val;
+  localStorage.setItem('stbHolidayTakenByMonth',JSON.stringify(taken));
+  renderHolidayAccrual();
+}
+function renderHolidayAccrual(){
+  var body=document.getElementById('holidayAccrualBody');if(!body)return;
+  var year=new Date().getFullYear();
+  var takenByMonth=JSON.parse(localStorage.getItem('stbHolidayTakenByMonth')||'{}');
+  var fmtHrs=function(h){var sign=h<0?'-':'';h=Math.abs(h);var hh=Math.floor(h),mm=Math.round((h-hh)*60);return sign+hh+'hr'+(mm>0?' '+mm+'min':'');};
+
+  var runningBalance=0;
+  var rows='';
+  var currentMonthIdx=new Date().getMonth();
+
+  for(var m=0;m<=currentMonthIdx;m++){
+    var monthStart=fmtISO(new Date(year,m,1));
+    var monthEnd=fmtISO(new Date(year,m+1,0));
+    var monthKey=year+'-'+(m+1<10?'0':'')+(m+1);
+    var monthSH=staffHours.filter(function(h){return h.date>=monthStart&&h.date<=monthEnd;});
+    var hoursWorked=monthSH.reduce(function(s,h){return s+(parseFloat(h.hours)||0);},0);
+    var accrued=hoursWorked*0.1077;
+    var taken=parseFloat(takenByMonth[monthKey])||0;
+    runningBalance+=accrued-taken;
+    var value=staffHourlyRate>0?accrued*staffHourlyRate:null;
+
+    rows+='<tr>'
+      +'<td><strong>'+FMONS[m]+'</strong></td>'
+      +'<td>'+fmtHrs(hoursWorked)+'</td>'
+      +'<td style="color:#2d6a4f;font-weight:600;">'+fmtHrs(accrued)+'</td>'
+      +'<td><input type="number" id="hol-taken-'+monthKey+'" value="'+(taken||'')+'" min="0" step="0.5" placeholder="0" style="width:60px;padding:4px 6px;border:1.5px solid var(--tan-light);border-radius:6px;font-size:0.82rem;" onchange="saveHolidayTakenMonth(\''+monthKey+'\')"></td>'
+      +'<td style="font-weight:600;color:'+(runningBalance<0?'#e05252':'#2d6a4f')+';">'+fmtHrs(runningBalance)+'</td>'
+      +'<td>'+(value!==null?'£'+value.toFixed(2):'—')+'</td>'
+      +'</tr>';
+  }
+
+  body.innerHTML=rows||'<tr><td colspan="6" class="earn-empty">No hours logged yet this year.</td></tr>';
+}
+
 function setEarnView(v,tab){
   earnView=v;
   document.querySelectorAll('.earn-tab').forEach(function(t){t.classList.remove('active');});
@@ -1762,6 +1815,7 @@ function renderEarnings(){
         +'<td><button class="btn-wa-sm" style="background:#64748b;" onclick="openEditSH(\''+h.id+'\')">Edit</button></td></tr>';
     }).join('');
   }
+  renderHolidayAccrual();
 }
 
 function exportCash(){
@@ -1836,7 +1890,7 @@ function updateHolidayNote(){
 }
 
 function checkBannerVisibility(){
-  var zones=['rl-reminders','rl-requests','rl-rebook','rl-unpaid','rl-birthday','rl-referral','rl-poppy'];
+  var zones=['rl-reminders','rl-requests','rl-rebook','rl-unpaid','rl-birthday','rl-referral','rl-poppy','rl-friday'];
   var has=zones.some(function(z){var el=document.getElementById(z);return el&&el.innerHTML.trim();});
   var banner=document.getElementById('reminderBanner');
   if(has)banner.classList.add('show');else banner.classList.remove('show');
@@ -2089,6 +2143,101 @@ function checkPoppyLateStart(){
   var msg=soloCount===todayBks.length?'All appointments today are solo — Poppy doesn\'t need to come in!'
     :'First '+soloCount+' appointment'+(soloCount>1?'s are':' is')+' solo — Poppy\'s start: <strong>'+fmtTime(todayBks[soloCount].time)+'</strong>';
   setZone('rl-poppy','<div class="banner-chip" style="background:#f0fdf4;border-color:#3a9e6e;"><span>🐩</span> '+msg+'</div>');
+}
+
+// ── FRIDAY CASH & HOURS REMINDER ─────────────────────────────────────────
+function checkFridayReminder(){
+  var today=new Date();
+  var dow=today.getDay();
+  if(dow!==5){setZone('rl-friday','');return;}
+  var todayStr=fmtISO(today);
+  var dismissed=JSON.parse(localStorage.getItem('stbFridayDismissed')||'{}');
+  if(dismissed[todayStr]){setZone('rl-friday','');return;}
+  setZone('rl-friday',
+    '<div class="banner-chip" style="background:#e0f2fe;border-color:#0ea5e9;">'
+    +'<span>📊</span><strong>It\'s Friday!</strong> Time for this week\'s cash summary and Poppy\'s hours'
+    +'<button class="btn-wa-sm" style="background:#0ea5e9;" onclick="sendCashSummaryMsg()">Send Cash Summary</button>'
+    +'<button class="btn-wa-sm" style="background:#b45309;" onclick="sendPoppyHoursMsg()">Send Poppy Hours</button>'
+    +'<button class="btn-wa-sm" style="background:#7c3aed;" onclick="sendPoppyStartTimesMsg()">Send Poppy Start Times</button>'
+    +'<button class="btn-wa-sm" style="background:#94a3b8;" onclick="dismissFridayReminder()">✕</button>'
+    +'</div>'
+  );
+}
+function dismissFridayReminder(){
+  var todayStr=fmtISO(new Date());
+  var dismissed=JSON.parse(localStorage.getItem('stbFridayDismissed')||'{}');
+  dismissed[todayStr]=true;
+  localStorage.setItem('stbFridayDismissed',JSON.stringify(dismissed));
+  setZone('rl-friday','');
+}
+function sendCashSummaryMsg(){
+  var ws=getMonday(new Date());
+  var we=addDays(ws,6);
+  var weekStartStr=fmtISO(ws);
+  var weekEndStr=fmtISO(we);
+  var periodBks=bookings.filter(function(b){return b.date>=weekStartStr&&b.date<=weekEndStr&&b.paid;});
+  var periodExp=expenses.filter(function(e){return e.date>=weekStartStr&&e.date<=weekEndStr;});
+  var rows=[];
+  periodBks.forEach(function(b){
+    var amt=b.dogs&&b.dogs.length?b.dogs.reduce(function(s,d){return s+(parseFloat(d.price)||0);},0):(parseFloat(b.lastprice)||0);
+    var svc=b.dogs&&b.dogs.length?b.dogs.map(function(d){return(d.services&&d.services.length?d.services.map(function(sv){return sv.service;}).join('+'):d.service)||'';}).join(', '):(b.service||'');
+    rows.push({date:b.date,payee:b.name,item:svc,debit:'',credit:amt});
+  });
+  periodExp.forEach(function(e){
+    rows.push({date:e.date,payee:e.desc,item:e.cat||'',debit:parseFloat(e.amount)||0,credit:''});
+  });
+  rows.sort(function(a,b){return a.date.localeCompare(b.date);});
+  var lines=['Date\tPayee\tItem\tDebit\tCredit'];
+  rows.forEach(function(r){
+    lines.push(fmtDD(r.date)+'\t'+r.payee+'\t'+r.item+'\t'+(r.debit!==''?r.debit.toFixed(2):'')+'\t'+(r.credit!==''?r.credit.toFixed(2):''));
+  });
+  var totalDebit=rows.reduce(function(s,r){return s+(r.debit!==''?r.debit:0);},0);
+  var totalCredit=rows.reduce(function(s,r){return s+(r.credit!==''?r.credit:0);},0);
+  lines.push('TOTAL\t\t\t'+totalDebit.toFixed(2)+'\t'+totalCredit.toFixed(2));
+  var msg='📊 Cash Summary — '+fmtDD(weekStartStr)+' to '+fmtDD(weekEndStr)+'\n(Paste directly into Excel)\n\n'+lines.join('\n');
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+function sendPoppyHoursMsg(){
+  var ws=getMonday(new Date());
+  var weekStartStr=fmtISO(ws);
+  var weekEndStr=fmtISO(addDays(ws,6));
+  var periodSH=staffHours.filter(function(h){return h.date>=weekStartStr&&h.date<=weekEndStr;}).sort(function(a,b){return a.date.localeCompare(b.date);});
+  if(!periodSH.length){
+    openWA('07487506835','Hi Poppy! No hours logged for this week ('+fmtDD(weekStartStr)+' – '+fmtDD(weekEndStr)+').\n\nBecky x');
+    return;
+  }
+  var totalHours=0;
+  var msg='Hi Poppy! Here\'s your hours for this week ('+fmtDD(weekStartStr)+' – '+fmtDD(weekEndStr)+'):\n\n';
+  periodSH.forEach(function(h){
+    var hrs=parseFloat(h.hours)||0;
+    totalHours+=hrs;
+    var hh=Math.floor(hrs),mm=Math.round((hrs-hh)*60);
+    msg+='📅 '+fmtDD(h.date)+': '+(h.start&&h.end?fmtTime(h.start)+' – '+fmtTime(h.end):'')+' ('+hh+'hr'+(mm>0?' '+mm+'min':'')+')\n';
+  });
+  var totHH=Math.floor(totalHours),totMM=Math.round((totalHours-totHH)*60);
+  msg+='\nTotal: '+totHH+'hr'+(totMM>0?' '+totMM+'min':'');
+  if(staffHourlyRate>0)msg+=' = £'+(totalHours*staffHourlyRate).toFixed(2);
+  msg+='\n\nThanks for all your hard work!\nBecky x';
+  openWA('07487506835',msg);
+}
+function sendPoppyStartTimesMsg(){
+  var today=new Date();
+  var day=today.getDay();
+  var daysUntilMon=day===0?1:(day===1?0:8-day);
+  var mon=addDays(today,daysUntilMon);
+  var msg='Hi Poppy! Here are your start times for next week:\n\n';
+  var any=false;
+  for(var i=0;i<6;i++){
+    var d=addDays(mon,i);
+    var ds=fmtISO(d);
+    var dayBks=bookings.filter(function(b){return b.date===ds&&!b.noShow;}).sort(function(a,b){return a.time.localeCompare(b.time);});
+    if(!dayBks.length)continue;
+    any=true;
+    msg+='📅 '+DAYS[d.getDay()]+' '+fmtDD(ds)+': start '+fmtTime(dayBks[0].time)+'\n';
+  }
+  if(!any)msg+='No bookings scheduled next week!';
+  msg+='\nBecky x';
+  openWA('07487506835',msg);
 }
 
 function checkPrefill(){
@@ -2346,6 +2495,7 @@ setTimeout(checkReferralDiscounts,1200);
 setTimeout(checkPoppyLateStart,1500);
 setTimeout(checkRebookNudge,2000);
 setTimeout(checkSheetRequests,2500);
+setTimeout(checkFridayReminder,2800);
 </script>
 </body>
 </html>
