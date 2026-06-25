@@ -374,13 +374,26 @@ function applyHolidayMode(){
 }
 
 function loadSheetBookings(callback){
+  var dbg = document.getElementById('sheetDebug');
+  if(dbg) dbg.innerHTML = 'Loading bookings from sheet…';
   fetch(SHEET_URL+'?_cb='+Date.now(),{cache:'no-store'})
-    .then(function(r){return r.json();})
-    .then(function(data){
+    .then(function(r){
+      if(!r.ok){throw new Error('HTTP status '+r.status+' from sheet');}
+      return r.text();
+    })
+    .then(function(text){
+      var data;
+      try{
+        data=JSON.parse(text);
+      }catch(e){
+        throw new Error('Response was not valid JSON. Raw response (first 300 chars): '+text.substring(0,300));
+      }
+      if(!Array.isArray(data)){
+        throw new Error('Response was valid JSON but not an array. Got: '+JSON.stringify(data).substring(0,300));
+      }
       sheetBookings = data.map(function(r){
         return {date:r.date, time:parseSheetTime(r.time), finishTime:parseSheetTime(r.finishTime), duration:parseInt(r.duration)||90, id:r.id};
       });
-      var dbg = document.getElementById('sheetDebug');
       if(dbg) dbg.innerHTML = '<strong>All Sheet bookings ('+sheetBookings.length+' total):</strong><br>' + sheetBookings.map(function(b){return b.date+' '+b.time+'-'+b.finishTime+' ('+b.duration+'min)';}).join('<br>');
       // Also fetch blocked time slots so customers can't book over them
       fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'getBlocks'}), cache:'no-store'})
@@ -396,7 +409,8 @@ function loadSheetBookings(callback){
           if(callback) callback();
         });
     })
-    .catch(function(){
+    .catch(function(err){
+      if(dbg) dbg.innerHTML = '<strong style="color:red;">ERROR loading bookings:</strong><br>'+err.message+'<br><br>SHEET_URL: '+SHEET_URL;
       sheetLoaded = true;
       if(callback) callback();
     });
