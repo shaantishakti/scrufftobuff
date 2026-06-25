@@ -57,7 +57,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
 .cds-add-btn{display:inline-block;margin-top:4px;background:none;border:1px solid var(--tan-light);color:var(--tan);border-radius:6px;font-size:0.65rem;padding:2px 7px;cursor:pointer;}
 .cds-add-btn:hover{background:#f0f6ff;}
 .cal-outer{position:relative;min-width:560px;}
-.cal-header{display:grid;border-bottom:2px solid var(--tan-light);background:white;position:sticky;top:48px;z-index:10;}
+.cal-header{display:grid;border-bottom:2px solid var(--tan-light);background:white;z-index:10;}
 .day-hdr{padding:6px 4px;text-align:center;font-size:0.72rem;font-weight:700;color:#111;border-right:1px solid var(--tan-light);}
 .day-hdr:first-child{border-right:none;}
 .day-hdr.today{background:var(--becky-bg);}
@@ -254,12 +254,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
       <button onclick="openLogHours()" class="block-btn" style="background:#b45309;font-size:0.8rem;margin-left:auto;">+ Log Hours</button>
     </div>
     <table class="earn-table"><thead><tr><th>Date</th><th>Times</th><th>Hours</th><th>Cost</th><th>Day Revenue</th><th>Covered?</th><th></th></tr></thead><tbody id="staffBody"></tbody></table>
-    <h3 style="font-family:'Playfair Display',serif;font-size:1rem;margin:20px 0 8px;color:#b45309;">🏖️ Poppy's Holiday Accrual</h3>
-    <p style="font-size:0.82rem;color:#64748b;margin-bottom:10px;">Calculated at 10.77% of hours worked, as per your accountant's figure. Broken down month by month.</p>
-    <table class="earn-table">
-      <thead><tr><th>Month</th><th>Hours Worked</th><th>Holiday Accrued</th><th>Holiday Taken</th><th>Running Balance</th><th>Value</th></tr></thead>
-      <tbody id="holidayAccrualBody"></tbody>
-    </table>
+    <h3 style="font-family:'Playfair Display',serif;font-size:1rem;margin:20px 0 8px;color:#b45309;">🏖️ Poppy's Holiday Pay Calculator</h3>
+    <p style="font-size:0.82rem;color:#64748b;margin-bottom:10px;">Enter the hours she's worked, and it's calculated at 0.1077 × hours — your accountant's figure.</p>
+    <div style="background:white;border:1.5px solid var(--tan-light);border-radius:10px;padding:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
+      <div class="fg" style="margin:0;min-width:160px;">
+        <label>Hours Worked</label>
+        <input type="number" id="holidayCalcHours" min="0" step="0.25" placeholder="e.g. 32.5" oninput="calcHolidayPay()">
+      </div>
+      <button onclick="calcHolidayPay()" class="block-btn" style="background:#b45309;">Calculate</button>
+      <span id="holidayCalcResult" style="font-size:1rem;font-weight:700;color:#2d6a4f;"></span>
+    </div>
     <h3 style="font-family:'Playfair Display',serif;font-size:1rem;margin:20px 0 8px;color:#0ea5e9;">🌴 Holiday Mode</h3>
     <p style="font-size:0.82rem;color:#64748b;margin-bottom:10px;">Sets who is away. Updates calendar colours and restricts the online booking page.</p>
     <div style="background:white;border:1.5px solid var(--tan-light);border-radius:10px;padding:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
@@ -678,9 +682,9 @@ function renderCal(){
     var ds=fmtISO(d);
     var holTag='';
     if(holActive&&ds>=holStart&&ds<=holEnd){
-      var hl=holAway==='becky'?'Becky away':'Poppy away';
+      var hl=holAway==='becky'?'NO BECKY':'NO POPPY';
       var hc=holAway==='becky'?'#6b21a8':'#2d6a4f';var hbg2=holAway==='becky'?'#f3e8ff':'#d1fae5';
-      holTag='<span style="display:block;font-size:0.58rem;font-weight:700;color:'+hc+';background:'+hbg2+';border-radius:4px;padding:1px 4px;margin-top:2px;">🌴 '+hl+'</span>';
+      holTag='<span style="display:block;font-size:0.6rem;font-weight:800;letter-spacing:0.03em;color:'+hc+';background:'+hbg2+';border-radius:4px;padding:2px 4px;margin-top:3px;">🌴 '+hl+'</span>';
     }
     hdr+='<div class="day-hdr'+(tod?' today':'')+(lastSat||isThu?' closed-day':'')+'">'
       +(lastSat?'<span style="font-size:0.6rem;opacity:0.7;">Closed</span>':isThu?'<span style="font-size:0.6rem;opacity:0.7;">Closed</span>':'')
@@ -1698,49 +1702,18 @@ function saveStaffRate(){
   renderEarnings();
 }
 
-// ── HOLIDAY ACCRUAL (10.77% method, per accountant) ──────────
-function saveHolidayTakenMonth(monthKey){
-  var input=document.getElementById('hol-taken-'+monthKey);
-  if(!input)return;
-  var val=parseFloat(input.value);
-  if(isNaN(val)||val<0){alert('Please enter a valid number of hours.');return;}
-  var taken=JSON.parse(localStorage.getItem('stbHolidayTakenByMonth')||'{}');
-  taken[monthKey]=val;
-  localStorage.setItem('stbHolidayTakenByMonth',JSON.stringify(taken));
-  renderHolidayAccrual();
-}
-function renderHolidayAccrual(){
-  var body=document.getElementById('holidayAccrualBody');if(!body)return;
-  var year=new Date().getFullYear();
-  var takenByMonth=JSON.parse(localStorage.getItem('stbHolidayTakenByMonth')||'{}');
-  var fmtHrs=function(h){var sign=h<0?'-':'';h=Math.abs(h);var hh=Math.floor(h),mm=Math.round((h-hh)*60);return sign+hh+'hr'+(mm>0?' '+mm+'min':'');};
-
-  var runningBalance=0;
-  var rows='';
-  var currentMonthIdx=new Date().getMonth();
-
-  for(var m=0;m<=currentMonthIdx;m++){
-    var monthStart=fmtISO(new Date(year,m,1));
-    var monthEnd=fmtISO(new Date(year,m+1,0));
-    var monthKey=year+'-'+(m+1<10?'0':'')+(m+1);
-    var monthSH=staffHours.filter(function(h){return h.date>=monthStart&&h.date<=monthEnd;});
-    var hoursWorked=monthSH.reduce(function(s,h){return s+(parseFloat(h.hours)||0);},0);
-    var accrued=hoursWorked*0.1077;
-    var taken=parseFloat(takenByMonth[monthKey])||0;
-    runningBalance+=accrued-taken;
-    var value=staffHourlyRate>0?accrued*staffHourlyRate:null;
-
-    rows+='<tr>'
-      +'<td><strong>'+FMONS[m]+'</strong></td>'
-      +'<td>'+fmtHrs(hoursWorked)+'</td>'
-      +'<td style="color:#2d6a4f;font-weight:600;">'+fmtHrs(accrued)+'</td>'
-      +'<td><input type="number" id="hol-taken-'+monthKey+'" value="'+(taken||'')+'" min="0" step="0.5" placeholder="0" style="width:60px;padding:4px 6px;border:1.5px solid var(--tan-light);border-radius:6px;font-size:0.82rem;" onchange="saveHolidayTakenMonth(\''+monthKey+'\')"></td>'
-      +'<td style="font-weight:600;color:'+(runningBalance<0?'#e05252':'#2d6a4f')+';">'+fmtHrs(runningBalance)+'</td>'
-      +'<td>'+(value!==null?'£'+value.toFixed(2):'—')+'</td>'
-      +'</tr>';
-  }
-
-  body.innerHTML=rows||'<tr><td colspan="6" class="earn-empty">No hours logged yet this year.</td></tr>';
+// ── HOLIDAY PAY CALCULATOR (0.1077 × hours, per accountant) ──────────
+function calcHolidayPay(){
+  var input=document.getElementById('holidayCalcHours');
+  var result=document.getElementById('holidayCalcResult');
+  if(!input||!result)return;
+  var hours=parseFloat(input.value);
+  if(isNaN(hours)||hours<0){result.textContent='';return;}
+  var holidayHours=hours*0.1077;
+  var hh=Math.floor(holidayHours),mm=Math.round((holidayHours-hh)*60);
+  var label=hh+'hr'+(mm>0?' '+mm+'min':'');
+  var valueStr=staffHourlyRate>0?' (£'+(holidayHours*staffHourlyRate).toFixed(2)+')':'';
+  result.textContent='= '+label+' holiday'+valueStr;
 }
 
 function setEarnView(v,tab){
@@ -1815,7 +1788,6 @@ function renderEarnings(){
         +'<td><button class="btn-wa-sm" style="background:#64748b;" onclick="openEditSH(\''+h.id+'\')">Edit</button></td></tr>';
     }).join('');
   }
-  renderHolidayAccrual();
 }
 
 function exportCash(){
