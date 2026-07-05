@@ -266,21 +266,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
       <span id="holidayCalcResult" style="font-size:1rem;font-weight:700;color:#2d6a4f;"></span>
     </div>
     <h3 style="font-family:'Playfair Display',serif;font-size:1rem;margin:20px 0 8px;color:#0ea5e9;">🌴 Holiday Mode</h3>
-    <p style="font-size:0.82rem;color:#64748b;margin-bottom:10px;">Sets who is away. Updates calendar colours and restricts the online booking page.</p>
+    <p style="font-size:0.82rem;color:#64748b;margin-bottom:10px;">Add holidays for Becky and Poppy separately — both can have their own dates, even overlapping. Updates calendar colours and restricts the online booking page.</p>
     <div style="background:white;border:1.5px solid var(--tan-light);border-radius:10px;padding:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
       <div class="fg" style="margin:0;">
         <label style="font-size:0.76rem;">Who is away?</label>
         <div class="tog" style="margin-top:6px;">
-          <input type="radio" name="holidayAway" id="hol-becky" value="becky"><label for="hol-becky">💚 Becky</label>
-          <input type="radio" name="holidayAway" id="hol-poppy" value="poppy" checked><label for="hol-poppy">💜 Poppy</label>
+          <input type="radio" name="holidayAway" id="hol-becky" value="becky" checked><label for="hol-becky">💚 Becky</label>
+          <input type="radio" name="holidayAway" id="hol-poppy" value="poppy"><label for="hol-poppy">💜 Poppy</label>
         </div>
       </div>
       <div class="fg" style="margin:0;min-width:130px;"><label>Start</label><input type="date" id="holidayStart"></div>
       <div class="fg" style="margin:0;min-width:130px;"><label>End</label><input type="date" id="holidayEnd"></div>
-      <button onclick="saveHolidayMode()" class="block-btn" style="background:#0ea5e9;">Save</button>
-      <button onclick="clearHolidayMode()" class="btn-cancel" style="font-size:0.82rem;">Clear</button>
+      <button onclick="addHolidayPeriod()" class="block-btn" style="background:#0ea5e9;">+ Add Holiday</button>
+      <button onclick="clearAllHolidays()" class="btn-cancel" style="font-size:0.82rem;">Clear All</button>
       <span id="holidayModeNote" style="font-size:0.82rem;font-weight:600;"></span>
     </div>
+    <div id="holidayListWrap" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;"></div>
   </div>
 </div>
 
@@ -655,18 +656,28 @@ function renderCal(){
   var today=fmtISO(new Date());
   var isMobile=window.innerWidth<700;
   var numDays=isMobile?3:7;
-  var holStart=localStorage.getItem('stbHolidayStart')||'';
-  var holEnd=localStorage.getItem('stbHolidayEnd')||'';
-  var holAway=localStorage.getItem('stbHolidayAway')||'poppy';
-  var holActive=holStart&&holEnd&&today>=holStart&&today<=holEnd;
+  var allHolidays=getHolidays();
+  function holidaysOn(ds){return allHolidays.filter(function(h){return ds>=h.start&&ds<=h.end;});}
+  var todaysHolidays=holidaysOn(today);
   var existBanner=document.getElementById('calHolBanner');
   if(existBanner)existBanner.remove();
-  if(holActive){
+  if(todaysHolidays.length){
+    var awaySet={};todaysHolidays.forEach(function(h){awaySet[h.staff]=true;});
+    var bothAway=awaySet.becky&&awaySet.poppy;
     var hb=document.createElement('div');hb.id='calHolBanner';
-    var awayN=holAway==='becky'?'Becky':'Poppy';var coverN=holAway==='becky'?'Poppy':'Becky';
-    var hcol=holAway==='becky'?'#6b21a8':'#2d6a4f';var hbg=holAway==='becky'?'#f3e8ff':'#d1fae5';
-    hb.style.cssText='padding:8px 16px;font-size:0.82rem;font-weight:600;text-align:center;background:'+hbg+';border-bottom:2px solid '+(holAway==='becky'?'#c4b5fd':'#6ee7b7')+';color:'+hcol+';';
-    hb.textContent='🌴 '+awayN+' is away — '+coverN+' is covering';
+    var hcol,hbg,hborder,text;
+    if(bothAway){
+      hcol='#8b2020';hbg='#fdeaea';hborder='#e05252';
+      text='🌴 Becky and Poppy are both away today';
+    } else {
+      var awayStaff=awaySet.becky?'becky':'poppy';
+      var awayN=awayStaff==='becky'?'Becky':'Poppy';var coverN=awayStaff==='becky'?'Poppy':'Becky';
+      hcol=awayStaff==='becky'?'#6b21a8':'#2d6a4f';hbg=awayStaff==='becky'?'#f3e8ff':'#d1fae5';
+      hborder=awayStaff==='becky'?'#c4b5fd':'#6ee7b7';
+      text='🌴 '+awayN+' is away — '+coverN+' is covering';
+    }
+    hb.style.cssText='padding:8px 16px;font-size:0.82rem;font-weight:600;text-align:center;background:'+hbg+';border-bottom:2px solid '+hborder+';color:'+hcol+';';
+    hb.textContent=text;
     var calWrap=document.querySelector('.cal-wrap');if(calWrap)calWrap.parentNode.insertBefore(hb,calWrap);
   }
   var days=[];
@@ -681,12 +692,12 @@ function renderCal(){
     var lastSat=isLastSatOfMonth(fmtISO(d));
     var isThu=d.getDay()===4;
     var ds=fmtISO(d);
-    var holTag='';
-    if(holStart&&holEnd&&ds>=holStart&&ds<=holEnd){
-      var hl=holAway==='becky'?'NO BECKY':'NO POPPY';
-      var hc=holAway==='becky'?'#6b21a8':'#2d6a4f';var hbg2=holAway==='becky'?'#f3e8ff':'#d1fae5';
-      holTag='<span style="display:block;font-size:0.6rem;font-weight:800;letter-spacing:0.03em;color:'+hc+';background:'+hbg2+';border-radius:4px;padding:2px 4px;margin-top:3px;">🌴 '+hl+'</span>';
-    }
+    var dayHols=holidaysOn(ds);
+    var holTag=dayHols.map(function(h){
+      var hl=h.staff==='becky'?'NO BECKY':'NO POPPY';
+      var hc=h.staff==='becky'?'#6b21a8':'#2d6a4f';var hbg2=h.staff==='becky'?'#f3e8ff':'#d1fae5';
+      return '<span style="display:block;font-size:0.6rem;font-weight:800;letter-spacing:0.03em;color:'+hc+';background:'+hbg2+';border-radius:4px;padding:2px 4px;margin-top:3px;">🌴 '+hl+'</span>';
+    }).join('');
     hdr+='<div class="day-hdr'+(tod?' today':'')+(lastSat||isThu?' closed-day':'')+'">'
       +(lastSat?'<span style="font-size:0.6rem;opacity:0.7;">Closed</span>':isThu?'<span style="font-size:0.6rem;opacity:0.7;">Closed</span>':'')
       +'<span class="dn">'+DAYS[d.getDay()]+'</span>'
@@ -704,7 +715,8 @@ function renderCal(){
   body+='</div>';
   days.forEach(function(d){
     var ds=fmtISO(d);
-    var dayHol=holStart&&holEnd&&ds>=holStart&&ds<=holEnd;
+    var dayHols=holidaysOn(ds);
+    var dayAwaySet={};dayHols.forEach(function(h){dayAwaySet[h.staff]=true;});
     var lastSat=isLastSatOfMonth(ds);
     var isThu=d.getDay()===4;
     var isClosed=lastSat||isThu;
@@ -725,9 +737,16 @@ function renderCal(){
       var dur=getTotalDuration(bk);
       var tp=(sm-GRID_START)/10*ROW_H;
       var hp=dur/10*ROW_H;
-      var groomerCls=dayHol
-        ?(holAway==='becky'?'groomer-poppy':'')
-        :(bk.groomer==='poppy'?'groomer-poppy':bk.groomer==='both'?'groomer-both':'');
+      var groomerCls;
+      if(dayAwaySet.becky&&dayAwaySet.poppy){
+        groomerCls=(bk.groomer==='poppy'?'groomer-poppy':bk.groomer==='both'?'groomer-both':'');
+      } else if(dayAwaySet.becky){
+        groomerCls='groomer-poppy';
+      } else if(dayAwaySet.poppy){
+        groomerCls='';
+      } else {
+        groomerCls=(bk.groomer==='poppy'?'groomer-poppy':bk.groomer==='both'?'groomer-both':'');
+      }
       var dogNames=bk.dogs&&bk.dogs.length?bk.dogs.map(function(d){return d.name;}).filter(Boolean).join(' & '):bk.dog||'';
       var total=getBookingValue(bk);
       body+='<div class="bk '+groomerCls+(bk.paid?' paid-block':'')+'" style="top:'+Math.max(tp,0)+'px;height:'+Math.max(hp-2,18)+'px;left:2px;right:2px;" '
@@ -1834,47 +1853,74 @@ function doExportCash(){
   XLSX.writeFile(wb,'scrufftobuff-cash-'+fmtISO(new Date())+'.xlsx');
 }
 
-function saveHolidayMode(){
-  var start=document.getElementById('holidayStart').value;
-  var end=document.getElementById('holidayEnd').value;
-  var away=(document.querySelector('input[name="holidayAway"]:checked')||{value:'poppy'}).value;
-  if(!start||!end){alert('Please set both a start and end date.');return;}
-  if(end<start){alert('End date must be after start date.');return;}
-  localStorage.setItem('stbHolidayStart',start);
-  localStorage.setItem('stbHolidayEnd',end);
-  localStorage.setItem('stbHolidayAway',away);
-  updateHolidayNote();renderCal();
-  fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'setHoliday',start:start,end:end,away:away})}).catch(function(){});
-}
-function clearHolidayMode(){
-  localStorage.removeItem('stbHolidayStart');localStorage.removeItem('stbHolidayEnd');localStorage.removeItem('stbHolidayAway');
-  document.getElementById('holidayStart').value='';document.getElementById('holidayEnd').value='';
-  fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'setHoliday',start:'',end:'',away:''})}).catch(function(){});
-  var note=document.getElementById('holidayModeNote');note.style.color='#3a9e6e';note.textContent='Cleared ✓';
-  setTimeout(function(){note.textContent='';},3000);
-  renderCal();
-}
-function updateHolidayNote(){
+function getHolidays(){
+  var raw=localStorage.getItem('stbHolidays');
+  if(raw){try{return JSON.parse(raw)||[];}catch(e){return [];}}
+  // migrate old single-holiday format if present
   var start=localStorage.getItem('stbHolidayStart');
   var end=localStorage.getItem('stbHolidayEnd');
-  var away=localStorage.getItem('stbHolidayAway')||'poppy';
-  var note=document.getElementById('holidayModeNote');if(!note)return;
-  var awayEl=document.getElementById('hol-'+away);if(awayEl)awayEl.checked=true;
-  if(start){document.getElementById('holidayStart').value=start;}
-  if(end){document.getElementById('holidayEnd').value=end;}
+  var away=localStorage.getItem('stbHolidayAway');
   if(start&&end){
-    var today=fmtISO(new Date());
-    if(today>end){
-      localStorage.removeItem('stbHolidayStart');localStorage.removeItem('stbHolidayEnd');localStorage.removeItem('stbHolidayAway');
-      document.getElementById('holidayStart').value='';document.getElementById('holidayEnd').value='';
-      note.style.color='#3a9e6e';note.textContent='Holiday ended — welcome back! 🌴';return;
-    }
-    var awayName=away==='becky'?'Becky':'Poppy';
-    note.style.color=today>=start&&today<=end?'#0ea5e9':'#64748b';
-    note.textContent=(today>=start&&today<=end?'🌴 ACTIVE — '+awayName+' away: ':'Scheduled — '+awayName+' away: ')+fmtDD(start)+' – '+fmtDD(end);
-  } else {
-    note.style.color='#94a3b8';note.textContent='Not set';
+    var migrated=[{id:'h'+Date.now(),staff:away||'poppy',start:start,end:end}];
+    localStorage.setItem('stbHolidays',JSON.stringify(migrated));
+    localStorage.removeItem('stbHolidayStart');localStorage.removeItem('stbHolidayEnd');localStorage.removeItem('stbHolidayAway');
+    return migrated;
   }
+  return [];
+}
+function saveHolidaysList(list){localStorage.setItem('stbHolidays',JSON.stringify(list));}
+function addHolidayPeriod(){
+  var start=document.getElementById('holidayStart').value;
+  var end=document.getElementById('holidayEnd').value;
+  var staff=(document.querySelector('input[name="holidayAway"]:checked')||{value:'poppy'}).value;
+  if(!start||!end){alert('Please set both a start and end date.');return;}
+  if(end<start){alert('End date must be after start date.');return;}
+  var list=getHolidays();
+  list.push({id:'h'+Date.now(),staff:staff,start:start,end:end});
+  saveHolidaysList(list);
+  document.getElementById('holidayStart').value='';document.getElementById('holidayEnd').value='';
+  updateHolidayNote();renderCal();
+  fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'setHoliday',start:start,end:end,away:staff})}).catch(function(){});
+}
+function removeHolidayPeriod(id){
+  var list=getHolidays().filter(function(h){return h.id!==id;});
+  saveHolidaysList(list);
+  updateHolidayNote();renderCal();
+}
+function clearAllHolidays(){
+  if(!confirm('Remove all scheduled holidays for both Becky and Poppy?'))return;
+  saveHolidaysList([]);
+  updateHolidayNote();renderCal();
+  fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'setHoliday',start:'',end:'',away:''})}).catch(function(){});
+}
+function updateHolidayNote(){
+  var wrap=document.getElementById('holidayListWrap');
+  var note=document.getElementById('holidayModeNote');
+  if(!wrap||!note)return;
+  var today=fmtISO(new Date());
+  var list=getHolidays();
+  // drop holidays that have fully ended so the list doesn't grow forever
+  var stillRelevant=list.filter(function(h){return h.end>=today;});
+  if(stillRelevant.length!==list.length)saveHolidaysList(stillRelevant);
+  list=stillRelevant;
+  if(!list.length){
+    note.style.color='#94a3b8';note.textContent='No holidays scheduled';
+    wrap.innerHTML='';
+    return;
+  }
+  note.textContent='';
+  list.sort(function(a,b){return a.start.localeCompare(b.start);});
+  wrap.innerHTML=list.map(function(h){
+    var isBecky=h.staff==='becky';
+    var name=isBecky?'Becky':'Poppy';
+    var col=isBecky?'#2d6a4f':'#6b21a8';
+    var bg=isBecky?'#d1fae5':'#f3e8ff';
+    var isNow=today>=h.start&&today<=h.end;
+    return '<div style="display:flex;align-items:center;gap:8px;background:'+bg+';border:1.5px solid '+col+';border-radius:8px;padding:7px 10px;font-size:0.82rem;font-weight:600;color:'+col+';">'
+      +'<span>🌴</span><span>'+(isNow?'ACTIVE — ':'Scheduled — ')+name+' away: '+fmtDD(h.start)+' – '+fmtDD(h.end)+'</span>'
+      +'<button onclick="removeHolidayPeriod(\''+h.id+'\')" style="margin-left:auto;background:none;border:none;color:'+col+';font-weight:700;cursor:pointer;font-size:0.9rem;">✕</button>'
+      +'</div>';
+  }).join('');
 }
 
 function checkBannerVisibility(){
