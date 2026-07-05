@@ -54,6 +54,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
 .cds-income{font-size:0.72rem;font-weight:700;color:var(--paid);}
 .cds-expense{font-size:0.72rem;font-weight:700;color:var(--unpaid);}
 .cds-net{font-size:0.7rem;font-weight:600;color:var(--brown);margin-top:2px;}
+.cds-confirmed{font-size:0.65rem;font-weight:600;color:var(--paid);opacity:0.7;margin-top:1px;}
 .cds-add-btn{display:inline-block;margin-top:4px;background:none;border:1px solid var(--tan-light);color:var(--tan);border-radius:6px;font-size:0.65rem;padding:2px 7px;cursor:pointer;}
 .cds-add-btn:hover{background:#f0f6ff;}
 .cal-outer{position:relative;min-width:560px;}
@@ -681,7 +682,7 @@ function renderCal(){
     var isThu=d.getDay()===4;
     var ds=fmtISO(d);
     var holTag='';
-    if(holActive&&ds>=holStart&&ds<=holEnd){
+    if(holStart&&holEnd&&ds>=holStart&&ds<=holEnd){
       var hl=holAway==='becky'?'NO BECKY':'NO POPPY';
       var hc=holAway==='becky'?'#6b21a8':'#2d6a4f';var hbg2=holAway==='becky'?'#f3e8ff':'#d1fae5';
       holTag='<span style="display:block;font-size:0.6rem;font-weight:800;letter-spacing:0.03em;color:'+hc+';background:'+hbg2+';border-radius:4px;padding:2px 4px;margin-top:3px;">🌴 '+hl+'</span>';
@@ -703,6 +704,7 @@ function renderCal(){
   body+='</div>';
   days.forEach(function(d){
     var ds=fmtISO(d);
+    var dayHol=holStart&&holEnd&&ds>=holStart&&ds<=holEnd;
     var lastSat=isLastSatOfMonth(ds);
     var isThu=d.getDay()===4;
     var isClosed=lastSat||isThu;
@@ -723,11 +725,11 @@ function renderCal(){
       var dur=getTotalDuration(bk);
       var tp=(sm-GRID_START)/10*ROW_H;
       var hp=dur/10*ROW_H;
-      var groomerCls=holActive
+      var groomerCls=dayHol
         ?(holAway==='becky'?'groomer-poppy':'')
         :(bk.groomer==='poppy'?'groomer-poppy':bk.groomer==='both'?'groomer-both':'');
       var dogNames=bk.dogs&&bk.dogs.length?bk.dogs.map(function(d){return d.name;}).filter(Boolean).join(' & '):bk.dog||'';
-      var total=bk.dogs&&bk.dogs.length?bk.dogs.reduce(function(s,d){return s+(d.services&&d.services.length?d.services.reduce(function(ss,sv){return ss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):(parseFloat(bk.lastprice)||0);
+      var total=getBookingValue(bk);
       body+='<div class="bk '+groomerCls+(bk.paid?' paid-block':'')+'" style="top:'+Math.max(tp,0)+'px;height:'+Math.max(hp-2,18)+'px;left:2px;right:2px;" '
         +'onclick="event.stopPropagation();openEdit(\''+bk.id+'\')">'
         +'<div class="bn"><span class="pay-dot '+(bk.paid?'paid':'unpaid')+'"></span>'+bk.name+'</div>'
@@ -744,6 +746,9 @@ function renderCal(){
   populateMonthPicker();
   renderDaySummary(days,cols);
 }
+function getBookingValue(bk){
+  return bk.dogs&&bk.dogs.length?bk.dogs.reduce(function(s,d){return s+(d.services&&d.services.length?d.services.reduce(function(ss,sv){return ss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):(parseFloat(bk.lastprice)||0);
+}
 function renderDaySummary(days,cols){
   var wrap=document.getElementById('calDaySummary');if(!wrap)return;
   wrap.style.gridTemplateColumns=cols;
@@ -751,14 +756,25 @@ function renderDaySummary(days,cols){
   days.forEach(function(d){
     var ds=fmtISO(d);
     var dayBks=bookings.filter(function(b){return b.date===ds&&!b.noShow;});
-    var income=dayBks.filter(function(b){return b.paid;}).reduce(function(s,b){return s+(b.dogs&&b.dogs.length?b.dogs.reduce(function(ss,dg){return ss+(parseFloat(dg.price)||0);},0):(parseFloat(b.lastprice)||0));},0);
+    var expected=dayBks.reduce(function(s,b){return s+getBookingValue(b);},0);
+    var confirmed=dayBks.filter(function(b){return b.paid;}).reduce(function(s,b){return s+getBookingValue(b);},0);
+    var pending=expected-confirmed;
     var dayExp=expenses.filter(function(e){return e.date===ds;});
     var expTotal=dayExp.reduce(function(s,e){return s+(parseFloat(e.amount)||0);},0);
-    var net=income-expTotal;
+    var net=confirmed-expTotal;
+    var incomeHtml='';
+    if(expected>0.001){
+      if(pending>0.005){
+        incomeHtml+='<div class="cds-income">+£'+expected.toFixed(2)+' expected</div>';
+        incomeHtml+='<div class="cds-confirmed">✓ £'+confirmed.toFixed(2)+' confirmed</div>';
+      } else {
+        incomeHtml+='<div class="cds-income">✓ +£'+confirmed.toFixed(2)+' confirmed</div>';
+      }
+    }
     html+='<div class="cds-cell">'
-      +(income>0?'<div class="cds-income">+£'+income.toFixed(2)+'</div>':'')
+      +incomeHtml
       +(expTotal>0?'<div class="cds-expense">-£'+expTotal.toFixed(2)+'</div>':'')
-      +((income>0||expTotal>0)?'<div class="cds-net">net £'+net.toFixed(2)+'</div>':'')
+      +((expected>0||expTotal>0)?'<div class="cds-net">net £'+net.toFixed(2)+'</div>':'')
       +'<button class="cds-add-btn" onclick="openExpense(\''+ds+'\')">+ Expense</button>'
       +'</div>';
   });
@@ -2028,10 +2044,11 @@ function dismissRebookChip(name){
 
 function checkUnpaid(){
   var todayStr=fmtISO(new Date());
+  var weekAgoStr=fmtISO(addDays(new Date(),-7));
   var dismissed=JSON.parse(localStorage.getItem('stbDismissedUnpaid')||'{}');
   var now=Date.now();
   var unpaid=bookings.filter(function(b){
-    if(!(b.date<todayStr&&!b.paid&&!b.noShow&&b.name))return false;
+    if(!(b.date<weekAgoStr&&!b.paid&&!b.noShow&&b.name))return false;
     var dismissedAt=dismissed[b.id];
     if(dismissedAt&&(now-dismissedAt)<14*24*60*60*1000)return false;
     return true;
@@ -2039,8 +2056,9 @@ function checkUnpaid(){
   if(!unpaid.length){setZone('rl-unpaid','');return;}
   setZone('rl-unpaid',unpaid.map(function(b){
     var dn=b.dogs&&b.dogs.length?b.dogs.map(function(d){return d.name;}).filter(Boolean).join(' & '):b.dog||'';
+    var daysOverdue=Math.floor((now-new Date(b.date+'T00:00:00').getTime())/(24*60*60*1000));
     return '<div class="banner-chip" id="unpaid-'+b.id+'" style="background:#fdeaea;border-color:#e05252;">'
-      +'<span>💳</span><strong>'+b.name+'</strong>'+(dn?' ('+dn+')':'')+' — unpaid from '+fmtDD(b.date)
+      +'<span>💳</span><strong>'+b.name+'</strong>'+(dn?' ('+dn+')':'')+' — unpaid, '+daysOverdue+'d overdue'
       +(b.phone?'<button class="btn-wa-sm" style="background:#e05252;" onclick="chaseUnpaid(\''+b.id+'\')">Chase</button>':'')
       +'<button class="btn-wa-sm" style="background:#94a3b8;" onclick="dismissUnpaid(\''+b.id+'\')">✕</button>'
       +'</div>';
