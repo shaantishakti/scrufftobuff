@@ -400,11 +400,13 @@ function loadSheetBookings(callback){
         .then(function(r){return r.json();})
         .then(function(blockData){
           sheetBlocks = Array.isArray(blockData) ? blockData : [];
+          if(dbg) dbg.innerHTML += '<br><strong>Blocks loaded ('+sheetBlocks.length+' total):</strong><br>' + sheetBlocks.map(function(b){return b.date+(b.fullDay?' (full day)':' '+b.start+'-'+b.end)+' — '+(b.reason||'');}).join('<br>');
           sheetLoaded = true;
           if(callback) callback();
         })
-        .catch(function(){
+        .catch(function(err){
           sheetBlocks = [];
+          if(dbg) dbg.innerHTML += '<br><strong style="color:red;">ERROR loading blocks:</strong> '+err.message+' — blocked days/times will NOT be enforced until this is fixed!';
           sheetLoaded = true;
           if(callback) callback();
         });
@@ -712,6 +714,12 @@ function onServiceSelected(){
   }
 }
 
+function normDate(str){
+  var s = String(str||'').trim();
+  var m = s.match(/(\d{4})-?(\d{2})-?(\d{2})/);
+  return m ? (m[1]+'-'+m[2]+'-'+m[3]) : s;
+}
+
 function getAvailableSlots(dateStr){
   var d = new Date(dateStr+'T12:00:00');
   var dow = d.getDay(); // 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
@@ -746,8 +754,7 @@ function getAvailableSlots(dateStr){
 
   // Also block out any full-day blocks for this date (from owner's app)
   var dayBlocks = sheetBlocks.filter(function(bl){
-    var blDate = String(bl.date||'').trim();
-    return blDate === dateStr;
+    return normDate(bl.date) === dateStr;
   });
   if(dayBlocks.some(function(bl){return bl.fullDay;})) return [];
 
@@ -835,7 +842,7 @@ function renderMiniCal(){
     var iso=y+'-'+(mo<10?'0':'')+mo+'-'+(da<10?'0':'')+da;
     var isPast = d < today;
     var isOpen = HOURS[dow] !== undefined && HOURS[dow] !== null && dow !== 0;
-    var isFullDayBlocked = sheetBlocks.some(function(b){return b.date===iso&&b.fullDay;});
+    var isFullDayBlocked = sheetBlocks.some(function(b){return normDate(b.date)===iso&&b.fullDay;});
     var isBlocked = isFullDayBlocked || isLastSatOfMonth(iso) || isAlternateSaturday(iso) || dow===4;
     var avail = !isPast && isOpen && !isBlocked;
     var cls = 'mc-day';
