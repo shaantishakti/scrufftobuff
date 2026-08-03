@@ -1826,15 +1826,30 @@ function renderEarnings(){
 }
 
 function exportCash(){
-  if(typeof XLSX==='undefined'){
-    var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-    s.onload=function(){doExportCash();};document.head.appendChild(s);
-  } else doExportCash();
+  if(typeof XLSX!=='undefined'){ doExportCash(); return; }
+  var s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  s.onload=function(){ doExportCash(); };
+  s.onerror=function(){
+    // Primary CDN failed (blocked, offline, or down) — try a fallback before giving up
+    var s2=document.createElement('script');
+    s2.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s2.onload=function(){ doExportCash(); };
+    s2.onerror=function(){
+      alert('Could not load the Excel export tool. This usually means an ad-blocker or browser extension is blocking cdnjs.cloudflare.com / jsdelivr.net, or there is no internet connection right now. Try disabling any ad-blocker for this page, or check your connection, then try again.');
+    };
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s);
 }
 function doExportCash(){
   var range=getEarnRange();
   var cashBks=bookings.filter(function(b){return b.date>=range.start&&b.date<=range.end&&b.paid&&(b.payMethod==='cash'||b.payMethod==='split');});
   var cashExp=expenses.filter(function(e){return e.date>=range.start&&e.date<=range.end;});
+  if(!cashBks.length && !cashExp.length){
+    alert('No cash bookings or expenses found for the current period ('+range.start+' to '+range.end+'). Nothing to export — try a wider date range (e.g. switch to "Year" view) if you expected results.');
+    return;
+  }
   var rows=[];
   cashBks.forEach(function(b){
     var amt=b.payMethod==='split'&&b.splitPayment?(b.splitPayment.cash||0):(b.dogs&&b.dogs.length?b.dogs.reduce(function(s,d){return s+(parseFloat(d.price)||0);},0):(parseFloat(b.lastprice)||0));
