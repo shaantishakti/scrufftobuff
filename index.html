@@ -130,7 +130,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
 .btn-wa .wa-sub{display:block;font-size:0.72rem;opacity:0.8;}
 .dog-row{background:#f8faff;border:1.5px solid var(--tan-light);border-radius:10px;padding:14px;margin-bottom:10px;}
 .dog-row-label{font-weight:700;font-size:0.82rem;color:var(--brown);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;}
-.svc-row{display:grid;grid-template-columns:2fr 80px 80px 30px;gap:8px;align-items:end;margin-bottom:8px;}
+.svc-row{display:grid;grid-template-columns:2fr 160px 80px 30px;gap:8px;align-items:end;margin-bottom:8px;}
 .svc-row select{font-size:0.82rem;}
 .disc-flag{background:#fff8e0;border:1.5px solid #f59e0b;border-radius:8px;padding:10px 14px;font-size:0.82rem;color:#92400e;margin-bottom:10px;}
 .noshow-flag{background:var(--blocked-bg);border:1.5px solid var(--blocked);border-radius:8px;padding:8px 12px;font-size:0.8rem;color:var(--blocked);margin-bottom:8px;display:none;}
@@ -167,7 +167,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
 @media(max-width:600px){
   .frow{grid-template-columns:1fr;}
   .frow3{grid-template-columns:1fr 1fr;}
-  .svc-row{grid-template-columns:1fr 70px 70px 26px;}
+  .svc-row{grid-template-columns:1fr 140px 64px 22px;}
   .earn-cards{grid-template-columns:repeat(2,1fr);}
   .modal{padding:16px;}
 }
@@ -489,7 +489,7 @@ const SVC_OPTIONS=[
   'Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning',
   'Emmi-Pet Teeth Cleaning PAYG','Emmi-Pet Teeth Cleaning x4',
   'Emmi-Pet Teeth Cleaning x9','Emmi-Pet Teeth Maintenance',
-  'Teeth Descaling','Other'
+  'Teeth Descaling','Emmi-Pet Brush Head','Other'
 ];
 const SVC_DURATIONS={
   'Full Groom':120,'Wash & Dry':90,'Trim & Tidy':60,'Hand Stripping':120,
@@ -498,14 +498,14 @@ const SVC_DURATIONS={
   'Emmi-Pet Teeth Consultation':30,'Emmi-Pet Teeth Cleaning':30,
   'Emmi-Pet Teeth Cleaning PAYG':30,'Emmi-Pet Teeth Cleaning x4':30,
   'Emmi-Pet Teeth Cleaning x9':30,'Emmi-Pet Teeth Maintenance':30,
-  'Teeth Descaling':30,'Other':60
+  'Teeth Descaling':30,'Emmi-Pet Brush Head':0,'Other':60
 };
 const SVC_PRICES={
   'Puppy Intro (Inc. Bath) - £30':30,'Puppy Intro (Exc. Bath) - £15':15,
   'Emmi-Pet Teeth Consultation':45,'Emmi-Pet Teeth Cleaning':28,
   'Emmi-Pet Teeth Cleaning PAYG':28,'Emmi-Pet Teeth Cleaning x4':105,
   'Emmi-Pet Teeth Cleaning x9':155,'Emmi-Pet Teeth Maintenance':35,
-  'Nail Clip':13,'Anal Glands':25,'Teeth Descaling':25
+  'Nail Clip':13,'Anal Glands':25,'Teeth Descaling':25,'Emmi-Pet Brush Head':8
 };
 const POPPY_CANNOT_DO=[
   'Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning',
@@ -786,6 +786,7 @@ function renderCal(){
   renderDaySummary(days,cols);
 }
 function getBookingValue(bk){
+  if(bk.noShow)return 0;
   return bk.dogs&&bk.dogs.length?bk.dogs.reduce(function(s,d){return s+(d.services&&d.services.length?d.services.reduce(function(ss,sv){return ss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):(parseFloat(bk.lastprice)||0);
 }
 function renderDaySummary(days,cols){
@@ -952,7 +953,7 @@ function openEdit(id){
     b.dogs.forEach(function(d,i){
       var idx=i+1;
       dogInfo[idx]={name:d.name||'',breed:d.breed||'',dob:d.dob||''};
-      dogServices[idx]=d.services&&d.services.length?d.services.map(function(sv){return{service:sv.service||'',duration:sv.duration||60,price:sv.price||''};}):[{service:d.service||'',duration:d.duration||60,price:d.price||''}];
+      dogServices[idx]=d.services&&d.services.length?d.services.map(function(sv){return{service:sv.service||'',duration:(sv.duration!==undefined&&sv.duration!==''?sv.duration:60),price:sv.price||''};}):[{service:d.service||'',duration:(d.duration!==undefined&&d.duration!==''?d.duration:60),price:d.price||''}];
     });
     dogCount=b.dogs.length;
   }
@@ -1079,6 +1080,16 @@ function renderDogRow(i){
   var svcWrap=document.getElementById('svc-rows-'+i);
   svcs.forEach(function(sv,s){appendSvcRow(i,s,sv);});
 }
+function buildHourOptions(sel){
+  var out='';
+  for(var h=0;h<=6;h++){out+='<option value="'+h+'"'+(h===sel?' selected':'')+'>'+h+'h</option>';}
+  return out;
+}
+function buildMinuteOptions(sel){
+  var out='';
+  for(var m=0;m<60;m+=5){out+='<option value="'+m+'"'+(m===sel?' selected':'')+'>'+m+'m</option>';}
+  return out;
+}
 function appendSvcRow(dogIdx,svcIdx,sv){
   var wrap=document.getElementById('svc-rows-'+dogIdx);if(!wrap)return;
   var row=document.createElement('div');row.className='svc-row';row.id='svc-row-'+dogIdx+'-'+svcIdx;
@@ -1086,12 +1097,40 @@ function appendSvcRow(dogIdx,svcIdx,sv){
     +SVC_OPTIONS.map(function(o){return '<option value="'+o+'"'+(o===sv.service?' selected':'')+'>'+o+'</option>';}).join('')
     +'</select>';
   var isEmmi=sv.service&&sv.service.indexOf('Emmi-Pet')>=0||sv.service&&sv.service.indexOf('Teeth')>=0||sv.service&&sv.service.indexOf('Descaling')>=0;
+  var totalMins=(sv.duration!==undefined&&sv.duration!==''?parseInt(sv.duration):60);
+  var hrs=Math.floor(totalMins/60),mins=totalMins%60;
   row.innerHTML=svcSel
-    +'<div class="fg" style="margin:0;"><label style="font-size:0.68rem;">Duration</label><input type="number" id="f-dur-'+dogIdx+'-'+svcIdx+'" value="'+(sv.duration||60)+'" min="5" step="5" '+(isEmmi?'readonly style="background:#f0f4f8;"':'')+' oninput="calcFinish();showDurLabel('+dogIdx+','+svcIdx+')"><div id="dur-lbl-'+dogIdx+'-'+svcIdx+'" style="font-size:0.7rem;color:#555;margin-top:2px;"></div></div>'
+    +'<div class="fg" style="margin:0;"><label style="font-size:0.68rem;">Duration</label>'
+    +'<input type="hidden" id="f-dur-'+dogIdx+'-'+svcIdx+'" value="'+totalMins+'">'
+    +'<div style="display:flex;gap:5px;">'
+    +'<select id="f-dur-h-'+dogIdx+'-'+svcIdx+'" style="width:70px;'+(isEmmi?'background:#f0f4f8;':'')+'" '+(isEmmi?'disabled':'')+' onchange="updateDurFromHM('+dogIdx+','+svcIdx+')">'+buildHourOptions(hrs)+'</select>'
+    +'<select id="f-dur-m-'+dogIdx+'-'+svcIdx+'" style="width:72px;'+(isEmmi?'background:#f0f4f8;':'')+'" '+(isEmmi?'disabled':'')+' onchange="updateDurFromHM('+dogIdx+','+svcIdx+')">'+buildMinuteOptions(mins)+'</select>'
+    +'</div>'
+    +'<div id="dur-lbl-'+dogIdx+'-'+svcIdx+'" style="font-size:0.7rem;color:#555;margin-top:2px;"></div></div>'
     +'<div class="fg" style="margin:0;"><label style="font-size:0.68rem;">Price £</label><input type="number" id="f-price-'+dogIdx+'-'+svcIdx+'" value="'+(sv.price||'')+'" min="0" step="0.01" placeholder="0.00"></div>'
     +(svcIdx>0?'<button type="button" onclick="removeSvcRow('+dogIdx+','+svcIdx+')" style="background:none;border:none;color:#e05252;cursor:pointer;font-size:1.1rem;padding:0 4px;">×</button>':'<div></div>');
   wrap.appendChild(row);
   showDurLabel(dogIdx,svcIdx);
+}
+function updateDurFromHM(dogIdx,svcIdx){
+  var hEl=document.getElementById('f-dur-h-'+dogIdx+'-'+svcIdx);
+  var mEl=document.getElementById('f-dur-m-'+dogIdx+'-'+svcIdx);
+  var durEl=document.getElementById('f-dur-'+dogIdx+'-'+svcIdx);
+  if(!hEl||!mEl||!durEl)return;
+  var total=(parseInt(hEl.value)||0)*60+(parseInt(mEl.value)||0);
+  durEl.value=total;
+  calcFinish();
+  showDurLabel(dogIdx,svcIdx);
+}
+function setHMFromMinutes(dogIdx,svcIdx,totalMins){
+  var hEl=document.getElementById('f-dur-h-'+dogIdx+'-'+svcIdx);
+  var mEl=document.getElementById('f-dur-m-'+dogIdx+'-'+svcIdx);
+  if(!hEl||!mEl)return;
+  var h=Math.floor(totalMins/60),m=totalMins%60;
+  m=Math.round(m/5)*5;
+  if(m===60){m=0;h+=1;}
+  hEl.value=h;
+  mEl.value=m;
 }
 function addSvcRow(dogIdx){
   saveDogState();
@@ -1151,10 +1190,16 @@ function showDurLabel(dogIdx,svcIdx){
 function onSvcChange(dogIdx,svcIdx){
   var svcEl=document.getElementById('f-svc-'+dogIdx+'-'+svcIdx);
   var durEl=document.getElementById('f-dur-'+dogIdx+'-'+svcIdx);
+  var hEl=document.getElementById('f-dur-h-'+dogIdx+'-'+svcIdx);
+  var mEl=document.getElementById('f-dur-m-'+dogIdx+'-'+svcIdx);
   var priceEl=document.getElementById('f-price-'+dogIdx+'-'+svcIdx);
   var svc=svcEl.value;
   var isEmmi=svc.indexOf('Emmi-Pet')>=0||svc.indexOf('Teeth')>=0||svc.indexOf('Descaling')>=0;
-  if(durEl){durEl.value=SVC_DURATIONS[svc]||60;durEl.readOnly=isEmmi;durEl.style.background=isEmmi?'#f0f4f8':'';}
+  var newDur=(SVC_DURATIONS[svc]!==undefined?SVC_DURATIONS[svc]:60);
+  if(durEl)durEl.value=newDur;
+  setHMFromMinutes(dogIdx,svcIdx,newDur);
+  if(hEl){hEl.disabled=isEmmi;hEl.style.background=isEmmi?'#f0f4f8':'';}
+  if(mEl){mEl.disabled=isEmmi;mEl.style.background=isEmmi?'#f0f4f8':'';}
   if(priceEl&&SVC_PRICES[svc])priceEl.value=SVC_PRICES[svc];
   showDurLabel(dogIdx,svcIdx);
   calcFinish();
@@ -1351,17 +1396,15 @@ function saveBooking(){
     closeMain();
     setTimeout(function(){if(confirm('Date/time changed — send reschedule message to '+booking.name+'?'))sendRescheduleMsg(booking);},300);
   } else if(wasNew&&booking.phone){
+    closeMain();
     setTimeout(function(){
-      openEdit(booking.id);
-      setTimeout(function(){
-        var isNewCust=booking.visits===1;
-        if(isNewCust){
-          if(confirm('New customer — send confirmation message to '+booking.name+'?'))sendNewConfirmMsg();
-        } else {
-          if(confirm('Send confirmation message to '+booking.name+'?'))sendConfirmMsg();
-        }
-      },400);
-    },200);
+      var isNewCust=booking.visits===1;
+      if(isNewCust){
+        if(confirm('New customer — send confirmation message to '+booking.name+'?'))sendNewConfirmMsg(booking);
+      } else {
+        if(confirm('Send confirmation message to '+booking.name+'?'))sendConfirmMsg(booking);
+      }
+    },300);
   } else {
     closeMain();
   }
@@ -1378,6 +1421,10 @@ function toggleNoShow(){
   if(!editId)return;
   var b=bookings.find(function(x){return x.id===editId;});if(!b)return;
   b.noShow=!b.noShow;
+  if(b.noShow){
+    b.paid=false;b.payMethod='';b.splitPayment=null;
+    var puEl=document.getElementById('p-unpaid');if(puEl){puEl.checked=true;showPayMethod(false);}
+  }
   saveAll();renderCal();
   var btn=document.getElementById('btnNS');
   if(b.noShow){btn.textContent='✓ Undo No Show';btn.style.background='#64748b';}
@@ -1466,12 +1513,12 @@ function getPickupTimeStr(b){
   var dur=getTotalDuration(b);
   return fmtTime(minsToTime(sm+dur));
 }
-function sendConfirmMsg(){
-  var b=getCurrent();if(!b||!b.phone)return;
+function sendConfirmMsg(b){
+  b=b||getCurrent();if(!b||!b.phone)return;
   openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\nYour booking with '+BIZ+' is confirmed:\n\n'+buildDogSummary(b)+'\n\n📅 '+fmtDD(b.date)+'\n🕐 Drop off: '+fmtTime(b.time)+'\n🕐 Pick up: approx '+getPickupTimeStr(b)+'\n\nIf you need to reschedule, just drop me a message!\n\nWhenever you\'re ready to book your next appointment:\n👇 '+BOOK_URL+'\n\n⭐ Happy with the groom? We\'d love a Google review — it really helps us!\n'+'https://g.page/r/scrufftobuffdogs/review'+'\n\n💛 Refer a friend and get 10% off your next groom!\n\nSee you soon!\nBecky - '+BIZ);
 }
-function sendNewConfirmMsg(){
-  var b=getCurrent();if(!b||!b.phone)return;
+function sendNewConfirmMsg(b){
+  b=b||getCurrent();if(!b||!b.phone)return;
   openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\nYour booking with '+BIZ+' is confirmed:\n\n'+buildDogSummary(b)+'\n\n📅 '+fmtDD(b.date)+'\n🕐 Drop off: '+fmtTime(b.time)+'\n🕐 Pick up: approx '+getPickupTimeStr(b)+'\n\nDIRECTIONS:\nI\'ll follow this with a location pin. Coming from the A22/Nutley — turn onto Cackle Street, take the second left. As you reach the 5th house on your right (Spring House, Farm Watch sign), turn right. We\'re the last on the left — Spring Cottage. Gates will be open.\n\nPLEASE NOTE:\n• 48hrs notice needed for cancellations or a fee may apply\n• Prices may vary based on coat condition, matting, behaviour and size\n\nBook your next appointment online:\n👇 '+BOOK_URL+'\n\n💛 Refer a friend and get 10% off your next groom!\n\nLooking forward to meeting you both!\nBecky - '+BIZ);
 }
 function sendPriceListMsg(){
@@ -1595,7 +1642,7 @@ function doRebookWith(newDate){
     srcDogs.forEach(function(d,i){
       var idx=i+1;
       dogInfo[idx]={name:d.name||'',breed:d.breed||'',dob:d.dob||''};
-      dogServices[idx]=d.services&&d.services.length?d.services.map(function(sv){return{service:sv.service||'',duration:sv.duration||60,price:sv.price||''};}):[{service:d.service||'',duration:d.duration||60,price:d.price||''}];
+      dogServices[idx]=d.services&&d.services.length?d.services.map(function(sv){return{service:sv.service||'',duration:(sv.duration!==undefined&&sv.duration!==''?sv.duration:60),price:sv.price||''};}):[{service:d.service||'',duration:(d.duration!==undefined&&d.duration!==''?d.duration:60),price:d.price||''}];
     });
     dogCount=srcDogs.length;
     editId=null;
@@ -1824,7 +1871,7 @@ function getEarnRange(){
 }
 function renderEarnings(){
   var range=getEarnRange();
-  var periodBks=bookings.filter(function(b){return b.date>=range.start&&b.date<=range.end&&b.paid;});
+  var periodBks=bookings.filter(function(b){return b.date>=range.start&&b.date<=range.end&&b.paid&&!b.noShow;});
   var periodExp=expenses.filter(function(e){return e.date>=range.start&&e.date<=range.end;});
   var total=0,cash=0,card=0,monzo=0;
   periodBks.forEach(function(b){
@@ -2078,7 +2125,7 @@ function addFromRequest(id){
     dogInfo={};dogServices={};dogCount=1;
     dogInfo[1]={name:p.dog||'',breed:p.breed||'',dob:''};
     dogServices[1]=svcs.length?svcs.map(function(svc){
-      return{service:svc,duration:SVC_DURATIONS[svc]||60,price:SVC_PRICES[svc]||''};
+      return{service:svc,duration:(SVC_DURATIONS[svc]!==undefined?SVC_DURATIONS[svc]:60),price:SVC_PRICES[svc]||''};
     }):[{service:'Full Groom',duration:120,price:''}];
     renderDogRows();
     setTimeout(function(){
@@ -2404,7 +2451,7 @@ function addFromPrefill(){
     dogInfo={};dogServices={};dogCount=1;
     dogInfo[1]={name:p.dog||'',breed:p.breed||'',dob:''};
     dogServices[1]=svcs.length?svcs.map(function(svc){
-      return{service:svc,duration:SVC_DURATIONS[svc]||60,price:SVC_PRICES[svc]||''};
+      return{service:svc,duration:(SVC_DURATIONS[svc]!==undefined?SVC_DURATIONS[svc]:60),price:SVC_PRICES[svc]||''};
     }):[{service:'Full Groom',duration:120,price:''}];
     renderDogRows();
     setTimeout(function(){
