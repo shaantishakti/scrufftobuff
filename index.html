@@ -177,12 +177,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
 
 <nav class="nav">
   <div class="nav-tab active" onclick="showPage('calPage',this)">📅 Calendar</div>
-  <div class="nav-tab" onclick="showPage('earnPage',this)">💰 Earnings / Holidays</div>
+  <div class="nav-tab" onclick="showPage('earnPage',this)">💰 Earnings</div>
+  <div class="nav-tab" onclick="showPage('pricingPage',this)">💷 Outdated Pricing</div>
   <div class="nav-spacer"></div>
   <div class="more-btn" id="moreBtn" onclick="toggleMoreMenu()">⚙️ More</div>
 </nav>
 <div class="more-menu" id="moreMenu">
   <div class="more-menu-item" onclick="openShoppingList();toggleMoreMenu()">🛒 Shopping List</div>
+  <div class="more-menu-item" onclick="openHolidays();toggleMoreMenu()">🏖️ Holidays</div>
   <div class="more-menu-item" onclick="openFridayPreview();toggleMoreMenu()">📅 This Week's Schedule</div>
   <div class="more-menu-item" onclick="sendPoppySchedule();toggleMoreMenu()">📍 Send Poppy's Schedule</div>
   <div class="more-menu-item" onclick="sendPoppyStartTimesMsg();toggleMoreMenu()">⏰ Send Poppy's Start Times</div>
@@ -255,33 +257,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
       <button onclick="openLogHours()" class="block-btn" style="background:#b45309;font-size:0.8rem;margin-left:auto;">+ Log Hours</button>
     </div>
     <table class="earn-table"><thead><tr><th>Date</th><th>Times</th><th>Hours</th><th>Cost</th><th>Day Revenue</th><th>Covered?</th><th></th></tr></thead><tbody id="staffBody"></tbody></table>
-    <h3 style="font-family:'Playfair Display',serif;font-size:1rem;margin:20px 0 8px;color:#b45309;">🏖️ Poppy's Holiday Pay Calculator</h3>
-    <p style="font-size:0.82rem;color:#64748b;margin-bottom:10px;">Enter the hours she's worked, and it's calculated at 0.1077 × hours — your accountant's figure.</p>
-    <div style="background:white;border:1.5px solid var(--tan-light);border-radius:10px;padding:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
-      <div class="fg" style="margin:0;min-width:160px;">
-        <label>Hours Worked</label>
-        <input type="number" id="holidayCalcHours" min="0" step="0.25" placeholder="e.g. 32.5" oninput="calcHolidayPay()">
-      </div>
-      <button onclick="calcHolidayPay()" class="block-btn" style="background:#b45309;">Calculate</button>
-      <span id="holidayCalcResult" style="font-size:1rem;font-weight:700;color:#2d6a4f;"></span>
-    </div>
-    <h3 style="font-family:'Playfair Display',serif;font-size:1rem;margin:20px 0 8px;color:#0ea5e9;">🌴 Holiday Mode</h3>
-    <p style="font-size:0.82rem;color:#64748b;margin-bottom:10px;">Add holidays for Becky and Poppy separately — both can have their own dates, even overlapping. Updates calendar colours and restricts the online booking page.</p>
-    <div style="background:white;border:1.5px solid var(--tan-light);border-radius:10px;padding:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
-      <div class="fg" style="margin:0;">
-        <label style="font-size:0.76rem;">Who is away?</label>
-        <div class="tog" style="margin-top:6px;">
-          <input type="radio" name="holidayAway" id="hol-becky" value="becky" checked><label for="hol-becky">💚 Becky</label>
-          <input type="radio" name="holidayAway" id="hol-poppy" value="poppy"><label for="hol-poppy">💜 Poppy</label>
-        </div>
-      </div>
-      <div class="fg" style="margin:0;min-width:130px;"><label>Start</label><input type="date" id="holidayStart"></div>
-      <div class="fg" style="margin:0;min-width:130px;"><label>End</label><input type="date" id="holidayEnd"></div>
-      <button onclick="addHolidayPeriod()" class="block-btn" style="background:#0ea5e9;">+ Add Holiday</button>
-      <button onclick="clearAllHolidays()" class="btn-cancel" style="font-size:0.82rem;">Clear All</button>
-      <span id="holidayModeNote" style="font-size:0.82rem;font-weight:600;"></span>
-    </div>
-    <div id="holidayListWrap" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;"></div>
   </div>
 </div>
 
@@ -322,6 +297,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
     <div class="avg-groom-box" id="avgGroomBox"></div>
     <div class="disc-flag" id="discFlag" style="display:none;"></div>
     <div class="disc-flag" id="refFlag" style="display:none;background:#fffbeb;border-color:#f59e0b;color:#92400e;"></div>
+    <div class="disc-flag" id="priceFlag" style="display:none;background:#fef2f2;border-color:#ef4444;color:#991b1b;"></div>
     <div id="dogRowsWrap"></div>
     <button type="button" onclick="addDogSlot()" class="btn-cancel" style="font-size:0.8rem;margin-bottom:12px;">+ Add Another Dog</button>
     <div class="fg"><label>Notes</label><textarea id="f-notes" rows="2" placeholder="Coat condition, behaviour notes..."></textarea></div>
@@ -412,6 +388,49 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
     <div class="modal-btns">
       <button onclick="clearDoneShop()" class="btn-cancel" style="font-size:0.82rem;">Clear done</button>
       <button onclick="closeOverlay('shoppingOverlay')" class="btn-cancel">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="pricingPage">
+  <div class="earn-wrap">
+    <p style="font-size:0.85rem;color:#64748b;margin-bottom:14px;">Dogs whose price hasn't changed in 8+ months, based on their actual booking history.</p>
+    <div id="outdatedPricingList"></div>
+  </div>
+</div>
+
+<div class="overlay" id="holidaysOverlay">
+  <div class="modal" style="max-width:520px;max-height:80vh;overflow-y:auto;">
+    <h2>🏖️ Holidays</h2>
+    <h3 style="font-family:'Playfair Display',serif;font-size:1rem;margin:12px 0 8px;color:#b45309;">Poppy's Holiday Pay Calculator</h3>
+    <p style="font-size:0.82rem;color:#64748b;margin-bottom:10px;">Enter the hours she's worked, and it's calculated at 0.1077 × hours — your accountant's figure.</p>
+    <div style="background:white;border:1.5px solid var(--tan-light);border-radius:10px;padding:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
+      <div class="fg" style="margin:0;min-width:160px;">
+        <label>Hours Worked</label>
+        <input type="number" id="holidayCalcHours" min="0" step="0.25" placeholder="e.g. 32.5" oninput="calcHolidayPay()">
+      </div>
+      <button onclick="calcHolidayPay()" class="block-btn" style="background:#b45309;">Calculate</button>
+      <span id="holidayCalcResult" style="font-size:1rem;font-weight:700;color:#2d6a4f;"></span>
+    </div>
+    <h3 style="font-family:'Playfair Display',serif;font-size:1rem;margin:20px 0 8px;color:#0ea5e9;">🌴 Holiday Mode</h3>
+    <p style="font-size:0.82rem;color:#64748b;margin-bottom:10px;">Add holidays for Becky and Poppy separately — both can have their own dates, even overlapping. Updates calendar colours and restricts the online booking page.</p>
+    <div style="background:white;border:1.5px solid var(--tan-light);border-radius:10px;padding:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
+      <div class="fg" style="margin:0;">
+        <label style="font-size:0.76rem;">Who is away?</label>
+        <div class="tog" style="margin-top:6px;">
+          <input type="radio" name="holidayAway" id="hol-becky" value="becky" checked><label for="hol-becky">💚 Becky</label>
+          <input type="radio" name="holidayAway" id="hol-poppy" value="poppy"><label for="hol-poppy">💜 Poppy</label>
+        </div>
+      </div>
+      <div class="fg" style="margin:0;min-width:130px;"><label>Start</label><input type="date" id="holidayStart"></div>
+      <div class="fg" style="margin:0;min-width:130px;"><label>End</label><input type="date" id="holidayEnd"></div>
+      <button onclick="addHolidayPeriod()" class="block-btn" style="background:#0ea5e9;">+ Add Holiday</button>
+      <button onclick="clearAllHolidays()" class="btn-cancel" style="font-size:0.82rem;">Clear All</button>
+      <span id="holidayModeNote" style="font-size:0.82rem;font-weight:600;"></span>
+    </div>
+    <div id="holidayListWrap" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;"></div>
+    <div class="modal-btns">
+      <button onclick="closeOverlay('holidaysOverlay')" class="btn-cancel">Close</button>
     </div>
   </div>
 </div>
@@ -554,6 +573,7 @@ function showPage(id,tab){
   document.getElementById(id).classList.add('active');
   if(tab)tab.classList.add('active');
   if(id==='earnPage')renderEarnings();
+  if(id==='pricingPage')renderOutdatedPricingList();
 }
 function toggleMoreMenu(){
   var m=document.getElementById('moreMenu');
@@ -967,6 +987,7 @@ function clearForm(){
   document.getElementById('pm-cash').checked=true;
   document.getElementById('discFlag').style.display='none';
   document.getElementById('refFlag').style.display='none';
+  document.getElementById('priceFlag').style.display='none';
   document.getElementById('avgGroomBox').style.display='none';
   document.getElementById('groomerWarn').style.display='none';
   document.getElementById('dfFlag').style.display='none';
@@ -1187,6 +1208,8 @@ function fillCustomer(c){
     });
     dogCount=c.dogs.length;
     renderDogRows();
+    var lastBk=bookings.filter(function(bk){return bk.name&&bk.name.toLowerCase()===c.name.toLowerCase();}).sort(function(x,y){return y.date.localeCompare(x.date);})[0];
+    checkOutdatedPricing(c.dogs,lastBk?lastBk.date:null);
   }
   showAvgGroomTime(c.name);
   checkDiscountFlag(c.name,(c.visits||0)+1);
@@ -1518,6 +1541,38 @@ function showRebookPicker(){
   document.getElementById('rebookCustomDate').value='';
   document.getElementById('rebookOverlay').classList.add('open');
 }
+function checkOutdatedPricing(srcDogs,refDateStr){
+  var flag=document.getElementById('priceFlag');
+  if(!flag)return;
+  var msgs=[];
+  var belowStandard=[];
+  (srcDogs||[]).forEach(function(d){
+    var svcs=d.services&&d.services.length?d.services:[{service:d.service||d.lastService||'',price:d.price||d.lastPrice||''}];
+    svcs.forEach(function(sv){
+      var std=SVC_PRICES[sv.service];
+      var current=parseFloat(sv.price);
+      if(std&&!isNaN(current)&&current<std){
+        belowStandard.push(sv.service+' — on file at £'+current.toFixed(2)+', current rate is £'+std.toFixed(2));
+      }
+    });
+  });
+  if(belowStandard.length){
+    msgs.push('<strong>Below current rate:</strong><br>'+belowStandard.join('<br>'));
+  }
+  if(refDateStr){
+    var srcDate=new Date(refDateStr+'T12:00:00');
+    var monthsOld=Math.floor((new Date()-srcDate)/(1000*60*60*24*30.44));
+    if(monthsOld>=8){
+      msgs.push((msgs.length?'<br><br>':'')+'<strong>Price carried forward from '+fmtDD(refDateStr)+'</strong> ('+monthsOld+' months ago) — worth reviewing before confirming.');
+    }
+  }
+  if(msgs.length){
+    flag.innerHTML='⚠️ '+msgs.join('');
+    flag.style.display='block';
+  } else {
+    flag.style.display='none';
+  }
+}
 function doRebookJump(days){
   if(!_rebookSource)return;
   var newDate=fmtISO(addDays(new Date(_rebookSource.date+'T12:00:00'),days));
@@ -1558,7 +1613,9 @@ function doRebookWith(newDate){
     document.getElementById('discFlag').style.display='none';
     document.getElementById('refFlag').style.display='none';
     document.getElementById('noshowFlag').style.display='none';
+    document.getElementById('priceFlag').style.display='none';
     renderDogRows();
+    checkOutdatedPricing(srcDogs,b.date);
     buildTimeDropdown(b.time,_timeStep);
     _finishManuallySet=false;
     calcFinish();
@@ -2379,6 +2436,59 @@ function openShoppingList(){
   document.getElementById('shoppingOverlay').classList.add('open');
   renderShopList();
   setTimeout(function(){document.getElementById('shopInput').focus();},200);
+}
+function openHolidays(){
+  document.getElementById('holidaysOverlay').classList.add('open');
+  updateHolidayNote();
+}
+function computeOutdatedPricingList(){
+  var groups={};
+  bookings.forEach(function(b){
+    if(!b.name||!b.date)return;
+    var dogs=b.dogs&&b.dogs.length?b.dogs:[{name:b.dog||'',services:[{service:b.service||'',price:b.lastprice||''}]}];
+    dogs.forEach(function(d){
+      var svcs=d.services&&d.services.length?d.services:[{service:d.service||'',price:d.price||''}];
+      svcs.forEach(function(sv){
+        var price=parseFloat(sv.price);
+        if(!sv.service||isNaN(price))return;
+        var key=b.name.toLowerCase()+'|'+(d.name||'').toLowerCase()+'|'+sv.service;
+        if(!groups[key])groups[key]=[];
+        groups[key].push({date:b.date,price:price,clientName:b.name,dogName:d.name||'',service:sv.service});
+      });
+    });
+  });
+  var results=[];
+  Object.keys(groups).forEach(function(key){
+    var recs=groups[key].sort(function(a,b){return a.date.localeCompare(b.date);});
+    var last=recs[recs.length-1];
+    var sinceIdx=recs.length-1;
+    for(var i=recs.length-2;i>=0;i--){
+      if(recs[i].price===last.price){sinceIdx=i;}
+      else break;
+    }
+    var sinceDate=recs[sinceIdx].date;
+    var monthsStale=Math.floor((new Date()-new Date(sinceDate+'T12:00:00'))/(1000*60*60*24*30.44));
+    if(monthsStale>=8){
+      results.push({clientName:last.clientName,dogName:last.dogName,service:last.service,price:last.price,sinceDate:sinceDate,lastVisit:last.date,monthsStale:monthsStale});
+    }
+  });
+  results.sort(function(a,b){return b.monthsStale-a.monthsStale;});
+  return results;
+}
+function renderOutdatedPricingList(){
+  var list=document.getElementById('outdatedPricingList');if(!list)return;
+  var results=computeOutdatedPricingList();
+  if(!results.length){
+    list.innerHTML='<p style="color:#64748b;font-size:0.85rem;padding:20px 0;text-align:center;">Nothing currently outdated 🎉</p>';
+    return;
+  }
+  list.innerHTML=results.map(function(r){
+    return '<div style="border-bottom:1px solid var(--tan-light);padding:10px 0;">'
+      +'<strong>'+titleCase(r.clientName)+'</strong>'+(r.dogName?' — '+titleCase(r.dogName):'')
+      +'<br><span style="font-size:0.82rem;color:#64748b;">'+r.service+' — £'+r.price.toFixed(2)+'</span>'
+      +'<br><span style="font-size:0.78rem;color:#ef4444;">Unchanged since '+fmtDD(r.sinceDate)+' ('+r.monthsStale+' months) · last visit '+fmtDD(r.lastVisit)+'</span>'
+      +'</div>';
+  }).join('');
 }
 function addShopItem(){
   var input=document.getElementById('shopInput');
