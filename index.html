@@ -505,7 +505,7 @@ const SVC_PRICES={
   'Emmi-Pet Teeth Consultation':45,'Emmi-Pet Teeth Cleaning':28,
   'Emmi-Pet Teeth Cleaning PAYG':28,'Emmi-Pet Teeth Cleaning x4':105,
   'Emmi-Pet Teeth Cleaning x9':155,'Emmi-Pet Teeth Maintenance':35,
-  'Nail Clip':13,'Anal Glands':25,'Teeth Descaling':25,'Emmi-Pet Brush Head':8
+  'Nail Clip':13,'Anal Glands':25,'Teeth Descaling':30,'Emmi-Pet Brush Head':8
 };
 const POPPY_CANNOT_DO=[
   'Emmi-Pet Teeth Consultation','Emmi-Pet Teeth Cleaning',
@@ -958,8 +958,10 @@ function openEdit(id){
     dogCount=b.dogs.length;
   }
   renderDogRows();
-  // Restore the saved finish time (or fall back to auto-calculated)
-  _finishManuallySet = !!b.finishTime;
+  // Restore the saved finish time for display, but stay in auto-suggest mode
+  // so changing duration still recalculates it — only locks once the user
+  // actually edits the finish field themselves in this session.
+  _finishManuallySet = false;
   calcFinish();
   if(b.finishTime){
     document.getElementById('f-finish').value=b.finishTime;
@@ -1873,6 +1875,10 @@ function renderEarnings(){
   var range=getEarnRange();
   var periodBks=bookings.filter(function(b){return b.date>=range.start&&b.date<=range.end&&b.paid&&!b.noShow;});
   var periodExp=expenses.filter(function(e){return e.date>=range.start&&e.date<=range.end;});
+  // All completed (non no-show) bookings in this period, regardless of paid status —
+  // for counting how many dogs were actually groomed, not how much was earned.
+  var groomedBks=bookings.filter(function(b){return b.date>=range.start&&b.date<=range.end&&!b.noShow;});
+  var dogsGroomed=groomedBks.reduce(function(s,b){return s+(b.dogs&&b.dogs.length?b.dogs.length:(b.dog?1:0));},0);
   var total=0,cash=0,card=0,monzo=0;
   periodBks.forEach(function(b){
     var amt=b.dogs&&b.dogs.length?b.dogs.reduce(function(s,d){return s+(parseFloat(d.price)||0);},0):(parseFloat(b.lastprice)||0);
@@ -1887,7 +1893,8 @@ function renderEarnings(){
     {label:'Card',val:'£'+card.toFixed(2),cls:''},
     {label:'Monzo',val:'£'+monzo.toFixed(2),cls:''},
     {label:'Expenses',val:'£'+expTotal.toFixed(2),cls:'expense-c'},
-    {label:'Net Profit',val:'£'+net.toFixed(2),cls:'profit-c'}
+    {label:'Net Profit',val:'£'+net.toFixed(2),cls:'profit-c'},
+    {label:'Dogs Groomed',val:dogsGroomed,cls:''}
   ].map(function(c){return '<div class="earn-card '+c.cls+'"><div class="ec-label">'+c.label+'</div><div class="ec-val">'+c.val+'</div></div>';}).join('');
   var earnBody=document.getElementById('earnBody');
   if(!periodBks.length){earnBody.innerHTML='<tr><td colspan="6" class="earn-empty">No paid bookings in this period</td></tr>';}
