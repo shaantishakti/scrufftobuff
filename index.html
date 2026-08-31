@@ -1505,11 +1505,22 @@ function renderWaButtons(){
 }
 
 function getCurrent(){return editId?bookings.find(function(b){return b.id===editId;}):null;}
+function categorizeSvc(svcName){
+  if(!svcName)return '';
+  var isTeeth=svcName.indexOf('Emmi-Pet')>=0||svcName.indexOf('Teeth')>=0||svcName.indexOf('Descaling')>=0;
+  return isTeeth?'Teeth':'Groom';
+}
 function buildDogSummary(b){
-  if(!b.dogs||!b.dogs.length)return(b.dog||'')+(b.service?' — '+b.service:'')+(b.lastprice?' (£'+parseFloat(b.lastprice).toFixed(2)+')':'');
+  if(!b.dogs||!b.dogs.length)return(b.dog||'')+(b.service?' — '+categorizeSvc(b.service):'')+(b.lastprice?' (£'+parseFloat(b.lastprice).toFixed(2)+')':'');
   return b.dogs.map(function(d){
     var svcs=d.services&&d.services.length?d.services:d.service?[{service:d.service,price:d.price}]:[];
-    return '🐾 '+d.name+(d.breed?' ('+d.breed+')':'')+':\n'+svcs.map(function(sv){return '  • '+sv.service;}).join('\n');
+    var cats=[];
+    svcs.forEach(function(sv){
+      var c=categorizeSvc(sv.service);
+      if(c&&cats.indexOf(c)===-1)cats.push(c);
+    });
+    cats.sort(function(a){return a==='Groom'?-1:1;});
+    return '🐾 '+d.name+(d.breed?' ('+d.breed+')':'')+': '+cats.join(' + ');
   }).join('\n');
 }
 function getPickupTimeStr(b){
