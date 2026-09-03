@@ -1530,11 +1530,11 @@ function getPickupTimeStr(b){
 }
 function sendConfirmMsg(b){
   b=b||getCurrent();if(!b||!b.phone)return;
-  openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\nYour booking with '+BIZ+' is confirmed:\n\n'+buildDogSummary(b)+'\n\n📅 '+fmtDD(b.date)+'\n🕐 Drop off: '+fmtTime(b.time)+'\n🕐 Pick up: approx '+getPickupTimeStr(b)+'\n\nIf you need to reschedule, just drop me a message!\n\nWhenever you\'re ready to book your next appointment:\n👇 '+BOOK_URL+'\n\n⭐ Happy with the groom? We\'d love a Google review — it really helps us!\n'+'https://g.page/r/scrufftobuffdogs/review'+'\n\n💛 Refer a friend and get 10% off your next groom!\n\nSee you soon!\nBecky - '+BIZ);
+  openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\nYour booking with '+BIZ+' is confirmed:\n\n'+buildDogSummary(b)+'\n\n📅 '+fmtDD(b.date)+'\n🕐 Drop off: '+fmtTime(b.time)+'\n🕐 Pick up: approx '+getPickupTimeStr(b)+'\n\nPlease message if you need to reschedule.\n\nBook your next appointment:\n👇 '+BOOK_URL+'\n\nSee you soon!\nBecky - '+BIZ);
 }
 function sendNewConfirmMsg(b){
   b=b||getCurrent();if(!b||!b.phone)return;
-  openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\nYour booking with '+BIZ+' is confirmed:\n\n'+buildDogSummary(b)+'\n\n📅 '+fmtDD(b.date)+'\n🕐 Drop off: '+fmtTime(b.time)+'\n🕐 Pick up: approx '+getPickupTimeStr(b)+'\n\nDIRECTIONS:\nI\'ll follow this with a location pin. Coming from the A22/Nutley — turn onto Cackle Street, take the second left. As you reach the 5th house on your right (Spring House, Farm Watch sign), turn right. We\'re the last on the left — Spring Cottage. Gates will be open.\n\nPLEASE NOTE:\n• 48hrs notice needed for cancellations or a fee may apply\n• Prices may vary based on coat condition, matting, behaviour and size\n\nBook your next appointment online:\n👇 '+BOOK_URL+'\n\n💛 Refer a friend and get 10% off your next groom!\n\nLooking forward to meeting you both!\nBecky - '+BIZ);
+  openWA(b.phone,'Hi '+titleCase(b.name)+'!\n\nYour booking with '+BIZ+' is confirmed:\n\n'+buildDogSummary(b)+'\n\n📅 '+fmtDD(b.date)+'\n🕐 Drop off: '+fmtTime(b.time)+'\n🕐 Pick up: approx '+getPickupTimeStr(b)+'\n\nDIRECTIONS:\nI\'ll follow this with a location pin. Coming from the A22/Nutley — turn onto Cackle Street, take the second left. As you reach the 5th house on your right (Spring House, Farm Watch sign), turn right. We\'re the last on the left — Spring Cottage. Gates will be open.\n\nPLEASE NOTE:\n• 48hrs notice needed for cancellations or a fee may apply\n• Prices may vary based on coat condition, matting, behaviour and size\n\nBook your next appointment:\n👇 '+BOOK_URL+'\n\nLooking forward to meeting you both!\nBecky - '+BIZ);
 }
 function sendPriceListMsg(){
   var b=getCurrent();if(!b||!b.phone)return;
@@ -1581,7 +1581,7 @@ function sendRebookLinkMsg(){
 }
 function sendReviewMsg(){
   var b=getCurrent();if(!b||!b.phone)return;
-  openWA(b.phone,'Hi '+titleCase(b.name)+'! Hope '+((b.dogs&&b.dogs[0]&&b.dogs[0].name)||'your pup')+' is looking and feeling great after their groom! 🐾\n\nIf you\'re happy with the service, we\'d love a quick Google review — it really helps other pet owners find us!\n👇\nhttps://g.page/r/scrufftobuffdogs/review\n\nThank you so much!\nBecky - '+BIZ);
+  openWA(b.phone,'Hi '+titleCase(b.name)+'! Hope '+((b.dogs&&b.dogs[0]&&b.dogs[0].name)||'your pup')+' is looking and feeling great after their groom! 🐾\n\nIf you\'re happy with the service, we\'d love a quick Google review — it really helps other pet owners find us!\n👇\nhttps://g.page/r/scrufftobuffdogs/review\n\n💛 Know anyone else with a dog in need of a groom? Refer a friend and get 10% off your next visit!\n\nThank you so much!\nBecky - '+BIZ);
 }
 function sendCancelFeeMsg(){
   var b=getCurrent();if(!b||!b.phone)return;
