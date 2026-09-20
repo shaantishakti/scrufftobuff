@@ -103,6 +103,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
 #ct-new:checked~label[for=ct-new]{background:#e0f2fe;border-color:#0ea5e9;color:#0369a1;}
 #p-paid:checked~label[for=p-paid]{background:var(--paid-bg);border-color:var(--paid);color:var(--paid);}
 #p-unpaid:checked~label[for=p-unpaid]{background:var(--unpaid-bg);border-color:var(--unpaid);color:var(--unpaid);}
+#np-yes:checked~label[for=np-yes]{background:var(--unpaid-bg);border-color:var(--unpaid);color:var(--unpaid);}
 #gr-becky:checked~label[for=gr-becky]{background:var(--becky-bg);border-color:var(--becky);color:var(--becky);}
 #gr-poppy:checked~label[for=gr-poppy]{background:var(--poppy-bg);border-color:var(--poppy);color:var(--poppy);}
 #gr-both:checked~label[for=gr-both]{background:#e0f2fe;border-color:#0ea5e9;color:#0369a1;}
@@ -115,6 +116,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
 #pm-card:checked~label[for=pm-card]{background:#ede9fe;border-color:var(--card);color:#4338ca;}
 #pm-monzo:checked~label[for=pm-monzo]{background:#fee2e2;border-color:var(--monzo);color:#b91c1c;}
 #pm-split:checked~label[for=pm-split]{background:#f0fdf4;border-color:#22c55e;color:#15803d;}
+#pm-free:checked~label[for=pm-free]{background:var(--paid-bg);border-color:var(--paid);color:var(--paid);}
 .btn-save{background:var(--brown);color:white;border:none;padding:9px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:0.88rem;cursor:pointer;}
 .btn-save:hover{opacity:0.85;}
 .btn-cancel{background:none;border:1.5px solid var(--tan-light);color:var(--brown);padding:9px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:0.88rem;cursor:pointer;}
@@ -264,6 +266,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
   <div class="modal" style="max-width:560px;">
     <h2 id="modalTitle">New Booking</h2>
     <div id="noshowFlag" class="noshow-flag">⚠️ This customer has a previous no-show on record.</div>
+    <div id="neverPaidFlag" class="noshow-flag" style="background:#fdeaea;border-color:var(--unpaid);color:#8b2020;">🚫 This customer has a previous non-payment on record.</div>
     <div class="frow">
       <div class="fg" style="position:relative;">
         <label>Customer Name</label>
@@ -301,13 +304,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--brown)
     <div id="dogRowsWrap"></div>
     <button type="button" onclick="addDogSlot()" class="btn-cancel" style="font-size:0.8rem;margin-bottom:12px;">+ Add Another Dog</button>
     <div class="fg"><label>Notes</label><textarea id="f-notes" rows="2" placeholder="Coat condition, behaviour notes..."></textarea></div>
-    <div class="frow">
+    <div class="frow" id="paymentStatusRow">
       <div class="fg"><label>Payment Status</label>
         <div class="tog"><input type="radio" name="pstatus" id="p-unpaid" checked onchange="showPayMethod(false)"><label for="p-unpaid">Unpaid</label><input type="radio" name="pstatus" id="p-paid" onchange="showPayMethod(true)"><label for="p-paid">Paid</label></div>
       </div>
       <div class="fg" id="payMethodGroup" style="display:none;"><label>Method</label>
-        <div class="tog"><input type="radio" name="pmethod" id="pm-cash" value="cash" checked><label for="pm-cash">Cash</label><input type="radio" name="pmethod" id="pm-card" value="card"><label for="pm-card">Card</label><input type="radio" name="pmethod" id="pm-monzo" value="monzo"><label for="pm-monzo">Monzo</label><input type="radio" name="pmethod" id="pm-split" value="split"><label for="pm-split">Split</label></div>
+        <div class="tog"><input type="radio" name="pmethod" id="pm-cash" value="cash" checked><label for="pm-cash">Cash</label><input type="radio" name="pmethod" id="pm-card" value="card"><label for="pm-card">SumUp</label><input type="radio" name="pmethod" id="pm-monzo" value="monzo"><label for="pm-monzo">Monzo</label><input type="radio" name="pmethod" id="pm-split" value="split"><label for="pm-split">Split</label><input type="radio" name="pmethod" id="pm-free" value="free"><label for="pm-free">Free</label></div>
       </div>
+    </div>
+    <div class="fg" id="noShowPaymentNote" style="display:none;background:var(--blocked-bg);border:1.5px solid var(--blocked);border-radius:8px;padding:10px 14px;color:var(--blocked);font-weight:600;font-size:0.85rem;">No Show — payment not applicable</div>
+    <div class="fg">
+      <label>Non-Payment Marker</label>
+      <div class="tog"><input type="radio" name="neverpay" id="np-no" checked><label for="np-no">Normal</label><input type="radio" name="neverpay" id="np-yes"><label for="np-yes" style="border-color:var(--unpaid);">🚫 Mark customer for life</label></div>
+      <div style="font-size:0.74rem;color:#94a3b8;margin-top:4px;">Use this only when payment is genuinely written off — this will flag the customer on every future booking.</div>
     </div>
     <div id="splitWrap" style="display:none;" class="frow">
       <div class="fg"><label>Cash amount £</label><input type="number" id="split-cash" min="0" step="0.01"></div>
@@ -789,6 +798,7 @@ function renderCal(){
 }
 function getBookingValue(bk){
   if(bk.noShow)return 0;
+  if(bk.paid&&bk.payMethod==='free')return 0;
   return bk.dogs&&bk.dogs.length?bk.dogs.reduce(function(s,d){return s+(d.services&&d.services.length?d.services.reduce(function(ss,sv){return ss+(parseFloat(sv.price)||0);},0):(parseFloat(d.price)||0));},0):(parseFloat(bk.lastprice)||0);
 }
 function renderDaySummary(days,cols){
@@ -946,9 +956,12 @@ function openEdit(id){
     document.getElementById('split-other').value=b.splitPayment.other||'';
   }
   checkNoshowFlag(b.name);
+  checkNeverPaidFlag(b.name);
+  var npEl=document.getElementById(b.neverPay?'np-yes':'np-no');if(npEl)npEl.checked=true;
   var nsBtn=document.getElementById('btnNS');
   if(b.noShow){nsBtn.textContent='✓ Undo No Show';nsBtn.style.background='#64748b';}
   else{nsBtn.textContent='✗ No Show';nsBtn.style.background='var(--unpaid)';}
+  updateNoShowPaymentUI(b.noShow);
   buildTimeDropdown(b.time,_timeStep);
   if(b.dogs&&b.dogs.length){
     dogInfo={};dogServices={};
@@ -997,6 +1010,9 @@ function clearForm(){
   document.getElementById('groomerWarn').style.display='none';
   document.getElementById('dfFlag').style.display='none';
   document.getElementById('noshowFlag').style.display='none';
+  document.getElementById('neverPaidFlag').style.display='none';
+  document.getElementById('np-no').checked=true;
+  updateNoShowPaymentUI(false);
   _finishManuallySet=false;
   dogInfo={};dogServices={};dogCount=1;
   renderDogRows();
@@ -1264,6 +1280,8 @@ function fillCustomer(c){
   checkDiscountFlag(c.name,(c.visits||0)+1);
   checkReferralFlag(c);
   checkGroomerWarning();
+  checkNoshowFlag(c.name);
+  checkNeverPaidFlag(c.name);
 }
 document.addEventListener('click',function(e){
   var fn=document.getElementById('f-name');
@@ -1312,6 +1330,11 @@ function checkNoshowFlag(name){
   var flag=document.getElementById('noshowFlag');
   var hasNS=bookings.some(function(b){return b.name&&b.name.toLowerCase()===name.toLowerCase()&&b.noShow;});
   flag.style.display=hasNS?'block':'none';
+}
+function checkNeverPaidFlag(name){
+  var flag=document.getElementById('neverPaidFlag');
+  var hasNP=bookings.some(function(b){return b.name&&b.name.toLowerCase()===name.toLowerCase()&&b.neverPay;});
+  flag.style.display=hasNP?'block':'none';
 }
 function checkDiscountFlag(name,visits){
   var flag=document.getElementById('discFlag');
@@ -1381,6 +1404,7 @@ function saveBooking(){
     notes:document.getElementById('f-notes').value.trim(),
     referral:document.getElementById('f-referral').value.trim(),
     paid:paid,payMethod:paid?payMethod:'',splitPayment:splitPayment,
+    neverPay:(document.getElementById('np-yes')||{}).checked||false,
     dogs:dogs,dog:dogs[0]?dogs[0].name:'',service:dogs[0]?dogs[0].service:'',
     duration:getTotalDurationFromForm(),
     lastprice:dogs.reduce(function(s,d){return s+(parseFloat(d.price)||0);},0)||'',
@@ -1427,12 +1451,19 @@ function toggleNoShow(){
   b.noShow=!b.noShow;
   if(b.noShow){
     b.paid=false;b.payMethod='';b.splitPayment=null;
-    var puEl=document.getElementById('p-unpaid');if(puEl){puEl.checked=true;showPayMethod(false);}
   }
+  updateNoShowPaymentUI(b.noShow);
   saveAll();renderCal();
   var btn=document.getElementById('btnNS');
   if(b.noShow){btn.textContent='✓ Undo No Show';btn.style.background='#64748b';}
   else{btn.textContent='✗ No Show';btn.style.background='var(--unpaid)';}
+}
+function updateNoShowPaymentUI(isNoShow){
+  var row=document.getElementById('paymentStatusRow');
+  var note=document.getElementById('noShowPaymentNote');
+  if(!row||!note)return;
+  row.style.display=isNoShow?'none':'grid';
+  note.style.display=isNoShow?'block':'none';
 }
 
 function getCustomer(name){if(!name)return null;var n=name.toLowerCase();return customers.find(function(c){return c.name&&c.name.toLowerCase()===n;});}
@@ -1675,6 +1706,7 @@ function doRebookWith(newDate){
     document.getElementById('discFlag').style.display='none';
     document.getElementById('refFlag').style.display='none';
     document.getElementById('noshowFlag').style.display='none';
+    document.getElementById('neverPaidFlag').style.display='none';
     document.getElementById('priceFlag').style.display='none';
     renderDogRows();
     checkOutdatedPricing(srcDogs,b.date);
@@ -1886,7 +1918,7 @@ function getEarnRange(){
 }
 function renderEarnings(){
   var range=getEarnRange();
-  var periodBks=bookings.filter(function(b){return b.date>=range.start&&b.date<=range.end&&b.paid&&!b.noShow;});
+  var periodBks=bookings.filter(function(b){return b.date>=range.start&&b.date<=range.end&&b.paid&&!b.noShow&&b.payMethod!=='free';});
   var periodExp=expenses.filter(function(e){return e.date>=range.start&&e.date<=range.end;});
   // All completed (non no-show) bookings in this period, regardless of paid status —
   // for counting how many dogs were actually groomed, not how much was earned.
@@ -1903,7 +1935,7 @@ function renderEarnings(){
   document.getElementById('earnCards').innerHTML=[
     {label:'Total Income',val:'£'+total.toFixed(2),cls:''},
     {label:'Cash',val:'£'+cash.toFixed(2),cls:''},
-    {label:'Card',val:'£'+card.toFixed(2),cls:''},
+    {label:'SumUp',val:'£'+card.toFixed(2),cls:''},
     {label:'Monzo',val:'£'+monzo.toFixed(2),cls:''},
     {label:'Expenses',val:'£'+expTotal.toFixed(2),cls:'expense-c'},
     {label:'Net Profit',val:'£'+net.toFixed(2),cls:'profit-c'},
