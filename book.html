@@ -257,6 +257,7 @@ body{background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--blue);
 <script>
 const BIZ_WA = '447767749349';
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwG00lLXzSbhkxVaigOD0arI9A9rns4f-i7GoUeKBXzUcRuxoYbXg7FP3cxhrIfVrB3/exec';
+const SHEET_SECRET = 'k7ZTskXQ9GWz0kkB9ByxFSfDufZtRTWvi4CMnZnBAN0';
 let sheetBookings = [];
 let sheetBlocks = [];
 let sheetLoaded = false;
@@ -341,7 +342,7 @@ function minsToTime(m){return(Math.floor(m/60)<10?'0':'')+Math.floor(m/60)+':'+(
 function addMins(ts,mins){var p=ts.split(':');var t=parseInt(p[0])*60+parseInt(p[1])+mins;return minsToTime(t);}
 
 function loadHolidayMode(){
-  fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'getHoliday'})})
+  fetch(SHEET_URL, {method:'POST', body:JSON.stringify({secret:SHEET_SECRET, action:'getHoliday'})})
     .then(function(r){return r.json();})
     .then(function(data){
       holidayInfo = data || {start:'',end:'',away:''};
@@ -376,7 +377,7 @@ function applyHolidayMode(){
 function loadSheetBookings(callback){
   var dbg = document.getElementById('sheetDebug');
   if(dbg) dbg.innerHTML = 'Loading bookings from sheet…';
-  fetch(SHEET_URL+'?_cb='+Date.now(),{cache:'no-store'})
+  fetch(SHEET_URL+'?secret='+encodeURIComponent(SHEET_SECRET)+'&_cb='+Date.now(),{cache:'no-store'})
     .then(function(r){
       if(!r.ok){throw new Error('HTTP status '+r.status+' from sheet');}
       return r.text();
@@ -396,7 +397,7 @@ function loadSheetBookings(callback){
       });
       if(dbg) dbg.innerHTML = '<strong>All Sheet bookings ('+sheetBookings.length+' total):</strong><br>' + sheetBookings.map(function(b){return b.date+' '+b.time+'-'+b.finishTime+' ('+b.duration+'min)';}).join('<br>');
       // Also fetch blocked time slots so customers can't book over them
-      fetch(SHEET_URL, {method:'POST', body:JSON.stringify({action:'getBlocks'}), cache:'no-store'})
+      fetch(SHEET_URL, {method:'POST', body:JSON.stringify({secret:SHEET_SECRET, action:'getBlocks'}), cache:'no-store'})
         .then(function(r){return r.json();})
         .then(function(blockData){
           sheetBlocks = Array.isArray(blockData) ? blockData : [];
@@ -984,6 +985,7 @@ function submitRequest(){
   if(c.charAt(0)==='0') c='44'+c.slice(1);
   // Save request to Google Sheet requests tab
   var requestData = {
+    secret: SHEET_SECRET,
     action: 'addRequest',
     id: 'req'+Date.now(),
     name: name,
